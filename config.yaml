@@ -1,0 +1,51 @@
+# config.yaml
+
+# General settings for the experiment runner
+experiment_settings:
+  csv_file_path: "conversation.csv"
+  log_file_path: "results.csv"
+  output_dir: "output"
+
+# Configuration profile for the Diffuser model
+diffuser:
+  api_url: "http://127.0.0.1:8000/generate"
+  # Default parameters for the Diffuser
+  parameters:
+    steps: 20
+    canvas_size: 512
+    negative_prompt: "text, signature, watermark, blurry, low quality, color"
+    # The {description} placeholder will be filled by the runner
+    positive_magic: "Style: detailed sketch, composition, simple background"
+    prompt_templates:
+      initial: "A first-person point-of-view shot, visualizing the scene from this description: '{description}'\n{positive_magic}"
+      modify: "Modify the existing scene from a first-person point-of-view, incorporating this new detail: '{description}'\n{positive_magic}"
+
+# Configuration profile for the SGP (SVG) model
+sgp:
+  api_url: "http://12.0.0.1:8001/generate_svg"
+  # URL for the new text refining endpoint
+  refiner_api_url: "http://127.0.0.1:8001/refine_description"
+  # Default parameters for the SGP model
+  parameters:
+    canvas_size: 512 # Used for rendering the final PNG
+    # The {description} and {previous_svg} placeholders will be filled by the runner
+    prompt_templates:
+      initial: "Please write complete SVG code for an image corresponding to the following description: '{description}'"
+      modify: "Here is existing SVG code:\n<svg_code>\n{previous_svg}\n</svg_code>\nPlease modify this SVG to incorporate the following new instruction: '{description}'. Output only the new, complete SVG code."
+
+# Prompt for the text refiner model
+refiner:
+  prompt_template: >
+    You are an expert scene descriptor. Your task is to read the following conversational snippets from a single character's point of view and refine them into a single, clear, and descriptive paragraph.
+    Instructions:
+    1. Focus only on the physical environment, objects, and their spatial relationships.
+    2. Ignore conversational filler, greetings, and questions.
+    3. Combine related details into a coherent scene.
+    4. Output only the descriptive paragraph.
+
+    Conversation Snippets:
+    """
+    {dialogue_lines}
+    """
+
+    Refine Scene Description:

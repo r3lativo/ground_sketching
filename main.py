@@ -3,37 +3,36 @@ import argparse
 import os
 import base64
 import pandas as pd
+import yaml
+import csv
 from io import BytesIO
 from PIL import Image
-from typing import Optional
-from generators import DiffuserGeneratorClient, SgpGeneratorClient
+from typing import Optional, Dict
+from datetime import datetime
+import time
 
-# --- Configuration ---
-CSV_FILE_PATH = "conversation.csv"
-GENERATOR_APIS = {
-    "diffuser": "http://127.0.0.1:8000/generate_diff",
-    "sgp"     : "http://127.0.0.1:8001/generate_svg"
-}
+from generators import DiffuserGeneratorClient, SgpGeneratorClient, RefinerClient
 
 class ExperimentRunner:
-    def __init__(self, generator_choice: str, positive_magic: str):
-        api_url = GENERATOR_APIS.get(generator_choice)
-        if not api_url:
-            raise ValueError(f"Invalid generator choice: {generator_choice}. Must be one of {list(GENERATOR_APIS.keys())}")
+    def __init__(self, config: Dict, generator_choice: str):
+        self.config = config
+        self.generator_choice = generator_choice
+        self.gen_config = config[generator_choice]
+        self.exp_config = config['experiment_settings']
 
         if generator_choice == "diffuser":
-            self.chosen_g = "diffuser"
-            self.generator = DiffuserGeneratorClient(api_url)
+            self.generator = DiffuserGeneratorClient(self.gen_config['api_url'])
         else:
-            self.chosen_g = "sgp"
-            self.generator = SgpGeneratorClient(api_url)
-
-        self.positive_magic = positive_magic
+            self.generator = SgpGeneratorClient(self.gen_config['api_url'])
+        
+        self.refiner = RefinerClient(config['sgp']['refiner_api_url'])
+        
         self.current_image_b64: Optional[str] = None
+        self.current_svg_text: Optional[str] = None
 
     def _load_data(self, chunk_id: str, character: str) -> Optional[pd.DataFrame]:
         try:
-            df = pd.read_csv(CSV_FILE_PATH, dtype={'chunk_id': str})
+            df = pd.read_csv(self.exp_config['csv_file_path'], dtype={'chunk_id': str})
             perspective_df = df[(df['chunk_id'] == chunk_id) & (df['character'] == character)]
             if perspective_df.empty:
                 print(f"No lines found for '{character}' in chunk '{chunk_id}'.")
@@ -42,74 +41,104 @@ class ExperimentRunner:
         except FileNotFoundError:
             print(f"Error: The file '{CSV_FILE_PATH}' was not found.")
             return None
+        return df[(df['chunk_id'] == chunk_id) & (df['character'] == character)]
 
-    def run_chunk_mode(self, chunk_id: str, character: str, args):
-        df = self._load_data(chunk_id, character)
-        if df is None: return
+    def _log_result(self, args: argparse.Namespace, prompt: str, filename: str, latency: float, step: int):
+        log_file = self.exp_config['log_file_path']
+        file_exists = os.path.isfile(log_file)
+        with open(log_file, 'a', newline='') as f:
+            writer = csv.writer(f)
+            if not file_exists:
+                writer.writerow(["timestamp", "generator", "mode", "prompt_mode", "chunk_id", "character", "step", "prompt", "output_file", "latency_s"])
+            
+            writer.writerow([
+                datetime.now().isoformat(), args.generator, args.mode, args.prompt_mode, args.chunk_id,
+                args.character, step, prompt, filename, f"{latency:.2f}"
+            ])
 
-        full_description = ' '.join(df['character'] + ': ' + df['text'])
-        prompt = f"A first-person point-of-view shot visualizing the scene from this conversation: '{full_description}'\n{self.positive_magic}"
+    def _get_description(self, prompt_mode: str, dialogue_df: pd.DataFrame) -> str:
+        raw_lines = (dialogue_df['character'] + ': ' + dialogue_df['text']).tolist()
+        if prompt_mode == 'refined':
+            print("Refining description from dialogue...")
+            template = self.config['refiner']['prompt_template']
+            return self.refiner.refine(raw_lines, template)
+        return ' '.join(raw_lines)
 
-        if self.chosen_g == "sgp": prompt = "Please write SVG code for generating the image corresponding to the following description: " + prompt
+    def run(self, args: argparse.Namespace):
+        df = self._load_data(args.chunk_id, args.character)
+        if df is None or df.empty:
+            print("No data found for the specified criteria.")
+            return
+
+        if args.mode == 'chunk':
+            description = self._get_description(args.prompt_mode, df)
+            self._run_single_generation(description, args, "chunk_0")
+        else: # utterance mode
+            for idx, row in enumerate(df.itertuples()):
+                description = self._get_description(args.prompt_mode, pd.DataFrame([row]))
+                self._run_single_generation(description, args, f"utt_{idx}", is_modify=(idx > 0))
+                if self.current_image_b64 is None and self.current_svg_text is None:
+                    print("Stopping due to generation error in utterance mode.")
+                    break
+    
+    def _run_single_generation(self, description: str, args: argparse.Namespace, step_name: str):
+        params = self.gen_config['parameters']
+        templates = self.gen_config['prompt_templates']
+        
+        is_first_step = self.current_image_b64 is None and self.current_svg_text is None
+        prompt_template = templates['initial'] if is_first_step else templates['modify']
+
+        prompt = prompt_template.format(
+            description=description,
+            positive_magic=params.get('positive_magic', ''),
+            previous_svg=self.current_svg_text or ''
+        )
 
         payload = {
-            "prompt": prompt, "initial_image_b64": None, "negative_prompt": args.negative_prompt,
-            "num_inference_steps": args.steps, "canvas_height": args.canvas_size
+            "prompt": prompt,
+            "negative_prompt": params.get('negative_prompt', ''),
+            "num_inference_steps": params.get('steps', 20),
+            "canvas_height": params.get('canvas_size', 512),
+            "initial_image_b64": self.current_image_b64,
         }
-        
-        print(f"\nSending consolidated prompt for chunk {chunk_id}...")
-        image_b64 = self.generator.generate(payload)
-        
-        if image_b64:
-            self._save_image(image_b64, f"{character.lower()}_chunk_{chunk_id}.png")
 
-    def run_utterance_mode(self, chunk_id: str, character: str, args):
-        df = self._load_data(chunk_id, character)
-        if df is None: return
+        print(f"\n--- Running Step: {step_name} ---")
+        start_time = time.time()
+        result = self.generator.generate(payload)
+        latency = time.time() - start_time
 
-        for idx, row in enumerate(df.itertuples()):
-            line = f"{row.character}: {row.text}"
-            prompt_action = "visualizing the scene" if idx == 0 else "modifying the scene"
-            prompt = f"A first-person point-of-view shot, {prompt_action} from this utterance: '{line}'\n{self.positive_magic}"
-            if self.chosen_g == "sgp": prompt = "Please write SVG code for generating the image corresponding to the following description: " + prompt
+        if result:
+            filename = f"{args.generator}_{args.mode}_{args.prompt_mode}_{args.character.lower()}_{args.chunk_id}_{step_name}.png"
+            output_path = os.path.join(self.exp_config['output_dir'], filename)
+            os.makedirs(self.exp_config['output_dir'], exist_ok=True)
+            
+            image_b64 = result if isinstance(result, str) else result['image_b64']
+            
+            with open(output_path, "wb") as f:
+                f.write(base64.b64decode(image_b64))
+            print(f"Image saved to {output_path}")
 
-            payload = {
-                "prompt": prompt, "initial_image_b64": self.current_image_b64, "negative_prompt": args.negative_prompt,
-                "num_inference_steps": args.steps, "canvas_height": args.canvas_size
-            }
+            # Update state for next iteration
+            self.current_image_b64 = image_b64
+            if self.generator_choice == 'sgp' and isinstance(result, dict):
+                self.current_svg_text = result['svg_text']
 
-            print(f"\nSending prompt for utterance {idx + 1}...")
-            image_b64 = self.generator.generate(payload)
-
-            if image_b64:
-                self.current_image_b64 = image_b64
-                self._save_image(image_b64, f"{character.lower()}_utt_{idx}.png")
-            else:
-                print("Stopping due to API error.")
-                break
-
-    def _save_image(self, b64_string: str, filename: str):
-        os.makedirs("output", exist_ok=True)
-        output_path = os.path.join("output", filename)
-        img_data = base64.b64decode(b64_string)
-        Image.open(BytesIO(img_data)).save(output_path)
-        print(f"Image saved to {output_path}")
+            self._log_result(args, prompt, filename, latency, step_name)
+        else:
+            self.current_image_b64 = None
+            self.current_svg_text = None
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run scene generation experiments.")
     parser.add_argument("--generator", type=str, required=True, choices=["diffuser", "sgp"], help="Generator backend to use.")
     parser.add_argument("--mode", type=str, required=True, choices=["chunk", "utterance"], help="Prompting mode.")
+    parser.add_argument("--prompt_mode", type=str, default="raw", choices=["raw", "refined"], help="Whether to use raw dialogue or a refined description.")
     parser.add_argument("--chunk_id", type=str, required=True, help="Target chunk ID from the CSV.")
     parser.add_argument("--character", type=str, required=True, help="Target character POV.")
-    parser.add_argument("--canvas_size", type=int, default=512, help="Canvas size for the image.")
-    parser.add_argument("--steps", type=int, default=20, help="Number of inference steps.")
-    parser.add_argument("--negative_prompt", type=str, default="text, people, blurry, low quality", help="Negative prompt.")
-    parser.add_argument("--style", type=str, default="Style: detailed sketch, composition, simple background", help="Positive style keywords.")
     args = parser.parse_args()
 
-    runner = ExperimentRunner(args.generator, args.style)
-    
-    if args.mode == 'chunk':
-        runner.run_chunk_mode(args.chunk_id, args.character, args)
-    else:
-        runner.run_utterance_mode(args.chunk_id, args.character, args)
+    with open("config.yaml", 'r') as f:
+        config = yaml.safe_load(f)
+
+    runner = ExperimentRunner(config, args.generator)
+    runner.run(args)
