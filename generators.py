@@ -38,6 +38,7 @@ class DiffuserGeneratorClient:
         self.api_url = api_url
 
     def generate(self, payload: dict) -> Optional[str]:
+        # print(payload)
         try:
             response = requests.post(self.api_url, json=payload, timeout=300)
             response.raise_for_status()

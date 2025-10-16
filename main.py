@@ -43,21 +43,22 @@ class ExperimentRunner:
             return None
         return df[(df['chunk_id'] == chunk_id) & (df['character'] == character)]
 
-    def _log_result(self, args: argparse.Namespace, prompt: str, filename: str, latency: float, step: int):
+    def _log_result(self, args: argparse.Namespace, prompt: str, filename: str, latency: float, gen_step: str, num_inference_steps: int):
         log_file = self.exp_config['log_file_path']
         file_exists = os.path.isfile(log_file)
         with open(log_file, 'a', newline='') as f:
             writer = csv.writer(f)
             if not file_exists:
-                writer.writerow(["timestamp", "generator", "mode", "prompt_mode", "chunk_id", "character", "step", "prompt", "output_file", "latency_s"])
+                writer.writerow(["timestamp", "generator", "mode", "prompt_mode", "chunk_id", "character", "gen_step", "prompt", "output_file", "latency_s", "num_inference_steps"])
             
             writer.writerow([
                 datetime.now().isoformat(), args.generator, args.mode, args.prompt_mode, args.chunk_id,
-                args.character, step, prompt, filename, f"{latency:.2f}"
+                args.character, gen_step, prompt, filename, f"{latency:.2f}", num_inference_steps
             ])
 
     def _get_description(self, prompt_mode: str, dialogue_df: pd.DataFrame) -> str:
-        raw_lines = (dialogue_df['character'] + ': ' + dialogue_df['text']).tolist()
+        #raw_lines = (dialogue_df['character'] + ': ' + dialogue_df['text']).tolist()
+        raw_lines = dialogue_df['text'].tolist()  # Character removed totally from text to be processed
         if prompt_mode == 'refined':
             print("Refining description from dialogue...")
             template = self.config['refiner']['prompt_template']
@@ -74,41 +75,52 @@ class ExperimentRunner:
             description = self._get_description(args.prompt_mode, df)
             self._run_single_generation(description, args, "chunk_0")
         else: # utterance mode
+            total_len = len(df)
             for idx, row in enumerate(df.itertuples()):
+                
+                # IF IMG ALREADY THERE, LOAD IT AND SKIP TO THAT STEP
+                if idx < args.start_idx:
+                    continue
+                if args.initial_file and os.path.isfile(args.initial_file):
+                    with open(args.initial_file, "rb") as f:
+                        self.current_image_b64 = base64.b64encode(f.read())
+
                 description = self._get_description(args.prompt_mode, pd.DataFrame([row]))
-                self._run_single_generation(description, args, f"utt_{idx}", is_modify=(idx > 0))
+                self._run_single_generation(description, args, f"{idx+1}_of_{total_len}", f"u{idx}")
                 if self.current_image_b64 is None and self.current_svg_text is None:
                     print("Stopping due to generation error in utterance mode.")
                     break
     
-    def _run_single_generation(self, description: str, args: argparse.Namespace, step_name: str):
+    def _run_single_generation(self, description: str, args: argparse.Namespace, gen_step: str, u_idx: str):
         params = self.gen_config['parameters']
-        templates = self.gen_config['prompt_templates']
+        templates = params['prompt_templates']
         
         is_first_step = self.current_image_b64 is None and self.current_svg_text is None
-        prompt_template = templates['initial'] if is_first_step else templates['modify']
+        prompt_template = templates['initial'] if is_first_step else templates[u_idx]
 
         prompt = prompt_template.format(
             description=description,
             positive_magic=params.get('positive_magic', ''),
             previous_svg=self.current_svg_text or ''
-        )
+        ).strip()
+
+        num_inference_steps = params.get('steps')
 
         payload = {
             "prompt": prompt,
-            "negative_prompt": params.get('negative_prompt', ''),
-            "num_inference_steps": params.get('steps', 20),
-            "canvas_height": params.get('canvas_size', 512),
+            "negative_prompt": params.get('negative_prompt'),
+            "num_inference_steps": num_inference_steps,
+            "canvas_height": params.get('canvas_size'),
             "initial_image_b64": self.current_image_b64,
         }
 
-        print(f"\n--- Running Step: {step_name} ---")
+        print(f"\n--- Running Step: {gen_step} ---")
         start_time = time.time()
         result = self.generator.generate(payload)
         latency = time.time() - start_time
 
         if result:
-            filename = f"{args.generator}_{args.mode}_{args.prompt_mode}_{args.character.lower()}_{args.chunk_id}_{step_name}.png"
+            filename = f"{args.generator}_{args.mode[:3]}_{args.prompt_mode[:3]}_{args.character.lower()}_{args.chunk_id}_{gen_step}_{num_inference_steps}.png"
             output_path = os.path.join(self.exp_config['output_dir'], filename)
             os.makedirs(self.exp_config['output_dir'], exist_ok=True)
             
@@ -123,7 +135,7 @@ class ExperimentRunner:
             if self.generator_choice == 'sgp' and isinstance(result, dict):
                 self.current_svg_text = result['svg_text']
 
-            self._log_result(args, prompt, filename, latency, step_name)
+            self._log_result(args, prompt, filename, latency, gen_step, num_inference_steps)
         else:
             self.current_image_b64 = None
             self.current_svg_text = None
@@ -135,6 +147,8 @@ if __name__ == "__main__":
     parser.add_argument("--prompt_mode", type=str, default="raw", choices=["raw", "refined"], help="Whether to use raw dialogue or a refined description.")
     parser.add_argument("--chunk_id", type=str, required=True, help="Target chunk ID from the CSV.")
     parser.add_argument("--character", type=str, required=True, help="Target character POV.")
+    parser.add_argument("--initial_file", type=str, default=None)
+    parser.add_argument("--start_idx", type=int, default=0)
     args = parser.parse_args()
 
     with open("config.yaml", 'r') as f:

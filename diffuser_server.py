@@ -6,15 +6,17 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from typing import Optional
 
-from transformers import BitsAndBytesConfig as TransformersBitsAndBytesConfig
+# from transformers import BitsAndBytesConfig as TransformersBitsAndBytesConfig
 from transformers import Qwen2_5_VLForConditionalGeneration
-from diffusers import BitsAndBytesConfig as DiffusersBitsAndBytesConfig
-from diffusers import AutoencoderKLQwenImage 
+# from diffusers import BitsAndBytesConfig as DiffusersBitsAndBytesConfig
+# from diffusers import AutoencoderKLQwenImage
 from diffusers import QwenImageEditPipeline, QwenImageTransformer2DModel
+from diffusers import QwenImageEditPlusPipeline
 from PIL import Image
 
 class DiffuserGenerator:
-    def __init__(self, model_id="Qwen/Qwen-Image-Edit"):
+    # def __init__(self, model_id="Qwen/Qwen-Image-Edit"):
+    def __init__(self, model_id="Qwen/Qwen-Image-Edit-2509"):
         print("Initializing DiffuserGenerator and loading models...")
         self.model_id = model_id
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -22,34 +24,35 @@ class DiffuserGenerator:
         print(f"Using device: {self.device}")
 
         #--- Load and store all components as instance attributes ---
-        img_quant_config = DiffusersBitsAndBytesConfig(
-            load_in_4bit=True,
-            bnb_4bit_quant_type="nf4",
-            bnb_4bit_compute_dtype=self.torch_dtype,
-            llm_int8_skip_modules=["transformer_blocks.0.img_mod"],
-        )
+        # img_quant_config = DiffusersBitsAndBytesConfig(
+        #     load_in_4bit=True,
+        #     bnb_4bit_quant_type="nf4",
+        #     bnb_4bit_compute_dtype=self.torch_dtype,
+        #     llm_int8_skip_modules=["transformer_blocks.0.img_mod"],
+        # )
         self.transformer = QwenImageTransformer2DModel.from_pretrained(
             self.model_id,
             subfolder="transformer",
             torch_dtype=self.torch_dtype,
             local_files_only=True,
-            quantization_config=img_quant_config,
+            # quantization_config=img_quant_config,
         ).to(self.device)
 
-        text_quant_config = TransformersBitsAndBytesConfig(
-            load_in_4bit=True,
-            bnb_4bit_quant_type="nf4",
-            bnb_4bit_compute_dtype=self.torch_dtype
-        )
+        # text_quant_config = TransformersBitsAndBytesConfig(
+        #     load_in_4bit=True,
+        #     bnb_4bit_quant_type="nf4",
+        #     bnb_4bit_compute_dtype=self.torch_dtype
+        # )
         self.text_encoder = Qwen2_5_VLForConditionalGeneration.from_pretrained(
             self.model_id,
             subfolder="text_encoder",
             torch_dtype=self.torch_dtype,
             local_files_only=True,
-            quantization_config=text_quant_config,
+            # quantization_config=text_quant_config,
         ).to(self.device)
 
-        self.pipe = QwenImageEditPipeline.from_pretrained(
+        # self.pipe = QwenImageEditPipeline.from_pretrained(
+        self.pipe = QwenImageEditPlusPipeline.from_pretrained(
             self.model_id,
             transformer=self.transformer,
             text_encoder=self.text_encoder,
@@ -57,12 +60,10 @@ class DiffuserGenerator:
             local_files_only=True,
         ).to(self.device)
 
-        self.generator = torch.Generator(device=self.device)
         print("Diffuser models loaded successfully.")
-        
 
     def generate_image(self, initial_image_b64: Optional[str], prompt: str, negative_prompt: str, num_inference_steps: int, canvas_height: int) -> str:
-        image = Image.new('RGB', (canvas_height, canvas_height), (240, 240, 240))
+        image = Image.new('RGB', (canvas_height, canvas_height), (255, 255, 255))
         if initial_image_b64:
             img_data = base64.b64decode(initial_image_b64)
             image = Image.open(BytesIO(img_data)).convert("RGB")
@@ -71,7 +72,9 @@ class DiffuserGenerator:
             "image": image,
             "prompt": prompt,
             "negative_prompt": negative_prompt,
-            "generator": self.generator,
+            "generator": torch.manual_seed(0),  # SEED
+            "true_cfg_scale": 4.0,
+            #"guidance_scale": 1.0,
             "num_inference_steps": num_inference_steps
         }
         output_image = self.pipe(**inputs).images[0]
@@ -85,10 +88,10 @@ generator = DiffuserGenerator()
 
 class GenerationRequest(BaseModel):
     prompt: str
-    initial_image_b64: Optional[str] = None
-    negative_prompt: Optional[str] = ""
-    num_inference_steps: int = 20
-    canvas_height: int = 1024
+    initial_image_b64: Optional[str]
+    negative_prompt: Optional[str]
+    num_inference_steps: int
+    canvas_height: int
 
 @app.post("/generate_diff")
 def generate_diff(request: GenerationRequest):
