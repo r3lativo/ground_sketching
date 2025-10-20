@@ -172,13 +172,16 @@ class DiffuserGenerator:
             except Exception as e:
                 print(f"Warning: Could not decode initial_image_b64. Using blank canvas. Error: {e}")
 
+        seed = torch.manual_seed(params.get("seed", 0))
+
         # Step 3: Prepare pipeline inputs
         inputs = {
             "image": image,
             "prompt": prompt,
             "negative_prompt": params.get("negative_prompt"),
-            "generator": torch.manual_seed(0),
-            "true_cfg_scale": 4.0,
+            "generator": seed,
+            "true_cfg_scale": params.get("true_cfg_scale"),
+            "guidance_scale": params.get("guidance_scale"),
             "num_inference_steps": params.get("num_inference_steps")
         }
 

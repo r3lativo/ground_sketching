@@ -36,7 +36,7 @@ class ExperimentRunner:
             print(f"Error: Missing required key in CSV file: {e}")
             return None
 
-    def _log_result(self, gen_step: str, final_prompt: str, filename: str, latency: float, num_steps: int):
+    def _log_result(self, gen_step: str, final_prompt: str, negative_prompt:str, filename: str, latency: float, num_steps: int):
         log_file = self.config['log_file_path']
         os.makedirs(os.path.dirname(log_file), exist_ok=True)
         file_exists = os.path.isfile(log_file)
@@ -47,15 +47,15 @@ class ExperimentRunner:
                 writer.writerow([
                     "timestamp", "experiment_name", "mode",
                     "chunk_id", "character", "gen_step",
-                    "final_prompt", "output_file", "latency_s",
-                    "num_inference_steps"
+                    "final_prompt", "negative_prompt", "output_file",
+                    "latency_s", "num_inference_steps"
                 ])
             # Add actual content
             writer.writerow([
                 datetime.now().isoformat(), self.config['experiment_name'], self.config['mode'],
                 self.config['chunk_id'], self.config['character'], gen_step,
-                final_prompt, filename, f"{latency:.2f}",
-                num_steps
+                final_prompt, negative_prompt, filename,
+                f"{latency:.2f}", num_steps
             ])
 
     def run(self):
@@ -134,7 +134,7 @@ class ExperimentRunner:
             print(f"   Image saved to {output_path} (Latency: {latency:.2f}s)")
 
             self.current_image_b64 = result_b64
-            self._log_result(gen_step, final_prompt, filename, latency, num_steps)
+            self._log_result(gen_step, final_prompt, current_params.get("negative_prompt"), filename, latency, num_steps)
         else:
             print("   Generation failed. Received no image from the server.")
             self.current_image_b64 = None

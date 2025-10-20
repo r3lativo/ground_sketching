@@ -12,5 +12,3 @@ text_encoder_class: "transformers.Qwen2_5_VLForConditionalGeneration"
 # Subfolders within the Hugging Face repository where components are stored
 transformer_subfolder: "transformer"
 text_encoder_subfolder: "text_encoder"
-
-# NOTE: Quantization settings will be added in a future phase.
