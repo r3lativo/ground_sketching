@@ -1,0 +1,37 @@
+# A unique name for this experiment run. Used for naming output files.
+experiment_name: "povA_utterance_raw_v1"
+description: "Generates an image per utterance for chunk 001 from Character A's POV, using raw dialogue as the prompt."
+
+# --- Data Source ---
+csv_file_path: "data/conversation.csv"
+chunk_id: "001"
+character: "Nathan"
+
+# --- Generation Logic ---
+# 'chunk': a single image for the whole conversation chunk.
+# 'utterance': one image per line of dialogue, evolving from the previous one.
+mode: "utterance"
+
+# --- Prompting ---
+# In this phase, we only use 'initial' and 'iterative' templates.
+# The {description} placeholder will be filled with the dialogue text.
+prompt_templates:
+  initial: "A cinematic, wide-shot scene of {description}"
+  iterative: "The scene continues: {description}"
+
+# --- Model & Server ---
+# The API endpoint of the running diffuser_server.
+api_url: "http://localhost:8000/generate"
+
+# Default parameters to send with every API request.
+# These can be specific to the model being used.
+parameters:
+  initial_num_steps: 50      # Steps for the very first image
+  num_inference_steps: 30
+  canvas_size: 1024
+  negative_prompt: "text, watermark, signature, blurry, low-quality"
+
+# --- Output ---
+# Where to save the generated images and log file.
+output_dir: "results/"
+log_file_path: "results/experiment_log.csv"

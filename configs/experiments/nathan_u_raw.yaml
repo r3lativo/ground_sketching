@@ -1,0 +1,30 @@
+experiment_name: "nathan_utt_raw"
+
+# --- Data Source ---
+csv_file_path: "data/test.csv"
+chunk_id: "001"
+character: "Nathan"
+
+# --- Generation Logic ---
+# 'chunk': a single image for the whole conversation chunk.
+# 'utterance': one image per line of dialogue, evolving from the previous one.
+mode: "utterance"
+
+# --- Prompt Refinement Settings ---
+refine_prompt: false  # Set to true to enable the server-side refiner
+refiner_template_name: "sketch_description" # Matches the .jinja2 filename
+
+# --- Model & Server ---
+api_url: "http://localhost:8000/generate"
+
+# Default generation parameters for the image model
+parameters:
+  initial_num_steps: 30
+  num_inference_steps: 30
+  canvas_size: 512
+  negative_prompt: "text, signature, watermark, blurry, low quality, color"
+  true_cfg_scale: 4
+
+# --- Output ---
+output_dir: "results/"
+log_file_path: "results/experiment_log.csv"

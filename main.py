@@ -1,158 +1,151 @@
-# main.py
+# run_experiment.py
 import argparse
 import os
 import base64
 import pandas as pd
 import yaml
 import csv
-from io import BytesIO
-from PIL import Image
-from typing import Optional, Dict
-from datetime import datetime
 import time
+from datetime import datetime
+from typing import Optional, Dict, List
 
-from generators import DiffuserGeneratorClient, SgpGeneratorClient, RefinerClient
+from api_clients import DiffuserApiClient
 
 class ExperimentRunner:
-    def __init__(self, config: Dict, generator_choice: str):
-        self.config = config
-        self.generator_choice = generator_choice
-        self.gen_config = config[generator_choice]
-        self.exp_config = config['experiment_settings']
-
-        if generator_choice == "diffuser":
-            self.generator = DiffuserGeneratorClient(self.gen_config['api_url'])
-        else:
-            self.generator = SgpGeneratorClient(self.gen_config['api_url'])
+    def __init__(self, config_path: str):
+        with open(config_path, 'r') as f:
+            self.config: Dict = yaml.safe_load(f)
         
-        self.refiner = RefinerClient(config['sgp']['refiner_api_url'])
-        
+        print(f"Loaded experiment: {self.config['experiment_name']}")
+        self.client = DiffuserApiClient(self.config['api_url'])
         self.current_image_b64: Optional[str] = None
-        self.current_svg_text: Optional[str] = None
 
-    def _load_data(self, chunk_id: str, character: str) -> Optional[pd.DataFrame]:
+    def _load_data(self) -> Optional[pd.DataFrame]:
         try:
-            df = pd.read_csv(self.exp_config['csv_file_path'], dtype={'chunk_id': str})
-            perspective_df = df[(df['chunk_id'] == chunk_id) & (df['character'] == character)]
+            exp_conf = self.config
+            df = pd.read_csv(exp_conf['csv_file_path'], dtype={'chunk_id': str})
+            perspective_df = df[(df['chunk_id'] == exp_conf['chunk_id']) & (df['character'] == exp_conf['character'])]
             if perspective_df.empty:
-                print(f"No lines found for '{character}' in chunk '{chunk_id}'.")
+                print(f"No lines found for character '{exp_conf['character']}' in chunk '{exp_conf['chunk_id']}'.")
                 return None
             return perspective_df
         except FileNotFoundError:
-            print(f"Error: The file '{CSV_FILE_PATH}' was not found.")
+            print(f"Error: The file '{exp_conf['csv_file_path']}' was not found.")
             return None
-        return df[(df['chunk_id'] == chunk_id) & (df['character'] == character)]
+        except KeyError as e:
+            print(f"Error: Missing required key in CSV file: {e}")
+            return None
 
-    def _log_result(self, args: argparse.Namespace, prompt: str, filename: str, latency: float, gen_step: str, num_inference_steps: int):
-        log_file = self.exp_config['log_file_path']
+    def _log_result(self, gen_step: str, final_prompt: str, filename: str, latency: float, num_steps: int):
+        log_file = self.config['log_file_path']
+        os.makedirs(os.path.dirname(log_file), exist_ok=True)
         file_exists = os.path.isfile(log_file)
         with open(log_file, 'a', newline='') as f:
             writer = csv.writer(f)
             if not file_exists:
-                writer.writerow(["timestamp", "generator", "mode", "prompt_mode", "chunk_id", "character", "gen_step", "prompt", "output_file", "latency_s", "num_inference_steps"])
-            
+                # Write the headers
+                writer.writerow([
+                    "timestamp", "experiment_name", "mode",
+                    "chunk_id", "character", "gen_step",
+                    "final_prompt", "output_file", "latency_s",
+                    "num_inference_steps"
+                ])
+            # Add actual content
             writer.writerow([
-                datetime.now().isoformat(), args.generator, args.mode, args.prompt_mode, args.chunk_id,
-                args.character, gen_step, prompt, filename, f"{latency:.2f}", num_inference_steps
+                datetime.now().isoformat(), self.config['experiment_name'], self.config['mode'],
+                self.config['chunk_id'], self.config['character'], gen_step,
+                final_prompt, filename, f"{latency:.2f}",
+                num_steps
             ])
 
-    def _get_description(self, prompt_mode: str, dialogue_df: pd.DataFrame) -> str:
-        #raw_lines = (dialogue_df['character'] + ': ' + dialogue_df['text']).tolist()
-        raw_lines = dialogue_df['text'].tolist()  # Character removed totally from text to be processed
-        if prompt_mode == 'refined':
-            print("Refining description from dialogue...")
-            template = self.config['refiner']['prompt_template']
-            return self.refiner.refine(raw_lines, template)
-        return ' '.join(raw_lines)
-
-    def run(self, args: argparse.Namespace):
-        df = self._load_data(args.chunk_id, args.character)
-        if df is None or df.empty:
-            print("No data found for the specified criteria.")
+    def run(self):
+        """Main execution method to run the experiment."""
+        dialogue_df = self._load_data()
+        if dialogue_df is None or dialogue_df.empty:
+            print("Aborting experiment due to data loading issues.")
             return
 
-        if args.mode == 'chunk':
-            description = self._get_description(args.prompt_mode, df)
-            self._run_single_generation(description, args, "chunk_0")
-        else: # utterance mode
-            total_len = len(df)
-            for idx, row in enumerate(df.itertuples()):
-                
-                # IF IMG ALREADY THERE, LOAD IT AND SKIP TO THAT STEP
-                if idx < args.start_idx:
-                    continue
-                if args.initial_file and os.path.isfile(args.initial_file):
-                    with open(args.initial_file, "rb") as f:
-                        self.current_image_b64 = base64.b64encode(f.read())
-
-                description = self._get_description(args.prompt_mode, pd.DataFrame([row]))
-                self._run_single_generation(description, args, f"{idx+1}_of_{total_len}", f"u{idx}")
-                if self.current_image_b64 is None and self.current_svg_text is None:
-                    print("Stopping due to generation error in utterance mode.")
-                    break
-    
-    def _run_single_generation(self, description: str, args: argparse.Namespace, gen_step: str, u_idx: str):
-        params = self.gen_config['parameters']
-        templates = params['prompt_templates']
+        if self.config['mode'] == 'chunk':
+            dialogue_lines = dialogue_df['text'].tolist()
+            # For chunk mode, the index is always 0 (it's the first and only step)
+            self._run_single_generation(dialogue_lines, 0, "chunk_0")
         
-        is_first_step = self.current_image_b64 is None and self.current_svg_text is None
-        prompt_template = templates['initial'] if is_first_step else templates[u_idx]
+        elif self.config['mode'] == 'utterance':
+            total_steps = len(dialogue_df)
+            for idx, row in enumerate(dialogue_df.itertuples()):
+                dialogue_lines = [row.text] # Send as a list with one item
+                gen_step_name = f"u{idx}_of_{total_steps-1}"
 
-        prompt = prompt_template.format(
-            description=description,
-            positive_magic=params.get('positive_magic', ''),
-            previous_svg=self.current_svg_text or ''
-        ).strip()
+                self._run_single_generation(dialogue_lines, idx, gen_step_name)
+                if self.current_image_b64 is None:
+                    print(f"Stopping utterance sequence due to generation error at step {gen_step_name}.")
+                    break
 
-        num_inference_steps = params.get('steps')
+    def _run_single_generation(self, dialogue_lines: List[str], idx: int, gen_step: str):
+        """
+        Prepares and sends a request, dynamically setting the number of inference steps.
 
+        Args:
+            dialogue_lines (List[str]): The dialogue for this step.
+            idx (int): The index of the current step (0 for the first, 1+ for subsequent).
+            gen_step (str): A descriptive name for the generation step (for logging).
+        """
+        # --- DYNAMIC PARAMETER LOGIC ---
+        # Make a copy of the parameters to avoid modifying the original config dict
+        current_params = self.config.get("parameters", {}).copy()
+        
+        # Check if we are on the first step (idx == 0)
+        if idx == 0 and 'initial_num_steps' in current_params:
+            # Use the initial, higher step count
+            num_steps = current_params['initial_num_steps']
+            print(f"   Using initial steps: {num_steps}")
+        else:
+            # Use the standard, lower step count for subsequent steps
+            num_steps = current_params.get('num_inference_steps', 30) # Default to 30 if not specified
+        
+        # Set the final 'num_inference_steps' in our temporary params dictionary
+        current_params['num_inference_steps'] = num_steps
+        # --- END OF DYNAMIC LOGIC ---
+
+        # Construct the payload for the new /generate endpoint
         payload = {
-            "prompt": prompt,
-            "negative_prompt": params.get('negative_prompt'),
-            "num_inference_steps": num_inference_steps,
-            "canvas_height": params.get('canvas_size'),
+            "dialogue_lines": dialogue_lines,
+            "refine_prompt": self.config.get("refine_prompt", False),
+            "refiner_template_name": self.config.get("refiner_template_name", "default"),
             "initial_image_b64": self.current_image_b64,
+            "parameters": current_params # Use the modified parameters
         }
 
-        print(f"\n--- Running Step: {gen_step} ---")
+        print(f"\n--- Running Step: {gen_step} (Refine: {payload['refine_prompt']}) ---")
+        
         start_time = time.time()
-        result = self.generator.generate(payload)
+        result = self.client.generate(payload)
         latency = time.time() - start_time
 
         if result:
-            filename = f"{args.generator}_{args.mode[:3]}_{args.prompt_mode[:3]}_{args.character.lower()}_{args.chunk_id}_{gen_step}_{num_inference_steps}.png"
-            output_path = os.path.join(self.exp_config['output_dir'], filename)
-            os.makedirs(self.exp_config['output_dir'], exist_ok=True)
+            final_prompt, result_b64 = result  # Unpack the valid result
             
-            image_b64 = result if isinstance(result, str) else result['image_b64']
+            filename = f"{self.config['experiment_name']}_{gen_step}.png"
+            output_path = os.path.join(self.config['output_dir'], filename)
+            os.makedirs(os.path.dirname(self.config['output_dir']), exist_ok=True)
             
             with open(output_path, "wb") as f:
-                f.write(base64.b64decode(image_b64))
-            print(f"Image saved to {output_path}")
+                f.write(base64.b64decode(result_b64))
+            print(f"   Image saved to {output_path} (Latency: {latency:.2f}s)")
 
-            # Update state for next iteration
-            self.current_image_b64 = image_b64
-            if self.generator_choice == 'sgp' and isinstance(result, dict):
-                self.current_svg_text = result['svg_text']
-
-            self._log_result(args, prompt, filename, latency, gen_step, num_inference_steps)
+            self.current_image_b64 = result_b64
+            self._log_result(gen_step, final_prompt, filename, latency, num_steps)
         else:
+            print("   Generation failed. Received no image from the server.")
             self.current_image_b64 = None
-            self.current_svg_text = None
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Run scene generation experiments.")
-    parser.add_argument("--generator", type=str, required=True, choices=["diffuser", "sgp"], help="Generator backend to use.")
-    parser.add_argument("--mode", type=str, required=True, choices=["chunk", "utterance"], help="Prompting mode.")
-    parser.add_argument("--prompt_mode", type=str, default="raw", choices=["raw", "refined"], help="Whether to use raw dialogue or a refined description.")
-    parser.add_argument("--chunk_id", type=str, required=True, help="Target chunk ID from the CSV.")
-    parser.add_argument("--character", type=str, required=True, help="Target character POV.")
-    parser.add_argument("--initial_file", type=str, default=None)
-    parser.add_argument("--start_idx", type=int, default=0)
+    parser = argparse.ArgumentParser(description="Run scene generation experiments from a config file.")
+    parser.add_argument("--config", type=str, required=True, help="Path to the experiment's YAML configuration file.")
     args = parser.parse_args()
 
-    with open("config.yaml", 'r') as f:
-        config = yaml.safe_load(f)
-
-    runner = ExperimentRunner(config, args.generator)
-    runner.run(args)
+    if not os.path.isfile(args.config):
+        print(f"Error: Experiment configuration file not found at {args.config}")
+    else:
+        runner = ExperimentRunner(config_path=args.config)
+        runner.run()

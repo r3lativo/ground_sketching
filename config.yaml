@@ -52,8 +52,6 @@ diffuser:
 # Configuration profile for the SGP (SVG) model
 sgp:
   api_url: "http://12.0.0.1:8001/generate_svg"
-  # URL for the new text refining endpoint
-  refiner_api_url: "http://127.0.0.1:8001/refine_description"
   # Default parameters for the SGP model
   parameters:
     canvas_size: 512 # Used for rendering the final PNG
@@ -64,6 +62,7 @@ sgp:
 
 # Prompt for the text refiner model
 refiner:
+  refiner_api_url: " " #TODO
   prompt_template: >
     You are an expert scene descriptor. Your task is to read the following utterance from a single character's point of view and refine them into a single, clear, and descriptive paragraph.
     Instructions:
