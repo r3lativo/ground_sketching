@@ -7,10 +7,15 @@ import time
 from datetime import datetime
 import pandas as pd
 import yaml
-from typing import Optional, Dict, List 
+from typing import Optional, Dict, List
 
+import string
+
+from prompt_utils import rewrite, polish_edit_prompt
 from api_clients import DiffuserApiClient # The client class that handles communication with the generation server
 from config_models import ExperimentConfig # The standard configuration for the experiment
+
+alphabet = string.ascii_lowercase
 
 class ExperimentRunner:
     """
@@ -118,7 +123,7 @@ class ExperimentRunner:
 
         # Branch the execution logic based on the 'mode' specified in the config file.
         if self.config.mode == 'chunk':
-            gen_step_name = "chunk_0"
+            gen_step_name = self.config.chunk_id
             output_path = self._get_output_path(gen_step_name)
             
             # --- RESUMABILITY LOGIC ---
@@ -127,31 +132,34 @@ class ExperimentRunner:
                 return # The whole experiment is just one step, so we can exit.
             # --- END OF RESUMABILITY LOGIC ---
 
-            dialogue_lines = dialogue_df['text'].tolist()
+            dialogue_lines = dialogue_df['prompt'].tolist()
             self._run_single_generation(dialogue_lines, 0, gen_step_name)
         
         # In 'utterance' mode, we loop through each dialogue line one by one.
         elif self.config.mode == 'utterance':
             total_steps = len(dialogue_df)
+            
             for idx, row in enumerate(dialogue_df.itertuples()):
-                gen_step_name = f"u{idx}_of_{total_steps-1}"
-                output_path = self._get_output_path(gen_step_name)
+                dialogue_lines = row.prompt.split('$$$')
 
-                # --- RESUMABILITY LOGIC ---
-                if os.path.exists(output_path) and not self.force_overwrite:
-                    print(f"Skipping step {gen_step_name}, output already exists.")
-                    # IMPORTANT: Load the existing image to maintain the chain.
-                    with open(output_path, "rb") as f:
-                        self.current_image_b64 = base64.b64encode(f.read()).decode("utf-8")
-                    continue # Move to the next iteration of the loop.
-                # --- END OF RESUMABILITY LOGIC ---
-
-                dialogue_lines = [row.text]
-                self._run_single_generation(dialogue_lines, idx, gen_step_name)
+                for i, d in enumerate(dialogue_lines):
+                    gen_step_name = f"{idx}{alphabet[i]}_of_{total_steps-1}"
+                    output_path = self._get_output_path(gen_step_name)
                 
-                if self.current_image_b64 is None:
-                    print(f"Stopping utterance sequence due to generation error at step {gen_step_name}.")
-                    break
+                    # --- RESUMABILITY LOGIC ---
+                    if os.path.exists(output_path) and not self.force_overwrite:
+                        print(f"Skipping step {gen_step_name}, output already exists.")
+                        # IMPORTANT: Load the existing image to maintain the chain.
+                        with open(output_path, "rb") as f:
+                            self.current_image_b64 = base64.b64encode(f.read()).decode("utf-8")
+                        continue # Move to the next iteration of the loop.
+                    # --- END OF RESUMABILITY LOGIC ---
+
+                    self._run_single_generation([d], idx+i, gen_step_name)
+                
+                    if self.current_image_b64 is None:
+                        print(f"Stopping utterance sequence due to generation error at step {gen_step_name}.")
+                        break
 
     def _run_single_generation(self, dialogue_lines: List[str], idx: int, gen_step: str):
         """
