@@ -1,5 +1,5 @@
 # Only need to specify values that override the default config_models.py
-experiment_name: "nathan_utt_raw"
+experiment_name: "nathan_chunk_ref"
 description: "hehehe"
 
 # --- Data Source ---
@@ -8,9 +8,12 @@ chunk_id: "001"
 character: "Nathan"
 
 # --- Generation Logic ---
-mode: "utterance"
+mode: "chunk"
+
+# --- Refinement ---
+refine_prompt: True
+refiner_template_name: "sketch"
 
 # Default generation parameters for the image model
 parameters:
-  initial_num_steps: 30
-  # guidance_scale is ignored since the model is not guidance-distilled.
+  initial_num_steps: 50
