@@ -1,4 +1,8 @@
 # diffuser_server.py
+from transformers import AutoProcessor
+from vllm.multimodal import MultiModalDataDict
+from qwen_vl_utils import process_vision_info, decode_base64_to_pil, load_image
+
 import torch
 import base64
 import yaml
@@ -13,6 +17,8 @@ from jinja2 import Environment, FileSystemLoader
 from transformers import AutoTokenizer
 from PIL import Image
 from vllm import LLM, SamplingParams
+
+
 
 # --- Helper Functions ---
 def _get_class_from_string(class_path: str):
@@ -33,6 +39,95 @@ def _extract_answer(raw_output: str) -> str:
         return parts[-1].strip()
     return raw_output
 
+class VLModel:
+    """Manages a Vision-Language model using vLLM for image-text to text generation."""
+    def __init__(self, model_id: str, dtype: str = "auto"):
+        print(f"Initializing vLLM-based VLModel with model: {model_id}")
+        
+        # Load the vLLM engine for the multimodal model
+        self.llm = LLM(
+            model=model_id,
+            trust_remote_code=True, # Important for many VL models
+            tensor_parallel_size=torch.cuda.device_count(),
+            dtype=dtype,
+            gpu_memory_utilization=0.4 # Allocate more memory for this large model
+        )
+        print("VLModel vLLM engine loaded.")
+
+        # The processor handles both text tokenization and image preprocessing.
+        self.processor = AutoProcessor.from_pretrained(model_id, trust_remote_code=True)
+        print("VLModel processor loaded.")
+
+        # Default sampling parameters for text generation.
+        self.sampling_params = SamplingParams(temperature=0.7, top_p=0.95, max_tokens=1024)
+
+    def _prepare_messages(self, messages: List[Dict]) -> List[Dict]:
+        """
+        Processes messages to handle image data.
+        If an image is a base64 string, it's decoded to a PIL Image.
+        If it's a URL/path, it's loaded.
+        """
+        for message in messages:
+            if not isinstance(message.get('content'), list):
+                continue
+            for item in message['content']:
+                if item.get('type') == 'image':
+                    image_data = item['image']
+                    try:
+                        # Assume it's a base64 string first
+                        item['image'] = decode_base64_to_pil(image_data)
+                    except Exception:
+                        # If that fails, assume it's a URL or local path
+                        item['image'] = load_image(image_data)
+        return messages
+
+    def generate(self, messages: List[Dict]) -> str:
+        """
+        Generates a text description from a multimodal conversation history.
+        
+        Args:
+            messages: A list of message dictionaries, following the Qwen-VL format.
+                      Images can be provided as URLs, local paths, or base64 strings.
+        """
+        try:
+            # 1. Pre-process messages to load/decode images into PIL objects
+            processed_messages = self._prepare_messages(messages)
+
+            # 2. Use the processor's chat template to create the final text prompt string
+            text_prompt = self.processor.apply_chat_template(
+                processed_messages, tokenize=False, add_generation_prompt=True
+            )
+
+            # 3. Use the Qwen utility to extract PIL Images from the message list
+            image_inputs, _ = process_vision_info(processed_messages)
+
+            # 4. Use the full processor to get the final model inputs dictionary
+            #    This converts PIL images to tensors and gets other required vision data.
+            final_inputs = self.processor(
+                text=[text_prompt],
+                images=image_inputs,
+                padding=True,
+                return_tensors="pt"
+            )
+
+            # 5. Package the vision data for vLLM's `multi_modal_data` argument
+            multi_modal_data = MultiModalData(
+                type=MultiModalData.Type.IMAGE,
+                data=final_inputs['pixel_values'].to(self.llm.device, dtype=self.llm.dtype)
+            )
+
+            # 6. Run inference with vLLM
+            outputs = self.llm.generate(
+                prompts=[text_prompt],
+                sampling_params=self.sampling_params,
+                multi_modal_data={'image': multi_modal_data}
+            )
+
+            return outputs[0].outputs[0].text
+
+        except Exception as e:
+            print(f"Error during VLModel generation: {e}")
+            return f"An error occurred: {e}"
 
 class TextRefiner:
     """Manages a text generation model using vLLM for high-performance prompt refinement."""
@@ -44,10 +139,8 @@ class TextRefiner:
         
         # Convert torch dtype to the string format vLLM expects.
         dtype_str = "auto"
-        if dtype == torch.bfloat16:
-            dtype_str = "bfloat16"
-        elif dtype == torch.float16:
-            dtype_str = "half"
+        if dtype == torch.bfloat16: dtype_str = "bfloat16"
+        elif dtype == torch.float16: dtype_str = "half"
         
         # Initialize the vLLM engine. `gpu_memory_utilization` limits VRAM usage,
         # which is crucial for running another large model (the diffuser) on the same GPU.
@@ -194,8 +287,14 @@ class GenerationRequest(BaseModel):
     initial_image_b64: Optional[str] = None
     parameters: Dict
 
+class VLGenerationRequest(BaseModel):
+    messages: List[Dict]
+    # sampling_params: Optional[Dict] = None
+
 # Global variable to hold the initialized generator instance.
 generator: Optional[DiffuserGenerator] = None
+text_refiner: Optional[TextRefiner] = None # Added for clarity, though it's inside generator
+vl_model: Optional[VLModel] = None # New global for the VL model
 
 @app.post("/generate")
 def generate(request: GenerationRequest):
@@ -213,6 +312,15 @@ def generate(request: GenerationRequest):
     # Return a JSON object containing the final prompt and the image data.
     return {"prompt": prompt, "image_b64": img_b64}
 
+# --- ADD THE NEW /vlm_generate ENDPOINT ---
+@app.post("/vlm_generate")
+def vlm_generate(request: VLGenerationRequest):
+    """The API endpoint for Vision-Language Model generation."""
+    if not vl_model:
+        return {"error": "VL Model not initialized"}, 503
+    
+    generated_text = vl_model.generate(messages=request.messages)
+    return {"text": generated_text}
 
 if __name__ == "__main__":
     import uvicorn
@@ -221,6 +329,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Configurable Diffuser Model Server")
     parser.add_argument("--server-config", type=str, default="configs/server_config.yaml")
     parser.add_argument("--model-config", type=str, required=True)
+    parser.add_argument("--load_refiner", action="store_true")
+    parser.add_argument("--load_vl", action="store_true")
     args = parser.parse_args()
 
     # Load server and model configurations from YAML files.
@@ -229,12 +339,19 @@ if __name__ == "__main__":
     with open(args.model_config, 'r') as f:
         model_config = yaml.safe_load(f)
 
-    # Initialize the text refiner model.
-    text_refiner = TextRefiner(
-        model_id=server_config['refiner_model_id'],
-        device="cuda" if torch.cuda.is_available() else "cpu",
-        dtype=torch.bfloat16 if torch.cuda.is_available() else torch.float32,
-    )
+    if args.load_refiner:
+        # Initialize the text refiner model.
+        text_refiner = TextRefiner(
+            model_id=server_config['refiner_model_id'],
+            device="cuda" if torch.cuda.is_available() else "cpu",
+            dtype=torch.bfloat16 if torch.cuda.is_available() else torch.float32,
+        )
+    
+    if args.load_vl:
+        vl_model = VLModel(
+            model_id=server_config['vl_model_id'],
+            dtype="auto" # Let vLLM decide the best dtype for this quantized model
+        )
     
     # Initialize the main image generator, passing the refiner to it.
     generator = DiffuserGenerator(config=model_config, refiner=text_refiner)
