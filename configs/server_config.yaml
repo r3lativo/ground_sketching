@@ -5,4 +5,5 @@ host: "0.0.0.0"
 port: 8000
 
 # Hugging Face model ID for the text refiner
-refiner_model_id: "/linkhome/rech/genxzs01/upa38qy/.cache/huggingface/hub/models--Qwen--Qwen2.5-1.5B-Instruct/snapshots/989aa7980e4cf806f80c7fef2b1adb7bc71aa306" # "Qwen/Qwen2.5-1.5B-Instruct"
+refiner_model_id: "/linkhome/rech/genxzs01/upa38qy/.cache/huggingface/hub/models--Qwen--Qwen2.5-1.5B-Instruct/snapshots/989aa7980e4cf806f80c7fef2b1adb7bc71aa306"  # "Qwen/Qwen2.5-1.5B-Instruct"
+refiner_model_id: "/linkhome/rech/genxzs01/upa38qy/.cache/huggingface/hub/models--Qwen--Qwen2.5-VL-32B-Instruct-AWQ/snapshots/66c370b74a18e7b1e871c97918f032ed3578dfef"  # "Qwen/Qwen2.5-VL-32B-Instruct-AWQ" 
