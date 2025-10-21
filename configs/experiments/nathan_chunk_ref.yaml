@@ -17,3 +17,7 @@ refiner_template_name: "sketch"
 # Default generation parameters for the image model
 parameters:
   initial_num_steps: 50
+
+refiner_parameters:
+  temperature: 0.7
+  max_tokens: 250

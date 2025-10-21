@@ -12,5 +12,5 @@ mode: "utterance"
 
 # Default generation parameters for the image model
 parameters:
-  initial_num_steps: 30
+  initial_num_steps: 50
   # guidance_scale is ignored since the model is not guidance-distilled.

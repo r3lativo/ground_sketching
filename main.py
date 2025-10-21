@@ -178,7 +178,8 @@ class ExperimentRunner:
             "refine_prompt": self.config.refine_prompt,
             "refiner_template_name": self.config.refiner_template_name,
             "initial_image_b64": self.current_image_b64,
-            "parameters": current_params
+            "parameters": current_params,
+            "refiner_parameters": self.config.refiner_parameters.model_dump()
         }
 
         print(f"\n--- Running Step: {gen_step} (Refine: {payload['refine_prompt']}) ---")

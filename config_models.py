@@ -20,6 +20,18 @@ class GenerationParameters(BaseModel):
         extra = 'allow'
 
 
+class RefinerParameters(BaseModel):
+    """Defines all parameters for the TextRefiner's sampling process."""
+    temperature: float = 0.2
+    top_p: float = 0.95
+    max_tokens: int = 500
+    # The seed will be inherited from the main GenerationParameters, so it's not needed here.
+
+    # This allows for any other parameters to be passed through.
+    class Config:
+        extra = 'allow'
+
+
 class ExperimentConfig(BaseModel):
     """The main configuration model for an experiment run."""
     experiment_name: str
@@ -40,7 +52,8 @@ class ExperimentConfig(BaseModel):
     # Server and Model Settings
     api_url: str = "http://localhost:8000/generate"
     parameters: GenerationParameters = Field(default_factory=GenerationParameters)
-
+    refiner_parameters: RefinerParameters = Field(default_factory=RefinerParameters)
+    
     # Output Settings
     output_dir: str = "output/"
     log_file_path: str = "log.csv"

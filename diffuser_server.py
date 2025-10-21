@@ -62,13 +62,13 @@ class TextRefiner:
         # The tokenizer is still needed to correctly format the chat prompt.
         self.tokenizer = AutoTokenizer.from_pretrained(model_id, local_files_only=True)
 
-        # Pre-define sampling parameters for deterministic and controlled generation.
-        self.sampling_params = SamplingParams(
-            temperature=0.2,
-            top_p=0.95,
-            max_tokens=300,
-            stop=["<|im_end|>"] # Model-specific stop token to end generation cleanly.
-        )
+        # Default Params. Can be overridden by per-request params.
+        self.default_sampling_params = {
+            "temperature": 0.2,
+            "top_p": 0.95,
+            "max_tokens": 300,
+            "stop": ["<|im_end|>"]
+        }
 
         # Jinja2 environment to load and render prompt templates from files.
         self.jinja_env = Environment(loader=FileSystemLoader('configs/refiners'))
@@ -77,18 +77,28 @@ class TextRefiner:
     def refine(self, dialogue_lines: List[str], template_name: str) -> str:
         """Generates a refined prompt from dialogue lines using the vLLM engine."""
         try:
-            # Render the full prompt from a Jinja2 template.
+            # Prompt rendering and chat templating
             template = self.jinja_env.get_template(f"{template_name}.jinja2")
             prompt_content = template.render(dialogue_lines=dialogue_lines)
-            
-            # Apply the chat template to format the prompt correctly for the model.
             messages = [{"role": "user", "content": prompt_content}]
             final_prompt = self.tokenizer.apply_chat_template(
                 messages, tokenize=False, add_generation_prompt=True
             )
-            
+
+            # --- DYNAMIC SAMPLING PARAMS LOGIC ---
+            # Load default params
+            final_params = self.default_sampling_params.copy()
+            # If request-specific parameters were provided, merge them in.
+            # This allows the request to override the defaults.
+            if request_params:
+                final_params.update(request_params)
+
+            # Create the vLLM SamplingParams object.
+            sampling_params_obj = SamplingParams(**final_params)
+            # --- END OF DYNAMIC LOGIC ---
+
             # Run inference using the vLLM engine.
-            outputs = self.llm.generate([final_prompt], self.sampling_params)
+            outputs = self.llm.generate([final_prompt], sampling_params_obj)
             
             # Extract and clean up the generated text.
             raw_response = outputs[0].outputs[0].text
