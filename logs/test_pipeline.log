@@ -1,0 +1,35 @@
+2025-10-24 11:54:15,447 - root - INFO - Logging configured.
+2025-10-24 11:57:08,822 - root - INFO - Logging configured.
+2025-10-24 11:57:38,735 - root - INFO - Logging configured.
+2025-10-24 11:57:50,529 - root - INFO - Logging configured.
+2025-10-24 11:58:28,689 - root - INFO - Logging configured.
+2025-10-24 11:58:28,691 - __main__ - INFO - --- Starting Test Pipeline ---
+2025-10-24 11:58:28,692 - __main__ - INFO - Loading input images: ['data/man.png', 'data/puppy.png', 'data/sofa.png']
+2025-10-24 11:58:29,263 - __main__ - INFO - Successfully encoded 3 images to Base64.
+2025-10-24 11:58:29,264 - __main__ - INFO - Initial prompt: 'Let the man in image 1 lie on the sofa in image 3, and let the puppy in image 2 lie on the floor to sleep.'
+2025-10-24 11:58:29,264 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/v1 with prompt 'Let the man in image 1 lie on the sofa in image 3,...'
+2025-10-24 11:58:33,295 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-24 11:58:33,300 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Let the man in image 1 lie on the sofa in image 3, and let the puppy in image 2 lie on the floor to ...'
+2025-10-24 11:58:33,300 - __main__ - INFO - Enhanced prompt: 'Let the man in image 1 lie on the sofa in image 3, and let the puppy in image 2 lie on the floor to sleep.'
+2025-10-24 11:58:33,300 - __main__ - INFO - Calling image generation service...
+2025-10-24 11:58:33,300 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Let the man in image 1 lie on the sofa in image 3,...'
+2025-10-24 11:59:00,273 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-24 11:59:00,280 - src.api_clients - INFO - Image generation successful.
+2025-10-24 11:59:00,280 - __main__ - INFO - Image generation successful. Decoding and saving...
+2025-10-24 11:59:00,656 - __main__ - INFO - Output image saved successfully to: output/test_output_1761299908.png
+2025-10-24 11:59:00,657 - __main__ - INFO - --- Test Pipeline Finished ---
+2025-10-24 14:40:33,791 - root - INFO - Logging configured.
+2025-10-24 14:40:33,806 - __main__ - INFO - --- Starting Test Pipeline ---
+2025-10-24 14:40:33,806 - __main__ - INFO - Loading input images: ['data/man.png', 'data/puppy.png', 'data/sofa.png']
+2025-10-24 14:40:34,333 - __main__ - INFO - Successfully encoded 3 images to Base64.
+2025-10-24 14:40:34,334 - __main__ - INFO - Initial prompt: 'Let the man in image 1 lie on the sofa in image 3, and let the puppy in image 2 lie on the floor to sleep.'
+2025-10-24 14:40:34,334 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/v1 with prompt 'Let the man in image 1 lie on the sofa in image 3,...'
+2025-10-24 14:40:41,195 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-24 14:40:41,200 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Replace the man from image 1 with him lying on the sofa in image 3, and replace the puppy from image...'
+2025-10-24 14:40:41,200 - __main__ - INFO - Enhanced prompt: 'Replace the man from image 1 with him lying on the sofa in image 3, and replace the puppy from image 2 with it lying on the floor to sleep.'
+2025-10-24 14:40:41,200 - __main__ - INFO - Calling image generation service...
+2025-10-24 14:40:41,201 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Replace the man from image 1 with him lying on the...'
+2025-10-24 14:40:41,252 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 500 Internal Server Error"
+2025-10-24 14:40:41,253 - src.api_clients - ERROR - Image Gen API request failed with status 500: Internal Server Error
+2025-10-24 14:40:41,253 - __main__ - ERROR - Image generation service did not return an image.
+2025-10-24 14:40:41,253 - __main__ - INFO - --- Test Pipeline Finished ---

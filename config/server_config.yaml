@@ -1,0 +1,20 @@
+# config/server_config.yaml
+
+image_gen_service:
+  host: "0.0.0.0"
+  port: 8000
+  seed: 0
+  negative_prompt: " "
+  model_id: "Qwen/Qwen-Image-Edit-2509"
+  lora_path: "Qwen-Image-Lightning/Qwen-Image-Edit-2509/Qwen-Image-Edit-2509-Lightning-8steps-V1.0-fp32.safetensors"
+  num_inference_steps: 8
+  true_cfg_scale: 4.0
+
+prompt_enhancer_service:
+  host: "0.0.0.0"
+  port: 8001
+  seed: 0
+  #model_id: "/linkhome/rech/genxzs01/upa38qy/.cache/huggingface/hub/models--Qwen--Qwen2.5-VL-7B-Instruct/snapshots/cc594898137f460bfe9f0759e9844b3ce807cfb5"  # Qwen2.5-VL-7B-Instruct
+  #model_id: "/linkhome/rech/genxzs01/upa38qy/.cache/huggingface/hub/models--Qwen--Qwen2.5-VL-3B-Instruct-AWQ/snapshots/e7b623934290c5a4da0ee3c6e1e57bfb6b5abbf2"  # Qwen--Qwen2.5-VL-3B-Instruct-AWQ
+  model_id: "/lustre/fsmisc/dataset/HuggingFace_Models/Qwen/Qwen2.5-VL-32B-Instruct"
+  gpu_memory_utilization: 0.9

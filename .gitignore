@@ -1,3 +1,4 @@
-*.old*
+Qwen-Image-Lightning/
 *__pycache__*
-output*/
+generate_with_diffusers.py
+output/*

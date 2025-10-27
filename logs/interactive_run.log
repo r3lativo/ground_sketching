@@ -1,0 +1,685 @@
+2025-10-24 15:00:10,689 - root - INFO - Logging configured.
+2025-10-24 15:00:10,690 - __main__ - INFO - --- Starting Interactive Session ---
+2025-10-24 15:00:21,312 - src.utils - ERROR - Failed to write to log file logs/interactive_session.csv: name 'datetime' is not defined
+Traceback (most recent call last):
+  File "/lustre/fswork/projects/rech/bgp/upa38qy/ground_sketching/src/utils.py", line 86, in log_experiment_step
+    row_data["timestamp"] = datetime.now().isoformat()
+                            ^^^^^^^^
+NameError: name 'datetime' is not defined. Did you forget to import 'datetime'
+2025-10-24 15:00:21,314 - __main__ - INFO - Step 0 logged with status: fail
+2025-10-24 15:00:21,314 - __main__ - INFO - --- Interactive Session Ended ---
+2025-10-24 15:00:47,536 - root - INFO - Logging configured.
+2025-10-24 15:00:47,536 - __main__ - INFO - --- Starting Interactive Session ---
+2025-10-24 15:00:49,838 - __main__ - INFO - Step 0 logged with status: fail
+2025-10-24 15:00:49,838 - __main__ - INFO - --- Interactive Session Ended ---
+2025-10-24 15:01:39,173 - root - INFO - Logging configured.
+2025-10-24 15:01:39,173 - __main__ - INFO - --- Starting Interactive Session ---
+2025-10-24 15:01:45,312 - __main__ - INFO - Creating dummy blank image for initial generation.
+2025-10-24 15:01:45,344 - __main__ - INFO - Calling text prompt enhancer...
+2025-10-24 15:01:45,344 - src.api_clients - INFO - Sending request to Prompt Enhancer (Text): http://0.0.0.0:8001/v1 with prompt 'an house with a cat...'
+2025-10-24 15:01:56,734 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-24 15:01:56,739 - src.api_clients - INFO - Text Prompt enhancement successful. New prompt: 'A charming, cozy cottage-style house set in a tranquil rural or suburban setting. The house features...'
+2025-10-24 15:01:56,739 - __main__ - INFO - Calling image generation service with final prompt: 'A charming, cozy cottage-style house set in a tranquil rural or suburban setting. The house features...'
+2025-10-24 15:01:56,740 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'A charming, cozy cottage-style house set in a tran...'
+2025-10-24 15:01:59,855 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 500 Internal Server Error"
+2025-10-24 15:01:59,855 - src.api_clients - ERROR - Image Gen API request failed with status 500: Internal Server Error
+2025-10-24 15:01:59,855 - __main__ - ERROR - Image generation service did not return an image.
+2025-10-24 15:01:59,856 - __main__ - INFO - Step 0 logged with status: fail
+2025-10-24 15:08:28,356 - __main__ - INFO - Step 0 logged with status: fail
+2025-10-24 15:08:28,357 - __main__ - INFO - --- Interactive Session Ended ---
+2025-10-24 15:11:09,894 - root - INFO - Logging configured.
+2025-10-24 15:11:09,896 - __main__ - INFO - --- Starting Interactive Session ---
+2025-10-24 15:12:11,123 - __main__ - INFO - Creating dummy blank image for initial generation.
+2025-10-24 15:12:11,171 - __main__ - INFO - Calling text prompt enhancer...
+2025-10-24 15:12:11,171 - src.api_clients - INFO - Sending request to Prompt Enhancer (Text): http://0.0.0.0:8001/v1 with prompt 'a house with a cat...'
+2025-10-24 15:12:23,787 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-24 15:12:23,793 - src.api_clients - INFO - Text Prompt enhancement successful. New prompt: 'A cozy, quaint house nestled in a serene suburban setting, surrounded by lush greenery and blooming ...'
+2025-10-24 15:12:23,793 - __main__ - INFO - Calling image generation service with final prompt: 'A cozy, quaint house nestled in a serene suburban setting, surrounded by lush greenery and blooming ...'
+2025-10-24 15:12:23,793 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'A cozy, quaint house nestled in a serene suburban ...'
+2025-10-24 15:12:40,109 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-24 15:12:40,116 - src.api_clients - INFO - Image generation successful.
+2025-10-24 15:12:40,608 - __main__ - INFO - Output image saved successfully to: output/interactive/step_000_1761311560.png
+2025-10-24 15:12:40,612 - __main__ - INFO - Step 0 logged with status: success
+2025-10-24 15:14:44,415 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-24 15:14:44,415 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/v1 with prompt 'add a person sitting on the chair smoking a pipe...'
+2025-10-24 15:14:52,406 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-24 15:14:52,407 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Add a person sitting on the red rocking chair, wearing casual attire, and smoking a pipe, positioned...'
+2025-10-24 15:14:52,407 - __main__ - INFO - Calling image generation service with final prompt: 'Add a person sitting on the red rocking chair, wearing casual attire, and smoking a pipe, positioned...'
+2025-10-24 15:14:52,407 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Add a person sitting on the red rocking chair, wea...'
+2025-10-24 15:15:02,206 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-24 15:15:02,211 - src.api_clients - INFO - Image generation successful.
+2025-10-24 15:15:02,592 - __main__ - INFO - Output image saved successfully to: output/interactive/step_001_1761311702.png
+2025-10-24 15:15:02,594 - __main__ - INFO - Step 1 logged with status: success
+2025-10-24 15:17:07,614 - __main__ - INFO - Step 2 logged with status: fail
+2025-10-24 15:17:07,614 - __main__ - INFO - --- Interactive Session Ended ---
+2025-10-24 15:17:12,304 - root - INFO - Logging configured.
+2025-10-24 15:17:12,304 - __main__ - INFO - --- Starting Interactive Session ---
+2025-10-24 15:17:18,220 - __main__ - INFO - Creating dummy blank image for initial generation.
+2025-10-24 15:17:18,243 - __main__ - INFO - Calling text prompt enhancer...
+2025-10-24 15:17:18,243 - src.api_clients - INFO - Sending request to Prompt Enhancer (Text): http://0.0.0.0:8001/v1 with prompt 'A simple, minimalist icon of a house. The image sh...'
+2025-10-24 15:17:25,583 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-24 15:17:25,589 - src.api_clients - INFO - Text Prompt enhancement successful. New prompt: 'Create a minimalist, clean, and symbolic icon visually representing a home. The design should consis...'
+2025-10-24 15:17:25,589 - __main__ - INFO - Calling image generation service with final prompt: 'Create a minimalist, clean, and symbolic icon visually representing a home. The design should consis...'
+2025-10-24 15:17:25,589 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Create a minimalist, clean, and symbolic icon visu...'
+2025-10-24 15:17:35,131 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-24 15:17:35,133 - src.api_clients - INFO - Image generation successful.
+2025-10-24 15:17:35,275 - __main__ - INFO - Output image saved successfully to: output/interactive/step_000_1761311855.png
+2025-10-24 15:17:35,277 - __main__ - INFO - Step 0 logged with status: success
+2025-10-24 15:19:08,571 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-24 15:19:08,571 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/v1 with prompt 'Modify the existing house icon to have two stories...'
+2025-10-24 15:19:11,008 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-24 15:19:11,009 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Add a second story to the house icon by extending the roof and adding a rectangular window above the...'
+2025-10-24 15:19:11,009 - __main__ - INFO - Calling image generation service with final prompt: 'Add a second story to the house icon by extending the roof and adding a rectangular window above the...'
+2025-10-24 15:19:11,009 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Add a second story to the house icon by extending ...'
+2025-10-24 15:19:20,492 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-24 15:19:20,493 - src.api_clients - INFO - Image generation successful.
+2025-10-24 15:19:20,603 - __main__ - INFO - Output image saved successfully to: output/interactive/step_001_1761311960.png
+2025-10-24 15:19:20,605 - __main__ - INFO - Step 1 logged with status: success
+2025-10-24 15:22:04,293 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-24 15:22:04,293 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/v1 with prompt 'Modify the chimney on the house. Color only the ch...'
+2025-10-24 15:22:06,985 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-24 15:22:06,986 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Modify the chimney on the house by changing its color to red while keeping the rest of the house in ...'
+2025-10-24 15:22:06,986 - __main__ - INFO - Calling image generation service with final prompt: 'Modify the chimney on the house by changing its color to red while keeping the rest of the house in ...'
+2025-10-24 15:22:06,986 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Modify the chimney on the house by changing its co...'
+2025-10-24 15:22:16,466 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-24 15:22:16,468 - src.api_clients - INFO - Image generation successful.
+2025-10-24 15:22:16,668 - __main__ - INFO - Output image saved successfully to: output/interactive/step_002_1761312136.png
+2025-10-24 15:22:16,669 - __main__ - INFO - Step 2 logged with status: success
+2025-10-24 15:23:18,078 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-24 15:23:18,079 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/v1 with prompt 'Make the existing objects in the image smaller, as...'
+2025-10-24 15:23:20,947 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-24 15:23:20,948 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Scale down all objects in the image to appear smaller, simulating a wider field of view. Expand the ...'
+2025-10-24 15:23:20,948 - __main__ - INFO - Calling image generation service with final prompt: 'Scale down all objects in the image to appear smaller, simulating a wider field of view. Expand the ...'
+2025-10-24 15:23:20,948 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Scale down all objects in the image to appear smal...'
+2025-10-24 15:23:30,406 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-24 15:23:30,409 - src.api_clients - INFO - Image generation successful.
+2025-10-24 15:23:30,645 - __main__ - INFO - Output image saved successfully to: output/interactive/step_003_1761312210.png
+2025-10-24 15:23:30,647 - __main__ - INFO - Step 3 logged with status: success
+2025-10-24 15:25:05,557 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-24 15:25:05,562 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/v1 with prompt 'Add a simple outline of an emergency exit next to ...'
+2025-10-24 15:25:08,808 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-24 15:25:08,808 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Add a simple black outline of an emergency exit symbol to the right of the house, ensuring it is cle...'
+2025-10-24 15:25:08,808 - __main__ - INFO - Calling image generation service with final prompt: 'Add a simple black outline of an emergency exit symbol to the right of the house, ensuring it is cle...'
+2025-10-24 15:25:08,809 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Add a simple black outline of an emergency exit sy...'
+2025-10-24 15:25:18,582 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-24 15:25:18,586 - src.api_clients - INFO - Image generation successful.
+2025-10-24 15:25:18,799 - __main__ - INFO - Output image saved successfully to: output/interactive/step_004_1761312318.png
+2025-10-24 15:25:18,803 - __main__ - INFO - Step 4 logged with status: success
+2025-10-24 15:26:30,349 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-24 15:26:30,349 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/v1 with prompt 'Add a simple outline of an emergency button next t...'
+2025-10-24 15:26:33,500 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-24 15:26:33,501 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Add a simple, clean, and symbolic outline of a red emergency button with a black border next to the ...'
+2025-10-24 15:26:33,501 - __main__ - INFO - Calling image generation service with final prompt: 'Add a simple, clean, and symbolic outline of a red emergency button with a black border next to the ...'
+2025-10-24 15:26:33,501 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Add a simple, clean, and symbolic outline of a red...'
+2025-10-24 15:26:42,978 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-24 15:26:42,981 - src.api_clients - INFO - Image generation successful.
+2025-10-24 15:26:43,173 - __main__ - INFO - Output image saved successfully to: output/interactive/step_005_1761312403.png
+2025-10-24 15:26:43,175 - __main__ - INFO - Step 5 logged with status: success
+2025-10-24 15:26:54,184 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-24 15:26:54,184 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/v1 with prompt 'Rescale the image to add a red carpet in front of ...'
+2025-10-24 15:26:56,460 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-24 15:26:56,461 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Add a red carpet leading up to the entrance of the house icon, ensuring it is proportionate and cent...'
+2025-10-24 15:26:56,461 - __main__ - INFO - Calling image generation service with final prompt: 'Add a red carpet leading up to the entrance of the house icon, ensuring it is proportionate and cent...'
+2025-10-24 15:26:56,461 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Add a red carpet leading up to the entrance of the...'
+2025-10-24 15:27:05,915 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-24 15:27:05,918 - src.api_clients - INFO - Image generation successful.
+2025-10-24 15:27:06,103 - __main__ - INFO - Output image saved successfully to: output/interactive/step_006_1761312425.png
+2025-10-24 15:27:06,105 - __main__ - INFO - Step 6 logged with status: success
+2025-10-24 15:32:11,864 - __main__ - INFO - Step 7 logged with status: fail
+2025-10-24 15:32:11,865 - __main__ - INFO - --- Interactive Session Ended ---
+2025-10-24 15:32:19,436 - root - INFO - Logging configured.
+2025-10-24 15:32:19,437 - __main__ - INFO - --- Starting Interactive Session ---
+2025-10-24 15:33:16,821 - __main__ - INFO - Creating dummy blank image for initial generation.
+2025-10-24 15:33:16,861 - __main__ - INFO - Calling text prompt enhancer...
+2025-10-24 15:33:16,861 - src.api_clients - INFO - Sending request to Prompt Enhancer (Text): http://0.0.0.0:8001/v1 with prompt 'A simple, minimalist icon of a house. The image sh...'
+2025-10-24 15:33:24,758 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-24 15:33:24,763 - src.api_clients - INFO - Text Prompt enhancement successful. New prompt: 'Create a minimalist, symbolic icon featuring a simple black outline of a classic house shape against...'
+2025-10-24 15:33:24,764 - __main__ - INFO - Calling image generation service with final prompt: 'Create a minimalist, symbolic icon featuring a simple black outline of a classic house shape against...'
+2025-10-24 15:33:24,764 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Create a minimalist, symbolic icon featuring a sim...'
+2025-10-24 15:33:34,182 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-24 15:33:34,182 - src.api_clients - INFO - Image generation successful.
+2025-10-24 15:33:34,235 - __main__ - INFO - Output image saved successfully to: output/interactive/step_000_1761312814.png
+2025-10-24 15:33:34,236 - __main__ - INFO - Step 0 logged with status: success
+2025-10-24 15:33:34,273 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-24 15:33:34,274 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/v1 with prompt '...'
+2025-10-24 15:33:36,122 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-24 15:33:36,123 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Add a chimney on the roof and a window on the left side of the house....'
+2025-10-24 15:33:36,123 - __main__ - INFO - Calling image generation service with final prompt: 'Add a chimney on the roof and a window on the left side of the house....'
+2025-10-24 15:33:36,123 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Add a chimney on the roof and a window on the left...'
+2025-10-24 15:33:45,545 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-24 15:33:45,547 - src.api_clients - INFO - Image generation successful.
+2025-10-24 15:33:45,744 - __main__ - INFO - Output image saved successfully to: output/interactive/step_001_1761312825.png
+2025-10-24 15:33:45,746 - __main__ - INFO - Step 1 logged with status: success
+2025-10-24 15:33:53,608 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-24 15:33:53,608 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/v1 with prompt 'Modify the existing house icon to have two stories...'
+2025-10-24 15:33:56,578 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-24 15:33:56,579 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Add a second story to the house icon while keeping the minimalist black outline style. The new story...'
+2025-10-24 15:33:56,579 - __main__ - INFO - Calling image generation service with final prompt: 'Add a second story to the house icon while keeping the minimalist black outline style. The new story...'
+2025-10-24 15:33:56,579 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Add a second story to the house icon while keeping...'
+2025-10-24 15:34:06,097 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-24 15:34:06,099 - src.api_clients - INFO - Image generation successful.
+2025-10-24 15:34:06,338 - __main__ - INFO - Output image saved successfully to: output/interactive/step_002_1761312846.png
+2025-10-24 15:34:06,339 - __main__ - INFO - Step 2 logged with status: success
+2025-10-24 15:34:06,539 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-24 15:34:06,539 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/v1 with prompt '...'
+2025-10-24 15:34:08,270 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-24 15:34:08,271 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Add a chimney on the roof, positioned slightly off-center to the right....'
+2025-10-24 15:34:08,271 - __main__ - INFO - Calling image generation service with final prompt: 'Add a chimney on the roof, positioned slightly off-center to the right....'
+2025-10-24 15:34:08,271 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Add a chimney on the roof, positioned slightly off...'
+2025-10-24 15:34:17,686 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-24 15:34:17,688 - src.api_clients - INFO - Image generation successful.
+2025-10-24 15:34:17,864 - __main__ - INFO - Output image saved successfully to: output/interactive/step_003_1761312857.png
+2025-10-24 15:34:17,866 - __main__ - INFO - Step 3 logged with status: success
+2025-10-24 15:34:58,776 - __main__ - INFO - Step 4 logged with status: fail
+2025-10-24 15:34:58,776 - __main__ - INFO - --- Interactive Session Ended ---
+2025-10-24 15:35:01,893 - root - INFO - Logging configured.
+2025-10-24 15:35:01,894 - __main__ - INFO - --- Starting Interactive Session ---
+2025-10-24 15:35:16,825 - __main__ - INFO - Creating dummy blank image for initial generation.
+2025-10-24 15:35:16,845 - __main__ - INFO - Calling text prompt enhancer...
+2025-10-24 15:35:16,845 - src.api_clients - INFO - Sending request to Prompt Enhancer (Text): http://0.0.0.0:8001/v1 with prompt 'A simple, minimalist icon of a house. The image sh...'
+2025-10-24 15:35:23,592 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-24 15:35:23,597 - src.api_clients - INFO - Text Prompt enhancement successful. New prompt: 'A clean and minimalist iconic representation of a house, rendered in a simple, symbolic style. The i...'
+2025-10-24 15:35:23,598 - __main__ - INFO - Calling image generation service with final prompt: 'A clean and minimalist iconic representation of a house, rendered in a simple, symbolic style. The i...'
+2025-10-24 15:35:23,598 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'A clean and minimalist iconic representation of a ...'
+2025-10-24 15:35:33,101 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-24 15:35:33,102 - src.api_clients - INFO - Image generation successful.
+2025-10-24 15:35:33,248 - __main__ - INFO - Output image saved successfully to: output/interactive/step_000_1761312933.png
+2025-10-24 15:35:33,250 - __main__ - INFO - Step 0 logged with status: success
+2025-10-24 15:48:03,837 - __main__ - INFO - Step 1 logged with status: fail
+2025-10-24 15:48:03,837 - __main__ - INFO - --- Interactive Session Ended ---
+2025-10-24 15:52:50,961 - root - INFO - Logging configured.
+2025-10-24 15:52:50,962 - __main__ - INFO - --- Starting Interactive Session ---
+2025-10-24 15:53:01,587 - __main__ - INFO - Creating dummy blank image for initial generation.
+2025-10-24 15:53:01,626 - __main__ - INFO - Calling text prompt enhancer...
+2025-10-24 15:53:01,626 - src.api_clients - INFO - Sending request to Prompt Enhancer (Text): http://0.0.0.0:8001/v1 with prompt 'A simple, minimalist icon of a house. The image sh...'
+2025-10-24 15:53:08,901 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-24 15:53:08,907 - src.api_clients - INFO - Text Prompt enhancement successful. New prompt: 'Create a minimalist illustration of a house icon that embodies simplicity and symbolism. The design ...'
+2025-10-24 15:53:08,907 - __main__ - INFO - Calling image generation service with final prompt: 'Create a minimalist illustration of a house icon that embodies simplicity and symbolism. The design ...'
+2025-10-24 15:53:08,907 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Create a minimalist illustration of a house icon t...'
+2025-10-24 15:53:08,961 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 500 Internal Server Error"
+2025-10-24 15:53:08,962 - src.api_clients - ERROR - Image Gen API request failed with status 500: Internal Server Error
+2025-10-24 15:53:08,962 - __main__ - ERROR - Image generation service did not return an image.
+2025-10-24 15:53:08,963 - __main__ - INFO - Step 0 logged with status: fail
+2025-10-24 16:01:00,925 - __main__ - INFO - Step 0 logged with status: fail
+2025-10-24 16:01:00,926 - __main__ - INFO - --- Interactive Session Ended ---
+2025-10-24 16:01:05,978 - root - INFO - Logging configured.
+2025-10-24 16:01:05,979 - __main__ - INFO - --- Starting Interactive Session ---
+2025-10-24 16:01:52,749 - __main__ - INFO - Creating dummy blank image for initial generation.
+2025-10-24 16:01:52,786 - __main__ - INFO - Calling text prompt enhancer...
+2025-10-24 16:01:52,786 - src.api_clients - INFO - Sending request to Prompt Enhancer (Text): http://0.0.0.0:8001/v1 with prompt 'A simple, minimalist icon of a house. The image sh...'
+2025-10-24 16:01:59,988 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-24 16:01:59,994 - src.api_clients - INFO - Text Prompt enhancement successful. New prompt: 'A sleek, symbolic representation of a minimalist house icon. The composition features a simple, refi...'
+2025-10-24 16:01:59,994 - __main__ - INFO - Calling image generation service with final prompt: 'A sleek, symbolic representation of a minimalist house icon. The composition features a simple, refi...'
+2025-10-24 16:01:59,994 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'A sleek, symbolic representation of a minimalist h...'
+2025-10-24 16:02:00,120 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 500 Internal Server Error"
+2025-10-24 16:02:00,120 - src.api_clients - ERROR - Image Gen API request failed with status 500: Internal Server Error
+2025-10-24 16:02:00,120 - __main__ - ERROR - Image generation service did not return an image.
+2025-10-24 16:02:00,121 - __main__ - INFO - Step 0 logged with status: fail
+2025-10-24 16:03:12,716 - __main__ - WARNING - User interrupted session.
+2025-10-24 16:03:12,717 - __main__ - INFO - Step 0 logged with status: fail
+2025-10-24 16:03:12,717 - __main__ - INFO - --- Interactive Session Ended ---
+2025-10-24 16:03:16,555 - root - INFO - Logging configured.
+2025-10-24 16:03:16,555 - __main__ - INFO - --- Starting Interactive Session ---
+2025-10-24 16:03:18,382 - __main__ - INFO - Creating dummy blank image for initial generation.
+2025-10-24 16:03:18,403 - __main__ - INFO - Calling text prompt enhancer...
+2025-10-24 16:03:18,403 - src.api_clients - INFO - Sending request to Prompt Enhancer (Text): http://0.0.0.0:8001/v1 with prompt 'A simple, minimalist icon of a house. The image sh...'
+2025-10-24 16:03:25,829 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-24 16:03:25,834 - src.api_clients - INFO - Text Prompt enhancement successful. New prompt: 'Create a minimalist, highly symbolic icon of a house, rendered in a clean and geometric style. The i...'
+2025-10-24 16:03:25,834 - __main__ - INFO - Calling image generation service with final prompt: 'Create a minimalist, highly symbolic icon of a house, rendered in a clean and geometric style. The i...'
+2025-10-24 16:03:25,834 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Create a minimalist, highly symbolic icon of a hou...'
+2025-10-24 16:03:25,851 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 500 Internal Server Error"
+2025-10-24 16:03:25,851 - src.api_clients - ERROR - Image Gen API request failed with status 500: Internal Server Error
+2025-10-24 16:03:25,851 - __main__ - ERROR - Image generation service did not return an image.
+2025-10-24 16:03:25,852 - __main__ - INFO - Step 0 logged with status: fail
+2025-10-24 16:08:23,225 - __main__ - INFO - Step 0 logged with status: fail
+2025-10-24 16:08:23,226 - __main__ - INFO - --- Interactive Session Ended ---
+2025-10-24 16:08:28,249 - root - INFO - Logging configured.
+2025-10-24 16:08:28,249 - __main__ - INFO - --- Starting Interactive Session ---
+2025-10-24 16:08:29,721 - __main__ - INFO - Creating dummy blank image for initial generation.
+2025-10-24 16:08:29,763 - __main__ - INFO - Calling text prompt enhancer...
+2025-10-24 16:08:29,763 - src.api_clients - INFO - Sending request to Prompt Enhancer (Text): http://0.0.0.0:8001/v1 with prompt 'A simple, minimalist icon of a house. The image sh...'
+2025-10-24 16:08:38,975 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-24 16:08:38,981 - src.api_clients - INFO - Text Prompt enhancement successful. New prompt: 'Create a minimalist, clean, and symbolic black outline icon of a house against a solid white backgro...'
+2025-10-24 16:08:38,981 - __main__ - INFO - Calling image generation service with final prompt: 'Create a minimalist, clean, and symbolic black outline icon of a house against a solid white backgro...'
+2025-10-24 16:08:38,981 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Create a minimalist, clean, and symbolic black out...'
+2025-10-24 16:08:39,137 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 500 Internal Server Error"
+2025-10-24 16:08:39,138 - src.api_clients - ERROR - Image Gen API request failed with status 500: Internal Server Error
+2025-10-24 16:08:39,138 - __main__ - ERROR - Image generation service did not return an image.
+2025-10-24 16:08:39,139 - __main__ - INFO - Step 0 logged with status: fail
+2025-10-24 16:12:45,703 - __main__ - INFO - Step 0 logged with status: fail
+2025-10-24 16:12:45,704 - __main__ - INFO - --- Interactive Session Ended ---
+2025-10-24 16:12:51,791 - root - INFO - Logging configured.
+2025-10-24 16:12:51,791 - __main__ - INFO - --- Starting Interactive Session ---
+2025-10-24 16:13:26,459 - __main__ - INFO - Creating dummy blank image for initial generation.
+2025-10-24 16:13:26,501 - __main__ - INFO - Calling text prompt enhancer...
+2025-10-24 16:13:26,501 - src.api_clients - INFO - Sending request to Prompt Enhancer (Text): http://0.0.0.0:8001/v1 with prompt 'A simple, minimalist icon of a house. The image sh...'
+2025-10-24 16:13:35,060 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-24 16:13:35,065 - src.api_clients - INFO - Text Prompt enhancement successful. New prompt: 'A sleek, minimalist icon depicting a house as a simple, symbolic representation. The image consists ...'
+2025-10-24 16:13:35,065 - __main__ - INFO - Calling image generation service with final prompt: 'A sleek, minimalist icon depicting a house as a simple, symbolic representation. The image consists ...'
+2025-10-24 16:13:35,066 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'A sleek, minimalist icon depicting a house as a si...'
+2025-10-24 16:13:47,988 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-24 16:13:47,991 - src.api_clients - INFO - Image generation successful.
+2025-10-24 16:13:48,178 - __main__ - INFO - Output image saved successfully to: output/interactive/step_000_1761315228.png
+2025-10-24 16:13:48,180 - __main__ - INFO - Step 0 logged with status: success
+2025-10-24 16:14:23,826 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-24 16:14:23,826 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/v1 with prompt 'Modify the existing house icon to have two stories...'
+2025-10-24 16:14:26,850 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-24 16:14:26,851 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Add a second story to the house icon, keeping the minimalist black outline style. The new story shou...'
+2025-10-24 16:14:26,851 - __main__ - INFO - Calling image generation service with final prompt: 'Add a second story to the house icon, keeping the minimalist black outline style. The new story shou...'
+2025-10-24 16:14:26,851 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Add a second story to the house icon, keeping the ...'
+2025-10-24 16:14:36,406 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-24 16:14:36,409 - src.api_clients - INFO - Image generation successful.
+2025-10-24 16:14:36,679 - __main__ - INFO - Output image saved successfully to: output/interactive/step_001_1761315276.png
+2025-10-24 16:14:36,681 - __main__ - INFO - Step 1 logged with status: success
+2025-10-24 16:14:46,875 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-24 16:14:46,876 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/v1 with prompt 'Modify the chimney on the house. Color only the ch...'
+2025-10-24 16:14:48,984 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-24 16:14:48,984 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Color the chimney red while keeping the rest of the house in its minimalist, black outline style....'
+2025-10-24 16:14:48,984 - __main__ - INFO - Calling image generation service with final prompt: 'Color the chimney red while keeping the rest of the house in its minimalist, black outline style....'
+2025-10-24 16:14:48,984 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Color the chimney red while keeping the rest of th...'
+2025-10-24 16:14:58,427 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-24 16:14:58,430 - src.api_clients - INFO - Image generation successful.
+2025-10-24 16:14:58,619 - __main__ - INFO - Output image saved successfully to: output/interactive/step_002_1761315298.png
+2025-10-24 16:14:58,621 - __main__ - INFO - Step 2 logged with status: success
+2025-10-24 16:15:10,693 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-24 16:15:10,693 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/v1 with prompt 'Make the existing objects in the image smaller, as...'
+2025-10-24 16:15:13,959 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-24 16:15:13,959 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Scale down the house icon to make it appear smaller, as if viewed from a distance. Expand the canvas...'
+2025-10-24 16:15:13,959 - __main__ - INFO - Calling image generation service with final prompt: 'Scale down the house icon to make it appear smaller, as if viewed from a distance. Expand the canvas...'
+2025-10-24 16:15:13,959 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Scale down the house icon to make it appear smalle...'
+2025-10-24 16:15:23,448 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-24 16:15:23,450 - src.api_clients - INFO - Image generation successful.
+2025-10-24 16:15:23,642 - __main__ - INFO - Output image saved successfully to: output/interactive/step_003_1761315323.png
+2025-10-24 16:15:23,644 - __main__ - INFO - Step 3 logged with status: success
+2025-10-24 16:15:55,817 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-24 16:15:55,817 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/v1 with prompt 'Add a simple outline of an emergency exit next to ...'
+2025-10-24 16:15:58,570 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-24 16:15:58,571 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Add a simple black outline of an emergency exit symbol to the left of the house, ensuring it is clea...'
+2025-10-24 16:15:58,571 - __main__ - INFO - Calling image generation service with final prompt: 'Add a simple black outline of an emergency exit symbol to the left of the house, ensuring it is clea...'
+2025-10-24 16:15:58,571 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Add a simple black outline of an emergency exit sy...'
+2025-10-24 16:16:08,015 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-24 16:16:08,018 - src.api_clients - INFO - Image generation successful.
+2025-10-24 16:16:08,220 - __main__ - INFO - Output image saved successfully to: output/interactive/step_004_1761315368.png
+2025-10-24 16:16:08,222 - __main__ - INFO - Step 4 logged with status: success
+2025-10-24 16:16:12,997 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-24 16:16:12,997 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/v1 with prompt 'Add a simple outline of an emergency button next t...'
+2025-10-24 16:16:15,673 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-24 16:16:15,674 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Add a red emergency button with a clean, symbolic design next to the emergency exit. The button shou...'
+2025-10-24 16:16:15,674 - __main__ - INFO - Calling image generation service with final prompt: 'Add a red emergency button with a clean, symbolic design next to the emergency exit. The button shou...'
+2025-10-24 16:16:15,674 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Add a red emergency button with a clean, symbolic ...'
+2025-10-24 16:16:25,144 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-24 16:16:25,148 - src.api_clients - INFO - Image generation successful.
+2025-10-24 16:16:25,330 - __main__ - INFO - Output image saved successfully to: output/interactive/step_005_1761315385.png
+2025-10-24 16:16:25,332 - __main__ - INFO - Step 5 logged with status: success
+2025-10-24 16:16:46,204 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-24 16:16:46,204 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/v1 with prompt 'Rescale the image to add a red carpet in front of ...'
+2025-10-24 16:16:48,524 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-24 16:16:48,524 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Add a red carpet extending from the entrance of the visitor service center towards the foreground, e...'
+2025-10-24 16:16:48,524 - __main__ - INFO - Calling image generation service with final prompt: 'Add a red carpet extending from the entrance of the visitor service center towards the foreground, e...'
+2025-10-24 16:16:48,524 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Add a red carpet extending from the entrance of th...'
+2025-10-24 16:16:57,996 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-24 16:16:58,000 - src.api_clients - INFO - Image generation successful.
+2025-10-24 16:16:58,209 - __main__ - INFO - Output image saved successfully to: output/interactive/step_006_1761315418.png
+2025-10-24 16:16:58,210 - __main__ - INFO - Step 6 logged with status: success
+2025-10-24 16:17:27,672 - __main__ - INFO - Step 7 logged with status: fail
+2025-10-24 16:17:27,672 - __main__ - INFO - --- Interactive Session Ended ---
+2025-10-24 16:18:00,402 - root - INFO - Logging configured.
+2025-10-24 16:18:00,403 - __main__ - INFO - --- Starting Interactive Session ---
+2025-10-24 16:18:06,417 - __main__ - INFO - Creating dummy blank image for initial generation.
+2025-10-24 16:18:06,440 - __main__ - INFO - Calling text prompt enhancer...
+2025-10-24 16:18:06,440 - src.api_clients - INFO - Sending request to Prompt Enhancer (Text): http://0.0.0.0:8001/v1 with prompt 'A simple, minimalist icon of a house. The image sh...'
+2025-10-24 16:18:12,805 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-24 16:18:12,811 - src.api_clients - INFO - Text Prompt enhancement successful. New prompt: 'A minimalist, symbolic icon of a house rendered in a clean, contemporary style. The design consists ...'
+2025-10-24 16:18:12,811 - __main__ - INFO - Calling image generation service with final prompt: 'A minimalist, symbolic icon of a house rendered in a clean, contemporary style. The design consists ...'
+2025-10-24 16:18:12,811 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'A minimalist, symbolic icon of a house rendered in...'
+2025-10-24 16:18:22,315 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-24 16:18:22,317 - src.api_clients - INFO - Image generation successful.
+2025-10-24 16:18:22,454 - __main__ - INFO - Output image saved successfully to: output/interactive/step_000_1761315502.png
+2025-10-24 16:18:22,456 - __main__ - INFO - Step 0 logged with status: success
+2025-10-24 16:18:22,563 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-24 16:18:22,563 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/v1 with prompt '...'
+2025-10-24 16:18:24,333 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-24 16:18:24,334 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Add a chimney on the roof and a window on the front of the house...'
+2025-10-24 16:18:24,334 - __main__ - INFO - Calling image generation service with final prompt: 'Add a chimney on the roof and a window on the front of the house...'
+2025-10-24 16:18:24,334 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Add a chimney on the roof and a window on the fron...'
+2025-10-24 16:18:33,906 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-24 16:18:33,908 - src.api_clients - INFO - Image generation successful.
+2025-10-24 16:18:34,094 - __main__ - INFO - Output image saved successfully to: output/interactive/step_001_1761315513.png
+2025-10-24 16:18:34,097 - __main__ - INFO - Step 1 logged with status: success
+2025-10-24 16:19:32,062 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-24 16:19:32,063 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/v1 with prompt 'Modify the existing house icon to have two stories...'
+2025-10-24 16:19:35,691 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-24 16:19:35,692 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Add a second story to the house icon, maintaining the minimalist black outline style. Ensure the new...'
+2025-10-24 16:19:35,692 - __main__ - INFO - Calling image generation service with final prompt: 'Add a second story to the house icon, maintaining the minimalist black outline style. Ensure the new...'
+2025-10-24 16:19:35,692 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Add a second story to the house icon, maintaining ...'
+2025-10-24 16:19:45,354 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-24 16:19:45,356 - src.api_clients - INFO - Image generation successful.
+2025-10-24 16:19:45,480 - __main__ - INFO - Output image saved successfully to: output/interactive/step_002_1761315585.png
+2025-10-24 16:19:45,485 - __main__ - INFO - Step 2 logged with status: success
+2025-10-24 16:20:10,111 - __main__ - INFO - Step 3 logged with status: fail
+2025-10-24 16:20:10,111 - __main__ - INFO - --- Interactive Session Ended ---
+2025-10-24 16:20:22,890 - root - INFO - Logging configured.
+2025-10-24 16:20:22,890 - __main__ - INFO - --- Starting Interactive Session ---
+2025-10-24 16:20:24,854 - __main__ - INFO - Creating dummy blank image for initial generation.
+2025-10-24 16:20:24,890 - __main__ - INFO - Calling text prompt enhancer...
+2025-10-24 16:20:24,890 - src.api_clients - INFO - Sending request to Prompt Enhancer (Text): http://0.0.0.0:8001/v1 with prompt 'A simple, minimalist icon of a house. The image sh...'
+2025-10-24 16:20:32,798 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-24 16:20:32,804 - src.api_clients - INFO - Text Prompt enhancement successful. New prompt: 'A minimalist, symbolic icon of a house, rendered as a simple black outline against a pristine solid ...'
+2025-10-24 16:20:32,804 - __main__ - INFO - Calling image generation service with final prompt: 'A minimalist, symbolic icon of a house, rendered as a simple black outline against a pristine solid ...'
+2025-10-24 16:20:32,804 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'A minimalist, symbolic icon of a house, rendered a...'
+2025-10-24 16:20:42,411 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-24 16:20:42,413 - src.api_clients - INFO - Image generation successful.
+2025-10-24 16:20:42,532 - __main__ - INFO - Output image saved successfully to: output/interactive/step_000_1761315642.png
+2025-10-24 16:20:42,534 - __main__ - INFO - Step 0 logged with status: success
+2025-10-24 16:20:56,914 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-24 16:20:56,914 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/v1 with prompt 'Modify the existing house icon to have two stories...'
+2025-10-24 16:20:59,328 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-24 16:20:59,329 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Add a second story to the house icon while maintaining the minimalist, black outline style. Ensure t...'
+2025-10-24 16:20:59,329 - __main__ - INFO - Calling image generation service with final prompt: 'Add a second story to the house icon while maintaining the minimalist, black outline style. Ensure t...'
+2025-10-24 16:20:59,329 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Add a second story to the house icon while maintai...'
+2025-10-24 16:21:08,650 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-24 16:21:08,651 - src.api_clients - INFO - Image generation successful.
+2025-10-24 16:21:08,757 - __main__ - INFO - Output image saved successfully to: output/interactive/step_001_1761315668.png
+2025-10-24 16:21:08,764 - __main__ - INFO - Step 1 logged with status: success
+2025-10-24 16:27:10,002 - __main__ - INFO - Step 2 logged with status: fail
+2025-10-24 16:27:10,004 - __main__ - INFO - --- Interactive Session Ended ---
+2025-10-24 16:27:17,448 - root - INFO - Logging configured.
+2025-10-24 16:27:17,449 - __main__ - INFO - --- Starting Interactive Session ---
+2025-10-24 16:27:21,192 - __main__ - INFO - Creating dummy blank image for initial generation.
+2025-10-24 16:27:21,223 - __main__ - INFO - Calling text prompt enhancer...
+2025-10-24 16:27:21,223 - src.api_clients - INFO - Sending request to Prompt Enhancer (Text): http://0.0.0.0:8001/v1 with prompt 'A simple, minimalist icon of a house. The image sh...'
+2025-10-24 16:27:29,801 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-24 16:27:29,807 - src.api_clients - INFO - Text Prompt enhancement successful. New prompt: 'Create a minimalist, clean, and symbolic icon of a house. The design should consist solely of a simp...'
+2025-10-24 16:27:29,807 - __main__ - INFO - Calling image generation service with final prompt: 'Create a minimalist, clean, and symbolic icon of a house. The design should consist solely of a simp...'
+2025-10-24 16:27:29,807 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Create a minimalist, clean, and symbolic icon of a...'
+2025-10-24 16:27:39,472 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-24 16:27:39,473 - src.api_clients - INFO - Image generation successful.
+2025-10-24 16:27:39,588 - __main__ - INFO - Output image saved successfully to: output/interactive/step_000_1761316059.png
+2025-10-24 16:27:39,589 - __main__ - INFO - Step 0 logged with status: success
+2025-10-24 16:42:32,577 - __main__ - INFO - Step 1 logged with status: fail
+2025-10-24 16:42:32,598 - __main__ - INFO - --- Interactive Session Ended ---
+2025-10-24 16:44:42,158 - root - INFO - Logging configured.
+2025-10-24 16:44:42,159 - __main__ - INFO - --- Starting Interactive Session ---
+2025-10-24 16:47:00,119 - __main__ - INFO - Creating dummy blank image for initial generation.
+2025-10-24 16:47:00,161 - __main__ - INFO - Calling text prompt enhancer...
+2025-10-24 16:47:00,161 - src.api_clients - INFO - Sending request to Prompt Enhancer (Text): http://0.0.0.0:8001/v1 with prompt 'A simple, minimalist icon of a house. The image sh...'
+2025-10-24 16:47:09,382 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-24 16:47:09,387 - src.api_clients - INFO - Text Prompt enhancement successful. New prompt: 'A sleek, minimalist icon depicting a stylized house, rendered as a clean, monochromatic black outlin...'
+2025-10-24 16:47:09,388 - __main__ - INFO - Calling image generation service with final prompt: 'A sleek, minimalist icon depicting a stylized house, rendered as a clean, monochromatic black outlin...'
+2025-10-24 16:47:09,388 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'A sleek, minimalist icon depicting a stylized hous...'
+2025-10-24 16:47:30,453 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-24 16:47:30,455 - src.api_clients - INFO - Image generation successful.
+2025-10-24 16:47:30,669 - __main__ - INFO - Output image saved successfully to: output/interactive/step_000_1761317250.png
+2025-10-24 16:47:30,674 - __main__ - INFO - Step 0 logged with status: success
+2025-10-24 16:48:10,449 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-24 16:48:10,449 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/v1 with prompt 'Modify the existing house icon to have two stories...'
+2025-10-24 16:48:15,506 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-24 16:48:15,507 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Add a second story to the house icon by drawing a smaller rectangle above the existing one, maintain...'
+2025-10-24 16:48:15,507 - __main__ - INFO - Calling image generation service with final prompt: 'Add a second story to the house icon by drawing a smaller rectangle above the existing one, maintain...'
+2025-10-24 16:48:15,507 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Add a second story to the house icon by drawing a ...'
+2025-10-24 16:48:33,968 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-24 16:48:33,970 - src.api_clients - INFO - Image generation successful.
+2025-10-24 16:48:34,205 - __main__ - INFO - Output image saved successfully to: output/interactive/step_001_1761317313.png
+2025-10-24 16:48:34,207 - __main__ - INFO - Step 1 logged with status: success
+2025-10-24 16:49:32,948 - __main__ - INFO - Step 2 logged with status: fail
+2025-10-24 16:49:32,948 - __main__ - INFO - --- Interactive Session Ended ---
+2025-10-24 16:49:49,090 - root - INFO - Logging configured.
+2025-10-24 16:49:49,090 - __main__ - INFO - --- Starting Interactive Session ---
+2025-10-24 16:49:51,449 - __main__ - INFO - Creating dummy blank image for initial generation.
+2025-10-24 16:49:51,471 - __main__ - INFO - Calling text prompt enhancer...
+2025-10-24 16:49:51,471 - src.api_clients - INFO - Sending request to Prompt Enhancer (Text): http://0.0.0.0:8001/v1 with prompt 'A simple, minimalist icon of a house. The image sh...'
+2025-10-24 16:49:57,807 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-24 16:49:57,812 - src.api_clients - INFO - Text Prompt enhancement successful. New prompt: 'A clean, minimalist vector-style icon depicting a simple house. The house is represented by a bold b...'
+2025-10-24 16:49:57,812 - __main__ - INFO - Calling image generation service with final prompt: 'A clean, minimalist vector-style icon depicting a simple house. The house is represented by a bold b...'
+2025-10-24 16:49:57,812 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'A clean, minimalist vector-style icon depicting a ...'
+2025-10-24 16:50:16,376 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-24 16:50:16,378 - src.api_clients - INFO - Image generation successful.
+2025-10-24 16:50:16,571 - __main__ - INFO - Output image saved successfully to: output/interactive/step_000_1761317416.png
+2025-10-24 16:50:16,573 - __main__ - INFO - Step 0 logged with status: success
+2025-10-24 16:50:31,245 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-24 16:50:31,245 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/v1 with prompt 'Modify the existing house icon to have two stories...'
+2025-10-24 16:50:34,171 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-24 16:50:34,171 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Add a second story to the house icon while maintaining the minimalist black outline style. The new s...'
+2025-10-24 16:50:34,171 - __main__ - INFO - Calling image generation service with final prompt: 'Add a second story to the house icon while maintaining the minimalist black outline style. The new s...'
+2025-10-24 16:50:34,171 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Add a second story to the house icon while maintai...'
+2025-10-24 16:50:52,567 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-24 16:50:52,569 - src.api_clients - INFO - Image generation successful.
+2025-10-24 16:50:52,762 - __main__ - INFO - Output image saved successfully to: output/interactive/step_001_1761317452.png
+2025-10-24 16:50:52,764 - __main__ - INFO - Step 1 logged with status: success
+2025-10-24 16:55:57,117 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-24 16:55:57,117 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/v1 with prompt 'Modify the chimney on the house. Color only the ch...'
+2025-10-24 16:55:59,458 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-24 16:55:59,458 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Add a small chimney on the roof of the house, colored red while keeping the rest of the house in the...'
+2025-10-24 16:55:59,458 - __main__ - INFO - Calling image generation service with final prompt: 'Add a small chimney on the roof of the house, colored red while keeping the rest of the house in the...'
+2025-10-24 16:55:59,458 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Add a small chimney on the roof of the house, colo...'
+2025-10-24 16:56:17,835 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-24 16:56:17,837 - src.api_clients - INFO - Image generation successful.
+2025-10-24 16:56:18,082 - __main__ - INFO - Output image saved successfully to: output/interactive/step_002_1761317777.png
+2025-10-24 16:56:18,083 - __main__ - INFO - Step 2 logged with status: success
+2025-10-24 16:58:14,083 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-24 16:58:14,084 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/v1 with prompt 'Make the existing objects in the image smaller, as...'
+2025-10-24 16:58:17,081 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-24 16:58:17,082 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Scale down the house icon to make it appear smaller, as if viewed from a distance, while preserving ...'
+2025-10-24 16:58:17,082 - __main__ - INFO - Calling image generation service with final prompt: 'Scale down the house icon to make it appear smaller, as if viewed from a distance, while preserving ...'
+2025-10-24 16:58:17,082 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Scale down the house icon to make it appear smalle...'
+2025-10-24 16:58:35,690 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-24 16:58:35,692 - src.api_clients - INFO - Image generation successful.
+2025-10-24 16:58:35,895 - __main__ - INFO - Output image saved successfully to: output/interactive/step_003_1761317915.png
+2025-10-24 16:58:35,897 - __main__ - INFO - Step 3 logged with status: success
+2025-10-24 16:59:48,258 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-24 16:59:48,258 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/v1 with prompt 'Add a simple outline of an emergency exit next to ...'
+2025-10-24 16:59:51,425 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-24 16:59:51,426 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Add a simple black outline of an emergency exit symbol to the left of the house. The symbol should c...'
+2025-10-24 16:59:51,426 - __main__ - INFO - Calling image generation service with final prompt: 'Add a simple black outline of an emergency exit symbol to the left of the house. The symbol should c...'
+2025-10-24 16:59:51,426 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Add a simple black outline of an emergency exit sy...'
+2025-10-24 17:00:10,085 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-24 17:00:10,088 - src.api_clients - INFO - Image generation successful.
+2025-10-24 17:00:10,357 - __main__ - INFO - Output image saved successfully to: output/interactive/step_004_1761318010.png
+2025-10-24 17:00:10,358 - __main__ - INFO - Step 4 logged with status: success
+2025-10-24 17:00:44,105 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-24 17:00:44,105 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/v1 with prompt 'Add a simple outline of an emergency button next t...'
+2025-10-24 17:00:47,567 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-24 17:00:47,568 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Add a simple, clean, and symbolic outline of an emergency button next to the emergency exit. The but...'
+2025-10-24 17:00:47,568 - __main__ - INFO - Calling image generation service with final prompt: 'Add a simple, clean, and symbolic outline of an emergency button next to the emergency exit. The but...'
+2025-10-24 17:00:47,568 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Add a simple, clean, and symbolic outline of an em...'
+2025-10-24 17:01:06,168 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-24 17:01:06,171 - src.api_clients - INFO - Image generation successful.
+2025-10-24 17:01:06,472 - __main__ - INFO - Output image saved successfully to: output/interactive/step_005_1761318066.png
+2025-10-24 17:01:06,475 - __main__ - INFO - Step 5 logged with status: success
+2025-10-24 17:01:06,734 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-24 17:01:06,735 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/v1 with prompt '...'
+2025-10-24 17:01:08,538 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-24 17:01:08,538 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Replace the red dot above the house symbol with a small black triangle pointing upwards....'
+2025-10-24 17:01:08,538 - __main__ - INFO - Calling image generation service with final prompt: 'Replace the red dot above the house symbol with a small black triangle pointing upwards....'
+2025-10-24 17:01:08,538 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Replace the red dot above the house symbol with a ...'
+2025-10-24 17:01:27,203 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-24 17:01:27,205 - src.api_clients - INFO - Image generation successful.
+2025-10-24 17:01:27,454 - __main__ - INFO - Output image saved successfully to: output/interactive/step_006_1761318087.png
+2025-10-24 17:01:27,456 - __main__ - INFO - Step 6 logged with status: success
+2025-10-24 17:02:31,647 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-24 17:02:31,647 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/v1 with prompt 'remove all random dots, spots and stray pixels fro...'
+2025-10-24 17:02:33,705 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-24 17:02:33,706 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Remove all random dots, spots, and stray pixels from the white background to achieve a completely pu...'
+2025-10-24 17:02:33,706 - __main__ - INFO - Calling image generation service with final prompt: 'Remove all random dots, spots, and stray pixels from the white background to achieve a completely pu...'
+2025-10-24 17:02:33,706 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Remove all random dots, spots, and stray pixels fr...'
+2025-10-24 17:02:52,128 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-24 17:02:52,131 - src.api_clients - INFO - Image generation successful.
+2025-10-24 17:02:52,421 - __main__ - INFO - Output image saved successfully to: output/interactive/step_007_1761318172.png
+2025-10-24 17:02:52,423 - __main__ - INFO - Step 7 logged with status: success
+2025-10-24 17:03:28,577 - __main__ - INFO - Step 8 logged with status: fail
+2025-10-24 17:03:28,577 - __main__ - INFO - --- Interactive Session Ended ---
+2025-10-24 17:03:32,679 - root - INFO - Logging configured.
+2025-10-24 17:03:32,680 - __main__ - INFO - --- Starting Interactive Session ---
+2025-10-24 17:03:59,921 - __main__ - INFO - Creating dummy blank image for initial generation.
+2025-10-24 17:03:59,951 - __main__ - INFO - Calling text prompt enhancer...
+2025-10-24 17:03:59,952 - src.api_clients - INFO - Sending request to Prompt Enhancer (Text): http://0.0.0.0:8001/v1 with prompt 'A simple, minimalist icon of a house. The image sh...'
+2025-10-24 17:04:06,921 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-24 17:04:06,927 - src.api_clients - INFO - Text Prompt enhancement successful. New prompt: 'A sleek and minimalist vector icon depicting a simple house, rendered entirely in a crisp black outl...'
+2025-10-24 17:04:06,927 - __main__ - INFO - Calling image generation service with final prompt: 'A sleek and minimalist vector icon depicting a simple house, rendered entirely in a crisp black outl...'
+2025-10-24 17:04:06,927 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'A sleek and minimalist vector icon depicting a sim...'
+2025-10-24 17:04:52,119 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-24 17:04:52,121 - src.api_clients - INFO - Image generation successful.
+2025-10-24 17:04:52,291 - __main__ - INFO - Output image saved successfully to: output/interactive/step_000_1761318292.png
+2025-10-24 17:04:52,293 - __main__ - INFO - Step 0 logged with status: success
+2025-10-24 17:05:15,090 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-24 17:05:15,090 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/v1 with prompt 'Modify the existing house icon to have two stories...'
+2025-10-24 17:05:17,912 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-24 17:05:17,913 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Add a second story to the house icon by drawing another rectangular shape above the existing structu...'
+2025-10-24 17:05:17,913 - __main__ - INFO - Calling image generation service with final prompt: 'Add a second story to the house icon by drawing another rectangular shape above the existing structu...'
+2025-10-24 17:05:17,913 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Add a second story to the house icon by drawing an...'
+2025-10-24 17:06:02,837 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-24 17:06:02,839 - src.api_clients - INFO - Image generation successful.
+2025-10-24 17:06:02,986 - __main__ - INFO - Output image saved successfully to: output/interactive/step_001_1761318362.png
+2025-10-24 17:06:02,988 - __main__ - INFO - Step 1 logged with status: success
+2025-10-24 17:06:23,138 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-24 17:06:23,138 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/v1 with prompt 'Modify the chimney on the house. Color only the ch...'
+2025-10-24 17:06:26,113 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-24 17:06:26,114 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Modify the chimney by adding a small rectangular shape extending from the top of the house's roof. C...'
+2025-10-24 17:06:26,114 - __main__ - INFO - Calling image generation service with final prompt: 'Modify the chimney by adding a small rectangular shape extending from the top of the house's roof. C...'
+2025-10-24 17:06:26,114 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Modify the chimney by adding a small rectangular s...'
+2025-10-24 17:07:11,128 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-24 17:07:11,130 - src.api_clients - INFO - Image generation successful.
+2025-10-24 17:07:11,285 - __main__ - INFO - Output image saved successfully to: output/interactive/step_002_1761318431.png
+2025-10-24 17:07:11,286 - __main__ - INFO - Step 2 logged with status: success
+2025-10-24 17:07:53,080 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-24 17:07:53,080 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/v1 with prompt 'Make the existing objects in the image smaller, as...'
+2025-10-24 17:07:56,729 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-24 17:07:56,730 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Scale down the entire house icon to make it appear smaller, as if viewed from a distance. Expand the...'
+2025-10-24 17:07:56,731 - __main__ - INFO - Calling image generation service with final prompt: 'Scale down the entire house icon to make it appear smaller, as if viewed from a distance. Expand the...'
+2025-10-24 17:07:56,731 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Scale down the entire house icon to make it appear...'
+2025-10-24 17:08:41,986 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-24 17:08:41,989 - src.api_clients - INFO - Image generation successful.
+2025-10-24 17:08:42,239 - __main__ - INFO - Output image saved successfully to: output/interactive/step_003_1761318522.png
+2025-10-24 17:08:42,242 - __main__ - INFO - Step 3 logged with status: success
+2025-10-24 17:09:20,882 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-24 17:09:20,882 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/v1 with prompt 'Add a simple outline of an emergency exit next to ...'
+2025-10-24 17:09:24,038 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-24 17:09:24,039 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Add a simple black outline of an emergency exit symbol to the right of the house. The symbol should ...'
+2025-10-24 17:09:24,039 - __main__ - INFO - Calling image generation service with final prompt: 'Add a simple black outline of an emergency exit symbol to the right of the house. The symbol should ...'
+2025-10-24 17:09:24,039 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Add a simple black outline of an emergency exit sy...'
+2025-10-24 17:10:09,025 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-24 17:10:09,027 - src.api_clients - INFO - Image generation successful.
+2025-10-24 17:10:09,161 - __main__ - INFO - Output image saved successfully to: output/interactive/step_004_1761318609.png
+2025-10-24 17:10:09,163 - __main__ - INFO - Step 4 logged with status: success
+2025-10-24 17:10:40,302 - __main__ - INFO - Step 5 logged with status: fail
+2025-10-24 17:10:40,302 - __main__ - INFO - --- Interactive Session Ended ---
+2025-10-24 17:11:09,637 - root - INFO - Logging configured.
+2025-10-24 17:11:09,637 - __main__ - INFO - --- Starting Interactive Session ---
+2025-10-24 17:11:18,758 - __main__ - INFO - Creating dummy blank image for initial generation.
+2025-10-24 17:11:18,779 - __main__ - INFO - Calling text prompt enhancer...
+2025-10-24 17:11:18,779 - src.api_clients - INFO - Sending request to Prompt Enhancer (Text): http://0.0.0.0:8001/v1 with prompt 'A simple, minimalist icon of a house. The image sh...'
+2025-10-24 17:11:25,758 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-24 17:11:25,763 - src.api_clients - INFO - Text Prompt enhancement successful. New prompt: 'Create a highly stylized, minimalist vector icon depicting a classic house shape with a triangular r...'
+2025-10-24 17:11:25,763 - __main__ - INFO - Calling image generation service with final prompt: 'Create a highly stylized, minimalist vector icon depicting a classic house shape with a triangular r...'
+2025-10-24 17:11:25,763 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Create a highly stylized, minimalist vector icon d...'
+2025-10-24 17:11:44,074 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-24 17:11:44,075 - src.api_clients - INFO - Image generation successful.
+2025-10-24 17:11:44,149 - __main__ - INFO - Output image saved successfully to: output/interactive/step_000_1761318704.png
+2025-10-24 17:11:44,151 - __main__ - INFO - Step 0 logged with status: success
+2025-10-24 17:11:52,548 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-24 17:11:52,548 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/v1 with prompt 'Edit this image to remove all random spots, dots, ...'
+2025-10-24 17:11:54,540 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-24 17:11:54,541 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Clean the background by removing any stray pixels or imperfections, ensuring the background is compl...'
+2025-10-24 17:11:54,541 - __main__ - INFO - Calling image generation service with final prompt: 'Clean the background by removing any stray pixels or imperfections, ensuring the background is compl...'
+2025-10-24 17:11:54,541 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Clean the background by removing any stray pixels ...'
+2025-10-24 17:12:12,819 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-24 17:12:12,821 - src.api_clients - INFO - Image generation successful.
+2025-10-24 17:12:12,960 - __main__ - INFO - Output image saved successfully to: output/interactive/step_001_1761318732.png
+2025-10-24 17:12:12,962 - __main__ - INFO - Step 1 logged with status: success
+2025-10-24 17:12:13,075 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-24 17:12:13,075 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/v1 with prompt '...'
+2025-10-24 17:12:14,809 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-24 17:12:14,810 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Add a chimney on the roof, positioned slightly off-center to the right....'
+2025-10-24 17:12:14,810 - __main__ - INFO - Calling image generation service with final prompt: 'Add a chimney on the roof, positioned slightly off-center to the right....'
+2025-10-24 17:12:14,810 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Add a chimney on the roof, positioned slightly off...'
+2025-10-24 17:12:33,241 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-24 17:12:33,243 - src.api_clients - INFO - Image generation successful.
+2025-10-24 17:12:33,470 - __main__ - INFO - Output image saved successfully to: output/interactive/step_002_1761318753.png
+2025-10-24 17:12:33,472 - __main__ - INFO - Step 2 logged with status: success
+2025-10-24 17:12:33,667 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-24 17:12:33,667 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/v1 with prompt '...'
+2025-10-24 17:12:35,611 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-24 17:12:35,612 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Add a chimney on the roof and a small garden with grass and flowers in front of the house....'
+2025-10-24 17:12:35,612 - __main__ - INFO - Calling image generation service with final prompt: 'Add a chimney on the roof and a small garden with grass and flowers in front of the house....'
+2025-10-24 17:12:35,612 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Add a chimney on the roof and a small garden with ...'
+2025-10-24 17:12:54,061 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-24 17:12:54,063 - src.api_clients - INFO - Image generation successful.
+2025-10-24 17:12:54,338 - __main__ - INFO - Output image saved successfully to: output/interactive/step_003_1761318774.png
+2025-10-24 17:12:54,340 - __main__ - INFO - Step 3 logged with status: success
+2025-10-24 17:13:05,841 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-24 17:13:05,841 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/v1 with prompt 'Modify the existing house icon to have two stories...'
+2025-10-24 17:13:08,727 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-24 17:13:08,727 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Add a second story to the house while maintaining the minimalist black outline style. Ensure that th...'
+2025-10-24 17:13:08,727 - __main__ - INFO - Calling image generation service with final prompt: 'Add a second story to the house while maintaining the minimalist black outline style. Ensure that th...'
+2025-10-24 17:13:08,727 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Add a second story to the house while maintaining ...'
+2025-10-24 17:13:27,099 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-24 17:13:27,102 - src.api_clients - INFO - Image generation successful.
+2025-10-24 17:13:27,287 - __main__ - INFO - Output image saved successfully to: output/interactive/step_004_1761318807.png
+2025-10-24 17:13:27,289 - __main__ - INFO - Step 4 logged with status: success
+2025-10-24 17:13:45,189 - __main__ - INFO - Step 5 logged with status: fail
+2025-10-24 17:13:45,190 - __main__ - INFO - --- Interactive Session Ended ---
+2025-10-24 17:13:48,496 - root - INFO - Logging configured.
+2025-10-24 17:13:48,496 - __main__ - INFO - --- Starting Interactive Session ---
+2025-10-24 17:14:00,190 - __main__ - INFO - Creating dummy blank image for initial generation.
+2025-10-24 17:14:00,217 - __main__ - INFO - Calling text prompt enhancer...
+2025-10-24 17:14:00,217 - src.api_clients - INFO - Sending request to Prompt Enhancer (Text): http://0.0.0.0:8001/v1 with prompt 'A simple, minimalist icon of a house. The image sh...'
+2025-10-24 17:14:08,378 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-24 17:14:08,384 - src.api_clients - INFO - Text Prompt enhancement successful. New prompt: 'Create a clean, minimalist icon-style illustration of a house with a simple yet symbolic design. The...'
+2025-10-24 17:14:08,384 - __main__ - INFO - Calling image generation service with final prompt: 'Create a clean, minimalist icon-style illustration of a house with a simple yet symbolic design. The...'
+2025-10-24 17:14:08,384 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Create a clean, minimalist icon-style illustration...'
+2025-10-24 17:14:27,101 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-24 17:14:27,104 - src.api_clients - INFO - Image generation successful.
+2025-10-24 17:14:27,314 - __main__ - INFO - Output image saved successfully to: output/interactive/step_000_1761318867.png
+2025-10-24 17:14:27,316 - __main__ - INFO - Step 0 logged with status: success
+2025-10-24 17:14:33,642 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-24 17:14:33,642 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/v1 with prompt 'Edit this image to remove all random spots, dots, ...'
+2025-10-24 17:14:35,759 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-24 17:14:35,759 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Clean the white background by removing all stray pixels, spots, and imperfections, ensuring it is co...'
+2025-10-24 17:14:35,760 - __main__ - INFO - Calling image generation service with final prompt: 'Clean the white background by removing all stray pixels, spots, and imperfections, ensuring it is co...'
+2025-10-24 17:14:35,760 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Clean the white background by removing all stray p...'
+2025-10-24 17:14:54,127 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-24 17:14:54,129 - src.api_clients - INFO - Image generation successful.
+2025-10-24 17:14:54,290 - __main__ - INFO - Output image saved successfully to: output/interactive/step_001_1761318894.png
+2025-10-24 17:14:54,291 - __main__ - INFO - Step 1 logged with status: success
+2025-10-24 17:15:11,257 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-24 17:15:11,257 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/v1 with prompt 'Modify the existing house icon to have two stories...'
+2025-10-24 17:15:13,623 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-24 17:15:13,623 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Add a second story to the house icon while maintaining the minimalist, black outline style. Ensure t...'
+2025-10-24 17:15:13,624 - __main__ - INFO - Calling image generation service with final prompt: 'Add a second story to the house icon while maintaining the minimalist, black outline style. Ensure t...'
+2025-10-24 17:15:13,624 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Add a second story to the house icon while maintai...'
+2025-10-24 17:15:31,906 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-24 17:15:31,908 - src.api_clients - INFO - Image generation successful.
+2025-10-24 17:15:32,025 - __main__ - INFO - Output image saved successfully to: output/interactive/step_002_1761318931.png
+2025-10-24 17:15:32,027 - __main__ - INFO - Step 2 logged with status: success
+2025-10-24 17:15:40,256 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-24 17:15:40,256 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/v1 with prompt 'Edit this image to remove all random spots, dots, ...'
+2025-10-24 17:15:42,299 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-24 17:15:42,300 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Remove all random spots, dots, and stray pixels from the white background to achieve a pure white ba...'
+2025-10-24 17:15:42,300 - __main__ - INFO - Calling image generation service with final prompt: 'Remove all random spots, dots, and stray pixels from the white background to achieve a pure white ba...'
+2025-10-24 17:15:42,300 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Remove all random spots, dots, and stray pixels fr...'
+2025-10-24 17:16:00,706 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-24 17:16:00,709 - src.api_clients - INFO - Image generation successful.
+2025-10-24 17:16:00,890 - __main__ - INFO - Output image saved successfully to: output/interactive/step_003_1761318960.png
+2025-10-24 17:16:00,892 - __main__ - INFO - Step 3 logged with status: success
+2025-10-24 17:16:04,668 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-24 17:16:04,669 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/v1 with prompt 'Modify the chimney on the house. Color only the ch...'
+2025-10-24 17:16:06,963 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-24 17:16:06,963 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Color the chimney red while keeping the rest of the house in its existing minimalist, black outline ...'
+2025-10-24 17:16:06,963 - __main__ - INFO - Calling image generation service with final prompt: 'Color the chimney red while keeping the rest of the house in its existing minimalist, black outline ...'
+2025-10-24 17:16:06,963 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Color the chimney red while keeping the rest of th...'
+2025-10-24 17:16:25,411 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-24 17:16:25,413 - src.api_clients - INFO - Image generation successful.
+2025-10-24 17:16:25,524 - __main__ - INFO - Output image saved successfully to: output/interactive/step_004_1761318985.png
+2025-10-24 17:16:25,526 - __main__ - INFO - Step 4 logged with status: success
+2025-10-24 17:16:36,494 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-24 17:16:36,494 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/v1 with prompt 'Edit this image to remove all random spots, dots, ...'
+2025-10-24 17:16:38,661 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-24 17:16:38,662 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Remove all scattered spots, dots, and stray pixels from the white background, ensuring the backgroun...'
+2025-10-24 17:16:38,662 - __main__ - INFO - Calling image generation service with final prompt: 'Remove all scattered spots, dots, and stray pixels from the white background, ensuring the backgroun...'
+2025-10-24 17:16:38,662 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Remove all scattered spots, dots, and stray pixels...'
+2025-10-24 17:16:57,040 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-24 17:16:57,042 - src.api_clients - INFO - Image generation successful.
+2025-10-24 17:16:57,143 - __main__ - INFO - Output image saved successfully to: output/interactive/step_005_1761319017.png
+2025-10-24 17:16:57,145 - __main__ - INFO - Step 5 logged with status: success
+2025-10-24 17:18:32,997 - __main__ - INFO - Step 6 logged with status: fail
+2025-10-24 17:18:32,997 - __main__ - INFO - --- Interactive Session Ended ---
