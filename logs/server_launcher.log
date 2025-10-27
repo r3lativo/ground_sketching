@@ -1055,3 +1055,1038 @@
 2025-10-24 17:18:44,252 - __main__ - INFO - vLLM server process exited with code: 0
 2025-10-24 17:18:44,253 - __main__ - INFO - vLLM server shut down.
 2025-10-24 17:18:44,253 - __main__ - INFO - Server launcher finished.
+2025-10-27 13:39:14,393 - root - INFO - Logging configured.
+2025-10-27 13:40:29,787 - root - INFO - Logging configured.
+2025-10-27 13:42:27,018 - root - INFO - Logging configured.
+2025-10-27 13:45:39,265 - root - INFO - Logging configured.
+2025-10-27 13:47:59,352 - root - INFO - Logging configured.
+2025-10-27 13:49:43,167 - root - INFO - Logging configured.
+2025-10-27 13:51:50,608 - root - INFO - Logging configured.
+2025-10-27 13:55:01,309 - root - INFO - Logging configured.
+2025-10-27 13:56:49,764 - root - INFO - Logging configured.
+2025-10-27 14:00:45,771 - root - INFO - Logging configured.
+2025-10-27 16:41:22,090 - root - INFO - Logging configured.
+2025-10-27 16:44:45,102 - root - INFO - Logging configured.
+2025-10-27 16:55:21,797 - root - INFO - Logging configured.
+2025-10-27 17:00:28,977 - root - INFO - Logging configured.
+2025-10-27 17:05:20,118 - root - INFO - Logging configured.
+2025-10-27 17:12:08,569 - root - INFO - Logging configured.
+2025-10-27 17:12:08,572 - __main__ - INFO - Loading LLM: /lustre/fsmisc/dataset/HuggingFace_Models/Qwen/Qwen2.5-VL-32B-Instruct with dtype: bfloat16
+2025-10-27 17:13:50,482 - __main__ - INFO - LLM and tokenizer loaded successfully.
+2025-10-27 17:25:04,139 - __main__ - ERROR - Error during llm.generate: list index out of range
+Traceback (most recent call last):
+  File "/lustre/fswork/projects/rech/bgp/upa38qy/ground_sketching/new_serve_vllm.py", line 105, in handle_generation
+    outputs = llm.generate([prompt_str], sampling_params) # Pass as list
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/entrypoints/llm.py", line 396, in generate
+    outputs = self._run_engine(use_tqdm=use_tqdm)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/entrypoints/llm.py", line 1550, in _run_engine
+    step_outputs = self.llm_engine.step()
+                   ^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/llm_engine.py", line 248, in step
+    outputs = self.engine_core.get_output()
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/core_client.py", line 248, in get_output
+    outputs, _ = self.engine_core.step()
+                 ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 292, in step
+    model_output = self.execute_model_with_error_logging(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 278, in execute_model_with_error_logging
+    raise err
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 269, in execute_model_with_error_logging
+    return model_fn(scheduler_output)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/executor/abstract.py", line 93, in execute_model
+    output = self.collective_rpc("execute_model",
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/executor/uniproc_executor.py", line 58, in collective_rpc
+    answer = run_method(self.driver_worker, method, args, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/utils/__init__.py", line 3060, in run_method
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/torch/utils/_contextlib.py", line 120, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/worker/gpu_worker.py", line 436, in execute_model
+    output = self.model_runner.execute_model(scheduler_output,
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/torch/utils/_contextlib.py", line 120, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py", line 2006, in execute_model
+    self._update_states(scheduler_output)
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py", line 573, in _update_states
+    self._init_mrope_positions(req_state)
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py", line 715, in _init_mrope_positions
+    MRotaryEmbedding.get_input_positions_tensor(
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/model_executor/layers/rotary_embedding/mrope.py", line 392, in get_input_positions_tensor
+    return cls._vl_get_input_positions_tensor(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/model_executor/layers/rotary_embedding/mrope.py", line 795, in _vl_get_input_positions_tensor
+    image_grid_thw[image_index][0],
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: list index out of range
+2025-10-27 17:25:30,102 - __main__ - ERROR - Error during llm.generate: list index out of range
+Traceback (most recent call last):
+  File "/lustre/fswork/projects/rech/bgp/upa38qy/ground_sketching/new_serve_vllm.py", line 105, in handle_generation
+    outputs = llm.generate([prompt_str], sampling_params) # Pass as list
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/entrypoints/llm.py", line 396, in generate
+    outputs = self._run_engine(use_tqdm=use_tqdm)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/entrypoints/llm.py", line 1550, in _run_engine
+    step_outputs = self.llm_engine.step()
+                   ^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/llm_engine.py", line 248, in step
+    outputs = self.engine_core.get_output()
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/core_client.py", line 248, in get_output
+    outputs, _ = self.engine_core.step()
+                 ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 292, in step
+    model_output = self.execute_model_with_error_logging(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 278, in execute_model_with_error_logging
+    raise err
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 269, in execute_model_with_error_logging
+    return model_fn(scheduler_output)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/executor/abstract.py", line 93, in execute_model
+    output = self.collective_rpc("execute_model",
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/executor/uniproc_executor.py", line 58, in collective_rpc
+    answer = run_method(self.driver_worker, method, args, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/utils/__init__.py", line 3060, in run_method
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/torch/utils/_contextlib.py", line 120, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/worker/gpu_worker.py", line 436, in execute_model
+    output = self.model_runner.execute_model(scheduler_output,
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/torch/utils/_contextlib.py", line 120, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py", line 2006, in execute_model
+    self._update_states(scheduler_output)
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py", line 573, in _update_states
+    self._init_mrope_positions(req_state)
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py", line 715, in _init_mrope_positions
+    MRotaryEmbedding.get_input_positions_tensor(
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/model_executor/layers/rotary_embedding/mrope.py", line 392, in get_input_positions_tensor
+    return cls._vl_get_input_positions_tensor(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/model_executor/layers/rotary_embedding/mrope.py", line 795, in _vl_get_input_positions_tensor
+    image_grid_thw[image_index][0],
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: list index out of range
+2025-10-27 17:26:13,645 - __main__ - ERROR - Error during llm.generate: list index out of range
+Traceback (most recent call last):
+  File "/lustre/fswork/projects/rech/bgp/upa38qy/ground_sketching/new_serve_vllm.py", line 105, in handle_generation
+    outputs = llm.generate([prompt_str], sampling_params) # Pass as list
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/entrypoints/llm.py", line 396, in generate
+    outputs = self._run_engine(use_tqdm=use_tqdm)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/entrypoints/llm.py", line 1550, in _run_engine
+    step_outputs = self.llm_engine.step()
+                   ^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/llm_engine.py", line 248, in step
+    outputs = self.engine_core.get_output()
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/core_client.py", line 248, in get_output
+    outputs, _ = self.engine_core.step()
+                 ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 292, in step
+    model_output = self.execute_model_with_error_logging(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 278, in execute_model_with_error_logging
+    raise err
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 269, in execute_model_with_error_logging
+    return model_fn(scheduler_output)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/executor/abstract.py", line 93, in execute_model
+    output = self.collective_rpc("execute_model",
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/executor/uniproc_executor.py", line 58, in collective_rpc
+    answer = run_method(self.driver_worker, method, args, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/utils/__init__.py", line 3060, in run_method
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/torch/utils/_contextlib.py", line 120, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/worker/gpu_worker.py", line 436, in execute_model
+    output = self.model_runner.execute_model(scheduler_output,
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/torch/utils/_contextlib.py", line 120, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py", line 2006, in execute_model
+    self._update_states(scheduler_output)
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py", line 573, in _update_states
+    self._init_mrope_positions(req_state)
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py", line 715, in _init_mrope_positions
+    MRotaryEmbedding.get_input_positions_tensor(
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/model_executor/layers/rotary_embedding/mrope.py", line 392, in get_input_positions_tensor
+    return cls._vl_get_input_positions_tensor(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/model_executor/layers/rotary_embedding/mrope.py", line 795, in _vl_get_input_positions_tensor
+    image_grid_thw[image_index][0],
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: list index out of range
+2025-10-27 17:26:36,931 - __main__ - ERROR - Error during llm.generate: list index out of range
+Traceback (most recent call last):
+  File "/lustre/fswork/projects/rech/bgp/upa38qy/ground_sketching/new_serve_vllm.py", line 105, in handle_generation
+    outputs = llm.generate([prompt_str], sampling_params) # Pass as list
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/entrypoints/llm.py", line 396, in generate
+    outputs = self._run_engine(use_tqdm=use_tqdm)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/entrypoints/llm.py", line 1550, in _run_engine
+    step_outputs = self.llm_engine.step()
+                   ^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/llm_engine.py", line 248, in step
+    outputs = self.engine_core.get_output()
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/core_client.py", line 248, in get_output
+    outputs, _ = self.engine_core.step()
+                 ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 292, in step
+    model_output = self.execute_model_with_error_logging(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 278, in execute_model_with_error_logging
+    raise err
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 269, in execute_model_with_error_logging
+    return model_fn(scheduler_output)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/executor/abstract.py", line 93, in execute_model
+    output = self.collective_rpc("execute_model",
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/executor/uniproc_executor.py", line 58, in collective_rpc
+    answer = run_method(self.driver_worker, method, args, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/utils/__init__.py", line 3060, in run_method
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/torch/utils/_contextlib.py", line 120, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/worker/gpu_worker.py", line 436, in execute_model
+    output = self.model_runner.execute_model(scheduler_output,
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/torch/utils/_contextlib.py", line 120, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py", line 2006, in execute_model
+    self._update_states(scheduler_output)
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py", line 573, in _update_states
+    self._init_mrope_positions(req_state)
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py", line 715, in _init_mrope_positions
+    MRotaryEmbedding.get_input_positions_tensor(
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/model_executor/layers/rotary_embedding/mrope.py", line 392, in get_input_positions_tensor
+    return cls._vl_get_input_positions_tensor(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/model_executor/layers/rotary_embedding/mrope.py", line 795, in _vl_get_input_positions_tensor
+    image_grid_thw[image_index][0],
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: list index out of range
+2025-10-27 17:26:57,990 - __main__ - ERROR - Error during llm.generate: list index out of range
+Traceback (most recent call last):
+  File "/lustre/fswork/projects/rech/bgp/upa38qy/ground_sketching/new_serve_vllm.py", line 105, in handle_generation
+    outputs = llm.generate([prompt_str], sampling_params) # Pass as list
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/entrypoints/llm.py", line 396, in generate
+    outputs = self._run_engine(use_tqdm=use_tqdm)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/entrypoints/llm.py", line 1550, in _run_engine
+    step_outputs = self.llm_engine.step()
+                   ^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/llm_engine.py", line 248, in step
+    outputs = self.engine_core.get_output()
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/core_client.py", line 248, in get_output
+    outputs, _ = self.engine_core.step()
+                 ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 292, in step
+    model_output = self.execute_model_with_error_logging(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 278, in execute_model_with_error_logging
+    raise err
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 269, in execute_model_with_error_logging
+    return model_fn(scheduler_output)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/executor/abstract.py", line 93, in execute_model
+    output = self.collective_rpc("execute_model",
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/executor/uniproc_executor.py", line 58, in collective_rpc
+    answer = run_method(self.driver_worker, method, args, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/utils/__init__.py", line 3060, in run_method
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/torch/utils/_contextlib.py", line 120, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/worker/gpu_worker.py", line 436, in execute_model
+    output = self.model_runner.execute_model(scheduler_output,
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/torch/utils/_contextlib.py", line 120, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py", line 2006, in execute_model
+    self._update_states(scheduler_output)
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py", line 573, in _update_states
+    self._init_mrope_positions(req_state)
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py", line 715, in _init_mrope_positions
+    MRotaryEmbedding.get_input_positions_tensor(
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/model_executor/layers/rotary_embedding/mrope.py", line 392, in get_input_positions_tensor
+    return cls._vl_get_input_positions_tensor(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/model_executor/layers/rotary_embedding/mrope.py", line 795, in _vl_get_input_positions_tensor
+    image_grid_thw[image_index][0],
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: list index out of range
+2025-10-27 17:27:21,210 - __main__ - ERROR - Error during llm.generate: list index out of range
+Traceback (most recent call last):
+  File "/lustre/fswork/projects/rech/bgp/upa38qy/ground_sketching/new_serve_vllm.py", line 105, in handle_generation
+    outputs = llm.generate([prompt_str], sampling_params) # Pass as list
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/entrypoints/llm.py", line 396, in generate
+    outputs = self._run_engine(use_tqdm=use_tqdm)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/entrypoints/llm.py", line 1550, in _run_engine
+    step_outputs = self.llm_engine.step()
+                   ^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/llm_engine.py", line 248, in step
+    outputs = self.engine_core.get_output()
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/core_client.py", line 248, in get_output
+    outputs, _ = self.engine_core.step()
+                 ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 292, in step
+    model_output = self.execute_model_with_error_logging(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 278, in execute_model_with_error_logging
+    raise err
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 269, in execute_model_with_error_logging
+    return model_fn(scheduler_output)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/executor/abstract.py", line 93, in execute_model
+    output = self.collective_rpc("execute_model",
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/executor/uniproc_executor.py", line 58, in collective_rpc
+    answer = run_method(self.driver_worker, method, args, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/utils/__init__.py", line 3060, in run_method
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/torch/utils/_contextlib.py", line 120, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/worker/gpu_worker.py", line 436, in execute_model
+    output = self.model_runner.execute_model(scheduler_output,
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/torch/utils/_contextlib.py", line 120, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py", line 2006, in execute_model
+    self._update_states(scheduler_output)
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py", line 573, in _update_states
+    self._init_mrope_positions(req_state)
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py", line 715, in _init_mrope_positions
+    MRotaryEmbedding.get_input_positions_tensor(
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/model_executor/layers/rotary_embedding/mrope.py", line 392, in get_input_positions_tensor
+    return cls._vl_get_input_positions_tensor(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/model_executor/layers/rotary_embedding/mrope.py", line 795, in _vl_get_input_positions_tensor
+    image_grid_thw[image_index][0],
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: list index out of range
+2025-10-27 17:27:50,890 - __main__ - ERROR - Error during llm.generate: list index out of range
+Traceback (most recent call last):
+  File "/lustre/fswork/projects/rech/bgp/upa38qy/ground_sketching/new_serve_vllm.py", line 105, in handle_generation
+    outputs = llm.generate([prompt_str], sampling_params) # Pass as list
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/entrypoints/llm.py", line 396, in generate
+    outputs = self._run_engine(use_tqdm=use_tqdm)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/entrypoints/llm.py", line 1550, in _run_engine
+    step_outputs = self.llm_engine.step()
+                   ^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/llm_engine.py", line 248, in step
+    outputs = self.engine_core.get_output()
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/core_client.py", line 248, in get_output
+    outputs, _ = self.engine_core.step()
+                 ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 292, in step
+    model_output = self.execute_model_with_error_logging(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 278, in execute_model_with_error_logging
+    raise err
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 269, in execute_model_with_error_logging
+    return model_fn(scheduler_output)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/executor/abstract.py", line 93, in execute_model
+    output = self.collective_rpc("execute_model",
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/executor/uniproc_executor.py", line 58, in collective_rpc
+    answer = run_method(self.driver_worker, method, args, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/utils/__init__.py", line 3060, in run_method
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/torch/utils/_contextlib.py", line 120, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/worker/gpu_worker.py", line 436, in execute_model
+    output = self.model_runner.execute_model(scheduler_output,
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/torch/utils/_contextlib.py", line 120, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py", line 2006, in execute_model
+    self._update_states(scheduler_output)
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py", line 573, in _update_states
+    self._init_mrope_positions(req_state)
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py", line 715, in _init_mrope_positions
+    MRotaryEmbedding.get_input_positions_tensor(
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/model_executor/layers/rotary_embedding/mrope.py", line 392, in get_input_positions_tensor
+    return cls._vl_get_input_positions_tensor(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/model_executor/layers/rotary_embedding/mrope.py", line 795, in _vl_get_input_positions_tensor
+    image_grid_thw[image_index][0],
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: list index out of range
+2025-10-27 17:28:26,533 - __main__ - ERROR - Error during llm.generate: list index out of range
+Traceback (most recent call last):
+  File "/lustre/fswork/projects/rech/bgp/upa38qy/ground_sketching/new_serve_vllm.py", line 105, in handle_generation
+    outputs = llm.generate([prompt_str], sampling_params) # Pass as list
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/entrypoints/llm.py", line 396, in generate
+    outputs = self._run_engine(use_tqdm=use_tqdm)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/entrypoints/llm.py", line 1550, in _run_engine
+    step_outputs = self.llm_engine.step()
+                   ^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/llm_engine.py", line 248, in step
+    outputs = self.engine_core.get_output()
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/core_client.py", line 248, in get_output
+    outputs, _ = self.engine_core.step()
+                 ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 292, in step
+    model_output = self.execute_model_with_error_logging(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 278, in execute_model_with_error_logging
+    raise err
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 269, in execute_model_with_error_logging
+    return model_fn(scheduler_output)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/executor/abstract.py", line 93, in execute_model
+    output = self.collective_rpc("execute_model",
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/executor/uniproc_executor.py", line 58, in collective_rpc
+    answer = run_method(self.driver_worker, method, args, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/utils/__init__.py", line 3060, in run_method
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/torch/utils/_contextlib.py", line 120, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/worker/gpu_worker.py", line 436, in execute_model
+    output = self.model_runner.execute_model(scheduler_output,
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/torch/utils/_contextlib.py", line 120, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py", line 2006, in execute_model
+    self._update_states(scheduler_output)
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py", line 573, in _update_states
+    self._init_mrope_positions(req_state)
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py", line 715, in _init_mrope_positions
+    MRotaryEmbedding.get_input_positions_tensor(
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/model_executor/layers/rotary_embedding/mrope.py", line 392, in get_input_positions_tensor
+    return cls._vl_get_input_positions_tensor(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/model_executor/layers/rotary_embedding/mrope.py", line 795, in _vl_get_input_positions_tensor
+    image_grid_thw[image_index][0],
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: list index out of range
+2025-10-27 17:29:22,414 - __main__ - ERROR - Error during llm.generate: list index out of range
+Traceback (most recent call last):
+  File "/lustre/fswork/projects/rech/bgp/upa38qy/ground_sketching/new_serve_vllm.py", line 105, in handle_generation
+    outputs = llm.generate([prompt_str], sampling_params) # Pass as list
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/entrypoints/llm.py", line 396, in generate
+    outputs = self._run_engine(use_tqdm=use_tqdm)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/entrypoints/llm.py", line 1550, in _run_engine
+    step_outputs = self.llm_engine.step()
+                   ^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/llm_engine.py", line 248, in step
+    outputs = self.engine_core.get_output()
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/core_client.py", line 248, in get_output
+    outputs, _ = self.engine_core.step()
+                 ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 292, in step
+    model_output = self.execute_model_with_error_logging(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 278, in execute_model_with_error_logging
+    raise err
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 269, in execute_model_with_error_logging
+    return model_fn(scheduler_output)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/executor/abstract.py", line 93, in execute_model
+    output = self.collective_rpc("execute_model",
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/executor/uniproc_executor.py", line 58, in collective_rpc
+    answer = run_method(self.driver_worker, method, args, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/utils/__init__.py", line 3060, in run_method
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/torch/utils/_contextlib.py", line 120, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/worker/gpu_worker.py", line 436, in execute_model
+    output = self.model_runner.execute_model(scheduler_output,
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/torch/utils/_contextlib.py", line 120, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py", line 2006, in execute_model
+    self._update_states(scheduler_output)
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py", line 573, in _update_states
+    self._init_mrope_positions(req_state)
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py", line 715, in _init_mrope_positions
+    MRotaryEmbedding.get_input_positions_tensor(
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/model_executor/layers/rotary_embedding/mrope.py", line 392, in get_input_positions_tensor
+    return cls._vl_get_input_positions_tensor(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/model_executor/layers/rotary_embedding/mrope.py", line 795, in _vl_get_input_positions_tensor
+    image_grid_thw[image_index][0],
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: list index out of range
+2025-10-27 17:30:12,690 - __main__ - ERROR - Error during llm.generate: list index out of range
+Traceback (most recent call last):
+  File "/lustre/fswork/projects/rech/bgp/upa38qy/ground_sketching/new_serve_vllm.py", line 105, in handle_generation
+    outputs = llm.generate([prompt_str], sampling_params) # Pass as list
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/entrypoints/llm.py", line 396, in generate
+    outputs = self._run_engine(use_tqdm=use_tqdm)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/entrypoints/llm.py", line 1550, in _run_engine
+    step_outputs = self.llm_engine.step()
+                   ^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/llm_engine.py", line 248, in step
+    outputs = self.engine_core.get_output()
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/core_client.py", line 248, in get_output
+    outputs, _ = self.engine_core.step()
+                 ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 292, in step
+    model_output = self.execute_model_with_error_logging(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 278, in execute_model_with_error_logging
+    raise err
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 269, in execute_model_with_error_logging
+    return model_fn(scheduler_output)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/executor/abstract.py", line 93, in execute_model
+    output = self.collective_rpc("execute_model",
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/executor/uniproc_executor.py", line 58, in collective_rpc
+    answer = run_method(self.driver_worker, method, args, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/utils/__init__.py", line 3060, in run_method
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/torch/utils/_contextlib.py", line 120, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/worker/gpu_worker.py", line 436, in execute_model
+    output = self.model_runner.execute_model(scheduler_output,
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/torch/utils/_contextlib.py", line 120, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py", line 2006, in execute_model
+    self._update_states(scheduler_output)
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py", line 573, in _update_states
+    self._init_mrope_positions(req_state)
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py", line 715, in _init_mrope_positions
+    MRotaryEmbedding.get_input_positions_tensor(
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/model_executor/layers/rotary_embedding/mrope.py", line 392, in get_input_positions_tensor
+    return cls._vl_get_input_positions_tensor(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/model_executor/layers/rotary_embedding/mrope.py", line 795, in _vl_get_input_positions_tensor
+    image_grid_thw[image_index][0],
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: list index out of range
+2025-10-27 17:31:04,360 - __main__ - ERROR - Error during llm.generate: list index out of range
+Traceback (most recent call last):
+  File "/lustre/fswork/projects/rech/bgp/upa38qy/ground_sketching/new_serve_vllm.py", line 105, in handle_generation
+    outputs = llm.generate([prompt_str], sampling_params) # Pass as list
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/entrypoints/llm.py", line 396, in generate
+    outputs = self._run_engine(use_tqdm=use_tqdm)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/entrypoints/llm.py", line 1550, in _run_engine
+    step_outputs = self.llm_engine.step()
+                   ^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/llm_engine.py", line 248, in step
+    outputs = self.engine_core.get_output()
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/core_client.py", line 248, in get_output
+    outputs, _ = self.engine_core.step()
+                 ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 292, in step
+    model_output = self.execute_model_with_error_logging(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 278, in execute_model_with_error_logging
+    raise err
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 269, in execute_model_with_error_logging
+    return model_fn(scheduler_output)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/executor/abstract.py", line 93, in execute_model
+    output = self.collective_rpc("execute_model",
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/executor/uniproc_executor.py", line 58, in collective_rpc
+    answer = run_method(self.driver_worker, method, args, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/utils/__init__.py", line 3060, in run_method
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/torch/utils/_contextlib.py", line 120, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/worker/gpu_worker.py", line 436, in execute_model
+    output = self.model_runner.execute_model(scheduler_output,
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/torch/utils/_contextlib.py", line 120, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py", line 2006, in execute_model
+    self._update_states(scheduler_output)
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py", line 573, in _update_states
+    self._init_mrope_positions(req_state)
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py", line 715, in _init_mrope_positions
+    MRotaryEmbedding.get_input_positions_tensor(
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/model_executor/layers/rotary_embedding/mrope.py", line 392, in get_input_positions_tensor
+    return cls._vl_get_input_positions_tensor(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/model_executor/layers/rotary_embedding/mrope.py", line 795, in _vl_get_input_positions_tensor
+    image_grid_thw[image_index][0],
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: list index out of range
+2025-10-27 17:31:39,222 - __main__ - ERROR - Error during llm.generate: list index out of range
+Traceback (most recent call last):
+  File "/lustre/fswork/projects/rech/bgp/upa38qy/ground_sketching/new_serve_vllm.py", line 105, in handle_generation
+    outputs = llm.generate([prompt_str], sampling_params) # Pass as list
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/entrypoints/llm.py", line 396, in generate
+    outputs = self._run_engine(use_tqdm=use_tqdm)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/entrypoints/llm.py", line 1550, in _run_engine
+    step_outputs = self.llm_engine.step()
+                   ^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/llm_engine.py", line 248, in step
+    outputs = self.engine_core.get_output()
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/core_client.py", line 248, in get_output
+    outputs, _ = self.engine_core.step()
+                 ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 292, in step
+    model_output = self.execute_model_with_error_logging(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 278, in execute_model_with_error_logging
+    raise err
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 269, in execute_model_with_error_logging
+    return model_fn(scheduler_output)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/executor/abstract.py", line 93, in execute_model
+    output = self.collective_rpc("execute_model",
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/executor/uniproc_executor.py", line 58, in collective_rpc
+    answer = run_method(self.driver_worker, method, args, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/utils/__init__.py", line 3060, in run_method
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/torch/utils/_contextlib.py", line 120, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/worker/gpu_worker.py", line 436, in execute_model
+    output = self.model_runner.execute_model(scheduler_output,
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/torch/utils/_contextlib.py", line 120, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py", line 2006, in execute_model
+    self._update_states(scheduler_output)
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py", line 573, in _update_states
+    self._init_mrope_positions(req_state)
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py", line 715, in _init_mrope_positions
+    MRotaryEmbedding.get_input_positions_tensor(
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/model_executor/layers/rotary_embedding/mrope.py", line 392, in get_input_positions_tensor
+    return cls._vl_get_input_positions_tensor(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/model_executor/layers/rotary_embedding/mrope.py", line 795, in _vl_get_input_positions_tensor
+    image_grid_thw[image_index][0],
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: list index out of range
+2025-10-27 17:32:21,518 - __main__ - ERROR - Error during llm.generate: list index out of range
+Traceback (most recent call last):
+  File "/lustre/fswork/projects/rech/bgp/upa38qy/ground_sketching/new_serve_vllm.py", line 105, in handle_generation
+    outputs = llm.generate([prompt_str], sampling_params) # Pass as list
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/entrypoints/llm.py", line 396, in generate
+    outputs = self._run_engine(use_tqdm=use_tqdm)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/entrypoints/llm.py", line 1550, in _run_engine
+    step_outputs = self.llm_engine.step()
+                   ^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/llm_engine.py", line 248, in step
+    outputs = self.engine_core.get_output()
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/core_client.py", line 248, in get_output
+    outputs, _ = self.engine_core.step()
+                 ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 292, in step
+    model_output = self.execute_model_with_error_logging(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 278, in execute_model_with_error_logging
+    raise err
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 269, in execute_model_with_error_logging
+    return model_fn(scheduler_output)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/executor/abstract.py", line 93, in execute_model
+    output = self.collective_rpc("execute_model",
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/executor/uniproc_executor.py", line 58, in collective_rpc
+    answer = run_method(self.driver_worker, method, args, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/utils/__init__.py", line 3060, in run_method
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/torch/utils/_contextlib.py", line 120, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/worker/gpu_worker.py", line 436, in execute_model
+    output = self.model_runner.execute_model(scheduler_output,
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/torch/utils/_contextlib.py", line 120, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py", line 2006, in execute_model
+    self._update_states(scheduler_output)
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py", line 573, in _update_states
+    self._init_mrope_positions(req_state)
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py", line 715, in _init_mrope_positions
+    MRotaryEmbedding.get_input_positions_tensor(
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/model_executor/layers/rotary_embedding/mrope.py", line 392, in get_input_positions_tensor
+    return cls._vl_get_input_positions_tensor(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/model_executor/layers/rotary_embedding/mrope.py", line 795, in _vl_get_input_positions_tensor
+    image_grid_thw[image_index][0],
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: list index out of range
+2025-10-27 17:42:10,988 - root - INFO - Logging configured.
+2025-10-27 17:42:10,991 - __main__ - INFO - Loading LLM: /lustre/fsmisc/dataset/HuggingFace_Models/Qwen/Qwen2.5-VL-32B-Instruct with dtype: bfloat16
+2025-10-27 17:43:53,279 - __main__ - INFO - LLM and tokenizer loaded successfully.
+2025-10-27 17:46:36,847 - __main__ - ERROR - Error during llm.generate: list index out of range
+Traceback (most recent call last):
+  File "/lustre/fswork/projects/rech/bgp/upa38qy/ground_sketching/new_serve_vllm.py", line 105, in handle_generation
+    outputs = llm.generate([prompt_str], sampling_params) # Pass as list
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/entrypoints/llm.py", line 396, in generate
+    outputs = self._run_engine(use_tqdm=use_tqdm)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/entrypoints/llm.py", line 1550, in _run_engine
+    step_outputs = self.llm_engine.step()
+                   ^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/llm_engine.py", line 248, in step
+    outputs = self.engine_core.get_output()
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/core_client.py", line 248, in get_output
+    outputs, _ = self.engine_core.step()
+                 ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 292, in step
+    model_output = self.execute_model_with_error_logging(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 278, in execute_model_with_error_logging
+    raise err
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 269, in execute_model_with_error_logging
+    return model_fn(scheduler_output)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/executor/abstract.py", line 93, in execute_model
+    output = self.collective_rpc("execute_model",
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/executor/uniproc_executor.py", line 58, in collective_rpc
+    answer = run_method(self.driver_worker, method, args, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/utils/__init__.py", line 3060, in run_method
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/torch/utils/_contextlib.py", line 120, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/worker/gpu_worker.py", line 436, in execute_model
+    output = self.model_runner.execute_model(scheduler_output,
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/torch/utils/_contextlib.py", line 120, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py", line 2006, in execute_model
+    self._update_states(scheduler_output)
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py", line 573, in _update_states
+    self._init_mrope_positions(req_state)
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py", line 715, in _init_mrope_positions
+    MRotaryEmbedding.get_input_positions_tensor(
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/model_executor/layers/rotary_embedding/mrope.py", line 392, in get_input_positions_tensor
+    return cls._vl_get_input_positions_tensor(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/vllm/model_executor/layers/rotary_embedding/mrope.py", line 795, in _vl_get_input_positions_tensor
+    image_grid_thw[image_index][0],
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: list index out of range
+2025-10-27 17:56:24,124 - root - INFO - Logging configured.
+2025-10-27 17:56:24,126 - __main__ - INFO - Loading LLM: /lustre/fsmisc/dataset/HuggingFace_Models/Qwen/Qwen2.5-VL-32B-Instruct with dtype: bfloat16
+2025-10-27 17:58:41,365 - __main__ - CRITICAL - Failed to load LLM: To serve at least one request with the models's max seq len (25000), (6.11 GiB KV cache is needed, which is larger than the available KV cache memory (5.54 GiB). Based on the available memory, the estimated maximum model length is 22688. Try increasing `gpu_memory_utilization` or decreasing `max_model_len` when initializing the engine.
+Traceback (most recent call last):
+  File "/lustre/fswork/projects/rech/bgp/upa38qy/ground_sketching/new_serve_vllm.py", line 44, in <module>
+    llm = LLM(
+          ^^^^
+  File "/linkhome/rech/genxzs01/upa38qy/.local/lib/python3.12/site-packages/vllm/entrypoints/llm.py", line 297, in __init__
+    self.llm_engine = LLMEngine.from_engine_args(
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/linkhome/rech/genxzs01/upa38qy/.local/lib/python3.12/site-packages/vllm/v1/engine/llm_engine.py", line 177, in from_engine_args
+    return cls(vllm_config=vllm_config,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/linkhome/rech/genxzs01/upa38qy/.local/lib/python3.12/site-packages/vllm/v1/engine/llm_engine.py", line 114, in __init__
+    self.engine_core = EngineCoreClient.make_client(
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/linkhome/rech/genxzs01/upa38qy/.local/lib/python3.12/site-packages/vllm/v1/engine/core_client.py", line 82, in make_client
+    return InprocClient(vllm_config, executor_class, log_stats)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/linkhome/rech/genxzs01/upa38qy/.local/lib/python3.12/site-packages/vllm/v1/engine/core_client.py", line 245, in __init__
+    self.engine_core = EngineCore(*args, **kwargs)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/linkhome/rech/genxzs01/upa38qy/.local/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 92, in __init__
+    self._initialize_kv_caches(vllm_config)
+  File "/linkhome/rech/genxzs01/upa38qy/.local/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 199, in _initialize_kv_caches
+    kv_cache_configs = get_kv_cache_configs(vllm_config, kv_cache_specs,
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/linkhome/rech/genxzs01/upa38qy/.local/lib/python3.12/site-packages/vllm/v1/core/kv_cache_utils.py", line 1243, in get_kv_cache_configs
+    check_enough_kv_cache_memory(vllm_config, kv_cache_spec_one_worker,
+  File "/linkhome/rech/genxzs01/upa38qy/.local/lib/python3.12/site-packages/vllm/v1/core/kv_cache_utils.py", line 716, in check_enough_kv_cache_memory
+    raise ValueError(
+ValueError: To serve at least one request with the models's max seq len (25000), (6.11 GiB KV cache is needed, which is larger than the available KV cache memory (5.54 GiB). Based on the available memory, the estimated maximum model length is 22688. Try increasing `gpu_memory_utilization` or decreasing `max_model_len` when initializing the engine.
+2025-10-27 18:00:47,390 - root - INFO - Logging configured.
+2025-10-27 18:00:47,393 - __main__ - INFO - Loading LLM: /lustre/fsmisc/dataset/HuggingFace_Models/Qwen/Qwen2.5-VL-32B-Instruct with dtype: bfloat16
+2025-10-27 18:02:57,102 - __main__ - INFO - LLM and tokenizer loaded successfully.
+2025-10-27 18:04:14,962 - __main__ - ERROR - Error during llm.generate: list index out of range
+Traceback (most recent call last):
+  File "/lustre/fswork/projects/rech/bgp/upa38qy/ground_sketching/new_serve_vllm.py", line 105, in handle_generation
+    outputs = llm.generate([prompt_str], sampling_params) # Pass as list
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/linkhome/rech/genxzs01/upa38qy/.local/lib/python3.12/site-packages/vllm/entrypoints/llm.py", line 401, in generate
+    outputs = self._run_engine(use_tqdm=use_tqdm)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/linkhome/rech/genxzs01/upa38qy/.local/lib/python3.12/site-packages/vllm/entrypoints/llm.py", line 1600, in _run_engine
+    step_outputs = self.llm_engine.step()
+                   ^^^^^^^^^^^^^^^^^^^^^^
+  File "/linkhome/rech/genxzs01/upa38qy/.local/lib/python3.12/site-packages/vllm/v1/engine/llm_engine.py", line 265, in step
+    outputs = self.engine_core.get_output()
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/linkhome/rech/genxzs01/upa38qy/.local/lib/python3.12/site-packages/vllm/v1/engine/core_client.py", line 248, in get_output
+    outputs, _ = self.engine_core.step_fn()
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/linkhome/rech/genxzs01/upa38qy/.local/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 284, in step
+    model_output = self.execute_model_with_error_logging(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/linkhome/rech/genxzs01/upa38qy/.local/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 270, in execute_model_with_error_logging
+    raise err
+  File "/linkhome/rech/genxzs01/upa38qy/.local/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 261, in execute_model_with_error_logging
+    return model_fn(scheduler_output)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/linkhome/rech/genxzs01/upa38qy/.local/lib/python3.12/site-packages/vllm/v1/executor/abstract.py", line 103, in execute_model
+    output = self.collective_rpc("execute_model",
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/linkhome/rech/genxzs01/upa38qy/.local/lib/python3.12/site-packages/vllm/executor/uniproc_executor.py", line 83, in collective_rpc
+    return [run_method(self.driver_worker, method, args, kwargs)]
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/linkhome/rech/genxzs01/upa38qy/.local/lib/python3.12/site-packages/vllm/utils/__init__.py", line 3122, in run_method
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/torch/utils/_contextlib.py", line 120, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/linkhome/rech/genxzs01/upa38qy/.local/lib/python3.12/site-packages/vllm/v1/worker/gpu_worker.py", line 447, in execute_model
+    output = self.model_runner.execute_model(scheduler_output,
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/torch/utils/_contextlib.py", line 120, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/linkhome/rech/genxzs01/upa38qy/.local/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py", line 2239, in execute_model
+    self._update_states(scheduler_output)
+  File "/linkhome/rech/genxzs01/upa38qy/.local/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py", line 607, in _update_states
+    self._init_mrope_positions(req_state)
+  File "/linkhome/rech/genxzs01/upa38qy/.local/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py", line 764, in _init_mrope_positions
+    MRotaryEmbedding.get_input_positions_tensor(
+  File "/linkhome/rech/genxzs01/upa38qy/.local/lib/python3.12/site-packages/vllm/model_executor/layers/rotary_embedding/mrope.py", line 481, in get_input_positions_tensor
+    return cls._vl_get_input_positions_tensor(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/linkhome/rech/genxzs01/upa38qy/.local/lib/python3.12/site-packages/vllm/model_executor/layers/rotary_embedding/mrope.py", line 976, in _vl_get_input_positions_tensor
+    image_grid_thw[image_index][0],
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: list index out of range
+2025-10-27 18:17:08,774 - root - INFO - Logging configured.
+2025-10-27 18:17:08,778 - __main__ - INFO - Loading LLM: /lustre/fsmisc/dataset/HuggingFace_Models/Qwen/Qwen2.5-VL-32B-Instruct with dtype: bfloat16
+2025-10-27 18:19:31,846 - __main__ - INFO - LLM and tokenizer loaded successfully.
+2025-10-27 18:20:10,245 - __main__ - ERROR - Error during llm.generate: list index out of range
+Traceback (most recent call last):
+  File "/lustre/fswork/projects/rech/bgp/upa38qy/ground_sketching/new_serve_vllm.py", line 105, in handle_generation
+    outputs = llm.generate([prompt_str], sampling_params) # Pass as list
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/linkhome/rech/genxzs01/upa38qy/.local/lib/python3.12/site-packages/vllm/entrypoints/llm.py", line 401, in generate
+    outputs = self._run_engine(use_tqdm=use_tqdm)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/linkhome/rech/genxzs01/upa38qy/.local/lib/python3.12/site-packages/vllm/entrypoints/llm.py", line 1600, in _run_engine
+    step_outputs = self.llm_engine.step()
+                   ^^^^^^^^^^^^^^^^^^^^^^
+  File "/linkhome/rech/genxzs01/upa38qy/.local/lib/python3.12/site-packages/vllm/v1/engine/llm_engine.py", line 265, in step
+    outputs = self.engine_core.get_output()
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/linkhome/rech/genxzs01/upa38qy/.local/lib/python3.12/site-packages/vllm/v1/engine/core_client.py", line 248, in get_output
+    outputs, _ = self.engine_core.step_fn()
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/linkhome/rech/genxzs01/upa38qy/.local/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 284, in step
+    model_output = self.execute_model_with_error_logging(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/linkhome/rech/genxzs01/upa38qy/.local/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 270, in execute_model_with_error_logging
+    raise err
+  File "/linkhome/rech/genxzs01/upa38qy/.local/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 261, in execute_model_with_error_logging
+    return model_fn(scheduler_output)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/linkhome/rech/genxzs01/upa38qy/.local/lib/python3.12/site-packages/vllm/v1/executor/abstract.py", line 103, in execute_model
+    output = self.collective_rpc("execute_model",
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/linkhome/rech/genxzs01/upa38qy/.local/lib/python3.12/site-packages/vllm/executor/uniproc_executor.py", line 83, in collective_rpc
+    return [run_method(self.driver_worker, method, args, kwargs)]
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/linkhome/rech/genxzs01/upa38qy/.local/lib/python3.12/site-packages/vllm/utils/__init__.py", line 3122, in run_method
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/torch/utils/_contextlib.py", line 120, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/linkhome/rech/genxzs01/upa38qy/.local/lib/python3.12/site-packages/vllm/v1/worker/gpu_worker.py", line 447, in execute_model
+    output = self.model_runner.execute_model(scheduler_output,
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/torch/utils/_contextlib.py", line 120, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/linkhome/rech/genxzs01/upa38qy/.local/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py", line 2239, in execute_model
+    self._update_states(scheduler_output)
+  File "/linkhome/rech/genxzs01/upa38qy/.local/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py", line 607, in _update_states
+    self._init_mrope_positions(req_state)
+  File "/linkhome/rech/genxzs01/upa38qy/.local/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py", line 764, in _init_mrope_positions
+    MRotaryEmbedding.get_input_positions_tensor(
+  File "/linkhome/rech/genxzs01/upa38qy/.local/lib/python3.12/site-packages/vllm/model_executor/layers/rotary_embedding/mrope.py", line 481, in get_input_positions_tensor
+    return cls._vl_get_input_positions_tensor(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/linkhome/rech/genxzs01/upa38qy/.local/lib/python3.12/site-packages/vllm/model_executor/layers/rotary_embedding/mrope.py", line 976, in _vl_get_input_positions_tensor
+    image_grid_thw[image_index][0],
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: list index out of range
+2025-10-27 18:20:54,804 - root - INFO - Logging configured.
+2025-10-27 18:20:54,806 - __main__ - INFO - Loading LLM: /lustre/fsmisc/dataset/HuggingFace_Models/Qwen/Qwen2.5-VL-32B-Instruct with dtype: bfloat16
+2025-10-27 18:23:15,369 - __main__ - INFO - LLM and tokenizer loaded successfully.
+2025-10-27 18:25:22,455 - __main__ - ERROR - Error during llm.generate: list index out of range
+Traceback (most recent call last):
+  File "/lustre/fswork/projects/rech/bgp/upa38qy/ground_sketching/new_serve_vllm.py", line 105, in handle_generation
+    outputs = llm.generate([prompt_str], sampling_params) # Pass as list
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/linkhome/rech/genxzs01/upa38qy/.local/lib/python3.12/site-packages/vllm/entrypoints/llm.py", line 401, in generate
+    outputs = self._run_engine(use_tqdm=use_tqdm)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/linkhome/rech/genxzs01/upa38qy/.local/lib/python3.12/site-packages/vllm/entrypoints/llm.py", line 1600, in _run_engine
+    step_outputs = self.llm_engine.step()
+                   ^^^^^^^^^^^^^^^^^^^^^^
+  File "/linkhome/rech/genxzs01/upa38qy/.local/lib/python3.12/site-packages/vllm/v1/engine/llm_engine.py", line 265, in step
+    outputs = self.engine_core.get_output()
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/linkhome/rech/genxzs01/upa38qy/.local/lib/python3.12/site-packages/vllm/v1/engine/core_client.py", line 248, in get_output
+    outputs, _ = self.engine_core.step_fn()
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/linkhome/rech/genxzs01/upa38qy/.local/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 284, in step
+    model_output = self.execute_model_with_error_logging(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/linkhome/rech/genxzs01/upa38qy/.local/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 270, in execute_model_with_error_logging
+    raise err
+  File "/linkhome/rech/genxzs01/upa38qy/.local/lib/python3.12/site-packages/vllm/v1/engine/core.py", line 261, in execute_model_with_error_logging
+    return model_fn(scheduler_output)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/linkhome/rech/genxzs01/upa38qy/.local/lib/python3.12/site-packages/vllm/v1/executor/abstract.py", line 103, in execute_model
+    output = self.collective_rpc("execute_model",
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/linkhome/rech/genxzs01/upa38qy/.local/lib/python3.12/site-packages/vllm/executor/uniproc_executor.py", line 83, in collective_rpc
+    return [run_method(self.driver_worker, method, args, kwargs)]
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/linkhome/rech/genxzs01/upa38qy/.local/lib/python3.12/site-packages/vllm/utils/__init__.py", line 3122, in run_method
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/torch/utils/_contextlib.py", line 120, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/linkhome/rech/genxzs01/upa38qy/.local/lib/python3.12/site-packages/vllm/v1/worker/gpu_worker.py", line 447, in execute_model
+    output = self.model_runner.execute_model(scheduler_output,
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/torch/utils/_contextlib.py", line 120, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/linkhome/rech/genxzs01/upa38qy/.local/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py", line 2239, in execute_model
+    self._update_states(scheduler_output)
+  File "/linkhome/rech/genxzs01/upa38qy/.local/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py", line 607, in _update_states
+    self._init_mrope_positions(req_state)
+  File "/linkhome/rech/genxzs01/upa38qy/.local/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py", line 764, in _init_mrope_positions
+    MRotaryEmbedding.get_input_positions_tensor(
+  File "/linkhome/rech/genxzs01/upa38qy/.local/lib/python3.12/site-packages/vllm/model_executor/layers/rotary_embedding/mrope.py", line 481, in get_input_positions_tensor
+    return cls._vl_get_input_positions_tensor(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/linkhome/rech/genxzs01/upa38qy/.local/lib/python3.12/site-packages/vllm/model_executor/layers/rotary_embedding/mrope.py", line 976, in _vl_get_input_positions_tensor
+    image_grid_thw[image_index][0],
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: list index out of range
+2025-10-27 19:10:30,335 - root - INFO - Logging configured.
+2025-10-27 19:10:30,372 - __main__ - INFO - Loading LLM: /lustre/fsmisc/dataset/HuggingFace_Models/Qwen/Qwen2.5-VL-32B-Instruct with dtype: bfloat16
+2025-10-27 19:13:04,749 - __main__ - INFO - LLM and tokenizer loaded successfully.
+2025-10-27 19:13:56,807 - __main__ - ERROR - Error applying chat template: cannot access local variable 'processed_user_content' where it is not associated with a value
+Traceback (most recent call last):
+  File "/lustre/fswork/projects/rech/bgp/upa38qy/ground_sketching/new_serve_vllm.py", line 165, in handle_edit
+    chat_for_processor.append({"role": "user", "content": processed_user_content})
+                                                          ^^^^^^^^^^^^^^^^^^^^^^
+UnboundLocalError: cannot access local variable 'processed_user_content' where it is not associated with a value
+2025-10-27 19:15:07,784 - root - INFO - Logging configured.
+2025-10-27 19:15:07,786 - __main__ - INFO - Loading LLM: /lustre/fsmisc/dataset/HuggingFace_Models/Qwen/Qwen2.5-VL-32B-Instruct with dtype: bfloat16
+2025-10-27 19:17:21,593 - __main__ - INFO - LLM and tokenizer loaded successfully.
+2025-10-27 19:18:07,914 - __main__ - ERROR - Error applying chat template: name 'base64' is not defined
+Traceback (most recent call last):
+  File "/lustre/fswork/projects/rech/bgp/upa38qy/ground_sketching/new_serve_vllm.py", line 158, in handle_edit
+    img_bytes = base64.b64decode(b64_str)
+                ^^^^^^
+NameError: name 'base64' is not defined. Did you forget to import 'base64'
+2025-10-27 19:22:11,621 - root - INFO - Logging configured.
+2025-10-27 19:22:11,623 - __main__ - INFO - Loading LLM: /lustre/fsmisc/dataset/HuggingFace_Models/Qwen/Qwen2.5-VL-32B-Instruct with dtype: bfloat16
+2025-10-27 19:24:31,217 - __main__ - INFO - LLM and tokenizer loaded successfully.

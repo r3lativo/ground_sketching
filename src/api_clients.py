@@ -1,60 +1,55 @@
 # src/api_clients.py
 
 import httpx
-import openai
 import logging
 import yaml
 import os
-import json # For parsing JSON in original polish_edit logic
+import json
 from typing import List, Optional, Dict, Any
 from jinja2 import Environment, FileSystemLoader, select_autoescape
-
-from src.utils import load_config
+import torch # Added for seed generation fallback in call_image_gen
 
 logger = logging.getLogger(__name__)
 
 # --- Configuration & Template Loading ---
-config = load_config('config/server_config.yaml')
-image_gen_config = config.get("image_gen_service")
-enhancer_config = config.get("prompt_enhancer_service")
-
+CONFIG = {}
+CONFIG_PATH = 'config/server_config.yaml'
 IMAGE_GEN_URL = "http://localhost:8000" # Default
-ENHANCER_URL = "http://localhost:8001/v1"  # Default
+ENHANCER_API_BASE_URL = "http://localhost:8001/" # Default
 ENHANCER_MODEL_ID = "default_model_id" # Default
 POLISH_SYSTEM_PROMPT = "You are a helpful assistant." # Default
 EDIT_SYSTEM_PROMPT = "You are a helpful assistant for editing." # Default
 
 try:
-    IMAGE_GEN_URL = f"http://{image_gen_config['host']}:{image_gen_config['port']}"
-    ENHANCER_URL = f"http://{enhancer_config['host']}:{enhancer_config['port']}/v1"
-    ENHANCER_MODEL_ID = enhancer_config['model_id']
+    # Load Server Config
+    with open(CONFIG_PATH, 'r') as f:
+        CONFIG = yaml.safe_load(f)
+    IMAGE_GEN_URL = f"http://{CONFIG['image_gen_service']['host']}:{CONFIG['image_gen_service']['port']}"
+    # Construct the base URL for the OpenAI compatible endpoint
+    ENHANCER_API_BASE_URL = f"http://{CONFIG['prompt_enhancer_service']['host']}:{CONFIG['prompt_enhancer_service']['port']}"
+    ENHANCER_MODEL_ID = CONFIG['prompt_enhancer_service']['model_id']
+
     logger.info(f"Image Gen API URL: {IMAGE_GEN_URL}")
-    logger.info(f"Prompt Enhancer API URL: {ENHANCER_URL}")
+    logger.info(f"Prompt Enhancer API Base URL: {ENHANCER_API_BASE_URL}")
     logger.info(f"Using Enhancer Model ID: {ENHANCER_MODEL_ID}")
 
     # Load Jinja Templates for System Prompts
     env = Environment(
-        loader=FileSystemLoader('config'), # Look for templates in 'config/'
-        autoescape=select_autoescape(['html', 'xml']) # Basic autoescaping
+        loader=FileSystemLoader('config'),
+        autoescape=select_autoescape(['html', 'xml'])
     )
     polish_template = env.get_template('polish.jinja2')
     edit_template = env.get_template('polish_edit.jinja2')
-    # Render static templates immediately (they don't have variables here)
     POLISH_SYSTEM_PROMPT = polish_template.render().strip()
     EDIT_SYSTEM_PROMPT = edit_template.render().strip()
     logger.info("System prompts loaded from Jinja2 templates.")
 
 except FileNotFoundError:
-    logger.error(f"Configuration or template file not or config/. Using defaults.")
+    logger.error(f"Configuration or template file not found in {CONFIG_PATH} or config/. Using defaults.")
 except KeyError as e:
-    logger.error(f"Missing key in configuration file: {e}. Using defaults.")
+    logger.error(f"Missing key in configuration file {CONFIG_PATH}: {e}. Using defaults.")
 except Exception as e:
     logger.error(f"Error loading config or templates: {e}", exc_info=True)
-
-
-# --- OpenAI Client (for vLLM) ---
-# Initialize OpenAI client pointing to the local vLLM server
-client = openai.AsyncClient(base_url=ENHANCER_URL, api_key="dummy")
 
 
 # --- Image Generation Client ---
@@ -66,17 +61,18 @@ async def call_image_gen(
 ) -> Optional[str]:
     """Calls the image generation service API."""
     endpoint = f"{IMAGE_GEN_URL}/img_generate"
+    image_gen_config = CONFIG.get('image_gen_service', {})
     payload = {
         "prompt": prompt,
         "images": base64_images,
-        "seed": image_gen_config.get("seed", 0),
-        "true_cfg_scale": image_gen_config.get("true_cfg_scale", 1.0),
-        "negative_prompt": image_gen_config.get("negative_prompt", " "),
-        "num_inference_steps": image_gen_config.get("num_inference_steps", 8),
+        "seed": image_gen_config.get("seed"),
+        "true_cfg_scale": image_gen_config.get("true_cfg_scale"),
+        "negative_prompt": image_gen_config.get("negative_prompt"),
+        "num_inference_steps": image_gen_config.get("num_inference_steps"),
     }
     logger.info(f"Sending request to Image Gen API: {endpoint} with prompt '{prompt[:50]}...'")
     try:
-        async with httpx.AsyncClient() as client_http: # Renamed to avoid clash with openai client
+        async with httpx.AsyncClient() as client_http:
             response = await client_http.post(endpoint, json=payload, timeout=timeout)
             response.raise_for_status()
             result = response.json()
@@ -97,133 +93,185 @@ async def call_image_gen(
         return None
 
 
-# --- Prompt Enhancer Client (Multimodal Edit Polishing) ---
+# --- Prompt Enhancer Client (Text-Only Beautification via HTTPX) ---
+
+async def call_text_prompt_enhancer(
+    initial_prompt: str,
+    #magic_prompt: str,
+    #max_tokens: int,
+    #temperature: float,
+    timeout: int = 120
+) -> Optional[str]:
+    """
+    Calls the vLLM OpenAI-compatible API via HTTPX to rewrite a text-only prompt.
+    """
+    endpoint = f"{ENHANCER_API_BASE_URL}/generate"
+    logger.info(f"Sending request to Prompt Enhancer (Text): {endpoint} with prompt '{initial_prompt[:50]}...'")
+
+    messages = [
+        {"role": "system", "content": POLISH_SYSTEM_PROMPT},
+        {"role": "user", "content": initial_prompt}
+    ]
+
+    payload = {
+        # "model": ENHANCER_MODEL_ID,
+        "messages": messages,
+        # "max_tokens": max_tokens,
+        # "temperature": temperature,
+        # Add other OpenAI compatible parameters if needed (e.g., "top_p": 0.9)
+    }
+
+    try:
+        async with httpx.AsyncClient() as client_http:
+            response = await client_http.post(endpoint, json=payload, timeout=timeout)
+            response.raise_for_status()
+            result = response.json()
+
+            # Navigate the OpenAI API response structure
+            if result.get("text") and len(result["text"]) > 0:
+                # message = result.get("text")
+                # polished_prompt = message.get("content")
+                polished_prompt = result.get("text")
+                if polished_prompt and isinstance(polished_prompt, str):
+                    final_prompt = polished_prompt.strip().replace("\n", " ")
+                    # final_prompt = polished_prompt + magic_prompt
+                    logger.info(f"Text Prompt enhancement successful. New prompt: '{final_prompt[:100]}...'")
+                    return final_prompt
+                else:
+                    logger.warning("Prompt Enhancer (Text) returned empty content.")
+                    return None
+            else:
+                logger.error(f"Prompt Enhancer (Text) API returned unexpected response format: {result}")
+                return None
+
+    except httpx.HTTPStatusError as e:
+        logger.error(f"Prompt Enhancer (Text) API request failed with status {e.response.status_code}: {e.response.text}")
+        return None
+    except httpx.RequestError as e:
+        logger.error(f"Error connecting to Prompt Enhancer API at {endpoint}: {e}")
+        return None
+    except Exception as e:
+        logger.error(f"An unexpected error occurred during text prompt enhancement call: {e}", exc_info=True)
+        return None
+
+
+# --- Prompt Enhancer Client (Multimodal Edit Polishing via HTTPX) ---
 
 async def call_edit_prompt_enhancer(
     initial_prompt: str,
     base64_images: List[str],
-    max_tokens: int = 300,
-    temperature: float = 0.2
+    #max_tokens: int,
+    #temperature: float,
+    timeout: int = 120,
 ) -> Optional[str]:
     """
-    Calls the vLLM prompt enhancer API to rewrite an *edit* instruction,
-    mimicking the original polish_edit_prompt logic.
+    Calls the vLLM OpenAI-compatible API via HTTPX to rewrite an edit instruction,
+    sending images and text.
     """
-    logger.info(f"Sending request to Prompt Enhancer (Edit): {ENHANCER_URL} with prompt '{initial_prompt[:50]}...'")
+    endpoint = f"{ENHANCER_API_BASE_URL}/edit"
+    logger.info(f"Sending request to Prompt Enhancer (Edit): {endpoint} with prompt '{initial_prompt[:50]}...' and {len(base64_images)} image(s).")
 
     # Construct multimodal message content
     content: List[Dict[str, Any]] = []
     for img_b64 in base64_images:
         content.append({
-            "type": "image_url",
-            "image_url": {"url": f"data:image/png;base64,{img_b64}"}
+            "type": "image",
+            "image": f"data:image/jpeg;base64,{img_b64}"
         })
-    # Add the final instruction text AFTER the images
     content.append({"type": "text", "text": initial_prompt})
 
     messages = [
-        {"role": "system", "content": EDIT_SYSTEM_PROMPT}, # Loaded from polish_edit.jinja2
+        {"role": "system", "content": EDIT_SYSTEM_PROMPT},
         {"role": "user", "content": content}
     ]
 
+    payload = {
+        # "model": ENHANCER_MODEL_ID,
+        "messages": messages,
+        # "max_tokens": max_tokens,
+        # "temperature": temperature,
+    }
+
     try:
-        response = await client.chat.completions.create(
-            model=ENHANCER_MODEL_ID,
-            messages=messages,
-            max_tokens=max_tokens,
-            temperature=temperature,
-        )
-        enhanced_prompt = response.choices[0].message.content
+        async with httpx.AsyncClient() as client_http:
+            response = await client_http.post(endpoint, json=payload, timeout=timeout)
+            response.raise_for_status()
+            result = response.json()
 
-        # --- Mimic original polish_edit_prompt JSON parsing ---
-        # The original code expected the VL model to return JSON.
-        # Let's try to parse, but fall back if it's just text.
-        if enhanced_prompt:
-            polished_text = None
-            try:
-                # Attempt to remove markdown and parse as JSON
-                cleaned_result = enhanced_prompt.strip().replace('```json','').replace('```','')
-                result_json = json.loads(cleaned_result)
-                if isinstance(result_json, dict) and 'Rewritten' in result_json:
-                    polished_text = result_json['Rewritten']
+            # Navigate the OpenAI API response structure
+            if result.get("text") and len(result["text"]) > 0:
+                # message = result.get("text")
+                # enhanced_prompt_raw = message.get("content")
+                enhanced_prompt_raw = result.get("text")
+                
+                # --- Mimic JSON parsing attempt ---
+                if enhanced_prompt_raw and isinstance(enhanced_prompt_raw, str):
+                    polished_text = None
+                    try:
+                        cleaned_result = enhanced_prompt_raw.strip().replace('```json','').replace('```','')
+                        result_json = json.loads(cleaned_result)
+                        if isinstance(result_json, dict) and 'Rewritten' in result_json:
+                            polished_text = result_json['Rewritten']
+                        else:
+                            logger.warning("Enhancer response parsed as JSON but missing 'Rewritten' key. Using raw response.")
+                            polished_text = enhanced_prompt_raw
+                    except json.JSONDecodeError:
+                        logger.debug("Enhancer response is not JSON, assuming direct rewritten prompt.")
+                        polished_text = enhanced_prompt_raw
+
+                    if polished_text:
+                        polished_text = polished_text.strip().replace("\n", " ")
+                        logger.info(f"Edit Prompt enhancement successful. New prompt: '{polished_text[:100]}...'")
+                        return polished_text
+                    else:
+                        logger.warning("Prompt Enhancer (Edit) returned an empty or invalid response after processing.")
+                        return None
                 else:
-                     logger.warning("Enhancer response parsed as JSON but missing 'Rewritten' key. Using raw response.")
-                     polished_text = enhanced_prompt # Fallback
-            except json.JSONDecodeError:
-                # If it's not JSON, assume the model followed the "output ONLY the rewritten instruction" rule
-                logger.debug("Enhancer response is not JSON, assuming direct rewritten prompt.")
-                polished_text = enhanced_prompt # Fallback
-
-            if polished_text:
-                polished_text = polished_text.strip().replace("\n", " ")
-                logger.info(f"Edit Prompt enhancement successful. New prompt: '{polished_text[:100]}...'")
-                return polished_text
+                    logger.warning("Prompt Enhancer (Edit) returned empty content.")
+                    return None
+                # --- End JSON parsing ---
             else:
-                 logger.warning("Prompt Enhancer (Edit) returned an empty or invalid response after processing.")
-                 return None
-        else:
-             logger.warning("Prompt Enhancer (Edit) returned an empty response.")
-             return None
+                logger.error(f"Prompt Enhancer (Edit) API returned unexpected response format: {result}")
+                return None
 
-    except openai.APIConnectionError as e:
-        logger.error(f"Failed to connect to Prompt Enhancer API at {ENHANCER_URL}: {e}")
+    except httpx.HTTPStatusError as e:
+        logger.error(f"Prompt Enhancer (Edit) API request failed with status {e.response.status_code}: {e.response.text}")
         return None
-    except openai.APIStatusError as e:
-        logger.error(f"Prompt Enhancer API returned an error status {e.status_code}: {e.response}")
+    except httpx.RequestError as e:
+        logger.error(f"Error connecting to Prompt Enhancer API at {endpoint}: {e}")
         return None
     except Exception as e:
         logger.error(f"An unexpected error occurred during edit prompt enhancement call: {e}", exc_info=True)
         return None
 
 
-# --- Prompt Enhancer Client (Text-Only Beautification) ---
+# --- Example Usage (Optional, for testing this file directly) ---
+async def _test_clients():
+    # Placeholder: Replace with actual base64 image data for testing
+    test_image_b64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=" # Example: 1x1 black pixel PNG
 
-async def call_text_prompt_enhancer(
-    initial_prompt: str,
-    magic_prompt: str = ", Ultra HD, 4K, cinematic composition", # Default magic prompt
-    max_tokens: int = 250,
-    temperature: float = 0.7 # Higher temperature for more creative beautification
-) -> Optional[str]:
-    """
-    Calls the vLLM prompt enhancer API to rewrite a *text-only* prompt,
-    mimicking the original polish_prompt logic.
-    """
-    logger.info(f"Sending request to Prompt Enhancer (Text): {ENHANCER_URL} with prompt '{initial_prompt[:50]}...'")
+    print("\n--- Testing Image Gen Client ---")
+    gen_result = await call_image_gen("make it blue", [test_image_b64])
+    if gen_result:
+        print(f"Image Gen returned base64 string starting with: {gen_result[:60]}...")
+    else:
+        print("Image Gen call failed.")
 
-    # Construct the final prompt including the user input for the LLM
-    # Note: We append the user input within the user message here.
-    user_content_text = f"{initial_prompt}"
+    print("\n--- Testing Edit Prompt Enhancer Client (via HTTPX) ---")
+    edit_enhance_result = await call_edit_prompt_enhancer("add hat", [test_image_b64])
+    if edit_enhance_result: print(f"Edit Enhancer returned: {edit_enhance_result}")
+    else: print("Edit Prompt Enhancer call failed.")
 
-    messages = [
-        {"role": "system", "content": POLISH_SYSTEM_PROMPT}, # Loaded from polish.jinja2
-        {"role": "user", "content": user_content_text} # Just text input
-    ]
+    print("\n--- Testing Text Prompt Enhancer Client (via HTTPX) ---")
+    text_enhance_result = await call_text_prompt_enhancer("a cat sitting")
+    if text_enhance_result: print(f"Text Enhancer returned: {text_enhance_result}")
+    else: print("Text Prompt Enhancer call failed.")
 
-    try:
-        response = await client.chat.completions.create(
-            model=ENHANCER_MODEL_ID, # Using the same VL model, but treating it as text-only
-            messages=messages,
-            max_tokens=max_tokens,
-            temperature=temperature,
-        )
+if __name__ == "__main__":
+    import asyncio
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    print("Running API client tests...")
+    # Make sure servers are running before uncommenting:
+    # asyncio.run(_test_clients())
+    print("Testing setup complete (tests commented out). Remember to start servers first.")
 
-        polished_prompt = response.choices[0].message.content
-        if polished_prompt:
-             polished_prompt = polished_prompt.strip().replace("\n", " ")
-             # Append the magic prompt like in the original code
-             final_prompt = polished_prompt + magic_prompt
-             logger.info(f"Text Prompt enhancement successful. New prompt: '{final_prompt[:100]}...'")
-             return final_prompt
-        else:
-             logger.warning("Prompt Enhancer (Text) returned an empty response.")
-             return None
-
-    except openai.APIConnectionError as e:
-        logger.error(f"Failed to connect to Prompt Enhancer API at {ENHANCER_URL}: {e}")
-        return None
-    except openai.APIStatusError as e:
-        logger.error(f"Prompt Enhancer API returned an error status {e.status_code}: {e.response}")
-        return None
-    except Exception as e:
-        logger.error(f"An unexpected error occurred during text prompt enhancement call: {e}", exc_info=True)
-        return None

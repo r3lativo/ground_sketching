@@ -20,7 +20,7 @@ root/
 ├── requirements.txt    # Python dependencies
 └── README.md           # This file
 
-````
+```
 
 ## Setup ⚙️
 
@@ -31,7 +31,7 @@ This project assumes access to an environment with necessary GPU drivers and CUD
 ```bash
 # Example environment setup (adapt if necessary)
 module load pytorch-gpu/py3/2.8.0
-````
+```
 
 ### Dependencies
 

@@ -89,20 +89,62 @@ async def main_interactive_loop():
             output_image_b64 = await call_image_gen(final_prompt, input_images_b64)
 
             if output_image_b64:
+                # CLEANUP
+                def cleanup(outpt_img):
+                    from PIL import Image, ImageFilter
+                    # Define your "allowed" colors
+                    WHITE = (255, 255, 255)
+                    BLACK = (0, 0, 0)
+                    allowed_colors=[WHITE, BLACK]
+
+                    # Open the image and convert to RGB (in case it's RGBA or grayscale)
+                    img = outpt_img.convert("RGB")
+
+                    # Get all pixel data
+                    pixels = img.load() 
+
+                    for i in range(img.width):
+                        for j in range(img.height):
+                            
+                            current_color = pixels[i, j]
+                            
+                            # If the pixel is not one of our exact allowed colors...
+                            if current_color not in allowed_colors:
+                                # Check if it's "close" to black or red (e.g., an artifact)
+                                # This is a simple distance check.
+                                # A "stray spot" will be some shade of gray, e.g., (240, 240, 240)
+                                
+                                # Simple check: Is it mostly white/grayish?
+                                if current_color[0] > 180 and current_color[1] > 180 and current_color[2] > 180:
+                                    pixels[i, j] = WHITE
+                                # Is it mostly black-ish?
+                                elif current_color[0] < 50 and current_color[1] < 50 and current_color[2] < 50:
+                                    pixels[i, j] = BLACK
+                                # Otherwise, it's an unknown artifact, so just make it white.
+                                
+
+                    
+                    return img
+
+                #output_image_b64 = cleanup(output_image_b64)
+
+
                 # --- Decode and Save ---
                 try:
                     output_image_pil = base64_to_pil(output_image_b64)
+                    cleaned_output_image_pil = cleanup(output_image_pil)
+
                     timestamp = int(time.time())
                     output_filename = f"step_{step_count:03d}_{timestamp}.png"
                     output_path = os.path.join(OUTPUT_DIR, output_filename)
-                    output_image_pil.save(output_path)
+                    cleaned_output_image_pil.save(output_path)
 
                     logger.info(f"Output image saved successfully to: {output_path}")
                     print(f"Image saved as: {output_path}")
 
                     # Update state for next iteration
                     current_image_path = output_path
-                    current_image_pil = output_image_pil
+                    current_image_pil = cleaned_output_image_pil
                     log_data["output_file"] = output_path
                     status = "success"
                     step_count += 1

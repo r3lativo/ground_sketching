@@ -16,8 +16,8 @@ from diffusers import (
     QwenImageEditPlusPipeline,
 )
 from diffusers.models import QwenImageTransformer2DModel
+import threading
 
-import pdb
 # Assuming utils.py and image_gen.py are accessible via src path
 from src.utils import pil_to_base64, base64_to_pil, setup_logging, load_config
 from src.api_models import ImageEditRequest, ImageEditResponse
@@ -27,6 +27,7 @@ config = load_config()
 pipeline = None
 DEVICE = "cpu"
 DTYPE = torch.float32
+generation_lock = threading.Lock()
 
 # --- Logging Setup ---
 # Call this early, potentially adjust log file path as needed
@@ -163,13 +164,14 @@ async def generate_image(request: ImageEditRequest):
 
     logger.debug("Running pipeline inference...")
     try:
-        with torch.inference_mode():
-            if DEVICE == "cuda":
-                 # Use autocast for potential performance gains with bfloat16/float16
-                 with torch.cuda.amp.autocast(torch_dtype=DTYPE if DTYPE in [torch.bfloat16, torch.float16] else None):
-                     output = pipeline(**inputs)
-            else: # CPU
-                 output = pipeline(**inputs)
+        with generation_lock:
+            with torch.inference_mode():
+                if DEVICE == "cuda":
+                    # Use autocast for potential performance gains with bfloat16/float16
+                    with torch.cuda.amp.autocast(torch_dtype=DTYPE if DTYPE in [torch.bfloat16, torch.float16] else None):
+                        output = pipeline(**inputs)
+                else: # CPU
+                    output = pipeline(**inputs)
 
         output_image = output.images[0]
         inference_time = time.time() - start_time

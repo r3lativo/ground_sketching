@@ -1063,3 +1063,227 @@ AttributeError: 'ImageEditRequest' object has no attribute 'num_steps'
 2025-10-24 17:18:40,898 - __main__ - INFO - Waiting for servers to shut down...
 2025-10-24 17:18:40,899 - __main__ - INFO - Uvicorn runs in a separate process/loop; manual stop (Ctrl+C) might be needed if it doesn't exit.
 2025-10-24 17:18:40,899 - __main__ - INFO - Server launcher finished.
+2025-10-27 13:40:07,991 - root - INFO - Logging configured.
+2025-10-27 13:40:08,017 - root - INFO - Logging configured.
+2025-10-27 13:40:08,019 - __main__ - INFO - Starting Uvicorn server for Image Generation Service on 0.0.0.0:8000...
+2025-10-27 13:40:08,182 - uvicorn.error - INFO - Started server process [2865450]
+2025-10-27 13:40:08,182 - uvicorn.error - INFO - Waiting for application startup.
+2025-10-27 13:40:08,183 - src.image_gen_app - INFO - Application startup: Loading model...
+2025-10-27 13:40:08,183 - src.image_gen_app - INFO - CUDA available. Using device: cuda with dtype: torch.bfloat16
+2025-10-27 13:40:09,563 - src.image_gen_app - INFO - Loading base pipeline: Qwen/Qwen-Image-Edit-2509...
+2025-10-27 13:40:11,909 - src.image_gen_app - INFO - Loading LoRA weights: Qwen-Image-Lightning/Qwen-Image-Edit-2509/Qwen-Image-Edit-2509-Lightning-8steps-V1.0-fp32.safetensors...
+2025-10-27 13:41:12,209 - src.image_gen_app - INFO - Moving pipeline to device: cuda...
+2025-10-27 13:44:07,547 - src.image_gen_app - INFO - Image generation pipeline loaded successfully.
+2025-10-27 13:44:07,558 - uvicorn.error - INFO - Application startup complete.
+2025-10-27 13:44:07,559 - uvicorn.error - INFO - Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+2025-10-27 13:51:50,278 - __main__ - INFO - Ctrl+C received, initiating shutdown...
+2025-10-27 13:51:50,278 - __main__ - INFO - Waiting for servers to shut down...
+2025-10-27 13:51:50,278 - __main__ - INFO - Uvicorn runs in a separate process/loop; manual stop (Ctrl+C) might be needed if it doesn't exit.
+2025-10-27 13:51:50,278 - __main__ - INFO - Server launcher finished.
+2025-10-27 14:02:57,708 - root - INFO - Logging configured.
+2025-10-27 14:02:57,711 - root - INFO - Logging configured.
+2025-10-27 14:02:57,714 - __main__ - INFO - Starting Uvicorn server for Image Generation Service on 0.0.0.0:8000...
+2025-10-27 14:02:57,845 - uvicorn.error - INFO - Started server process [2887300]
+2025-10-27 14:02:57,845 - uvicorn.error - INFO - Waiting for application startup.
+2025-10-27 14:02:57,847 - src.image_gen_app - INFO - Application startup: Loading model...
+2025-10-27 14:02:57,847 - src.image_gen_app - INFO - CUDA available. Using device: cuda with dtype: torch.bfloat16
+2025-10-27 14:02:59,157 - src.image_gen_app - INFO - Loading base pipeline: Qwen/Qwen-Image-Edit-2509...
+2025-10-27 14:03:00,944 - src.image_gen_app - INFO - Loading LoRA weights: Qwen-Image-Lightning/Qwen-Image-Edit-2509/Qwen-Image-Edit-2509-Lightning-8steps-V1.0-fp32.safetensors...
+2025-10-27 14:04:01,289 - src.image_gen_app - INFO - Moving pipeline to device: cuda...
+2025-10-27 14:07:12,328 - src.image_gen_app - INFO - Image generation pipeline loaded successfully.
+2025-10-27 14:07:12,331 - uvicorn.error - INFO - Application startup complete.
+2025-10-27 14:07:12,342 - uvicorn.error - INFO - Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+2025-10-27 14:09:19,535 - src.image_gen_app - INFO - Received request - Prompt: 'A simple, minimalist icon of a house. The image sh...', Images: 1
+2025-10-27 14:09:40,283 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 20.75 seconds.
+2025-10-27 14:09:40,333 - uvicorn.access - INFO - 127.0.0.1:56930 - "POST /img_generate HTTP/1.1" 200
+2025-10-27 16:41:24,272 - root - INFO - Logging configured.
+2025-10-27 16:41:24,326 - root - INFO - Logging configured.
+2025-10-27 16:41:24,328 - __main__ - INFO - Starting Uvicorn server for Image Generation Service on 0.0.0.0:8000...
+2025-10-27 16:41:24,496 - uvicorn.error - INFO - Started server process [1931151]
+2025-10-27 16:41:24,496 - uvicorn.error - INFO - Waiting for application startup.
+2025-10-27 16:41:24,497 - src.image_gen_app - INFO - Application startup: Loading model...
+2025-10-27 16:41:24,497 - src.image_gen_app - INFO - CUDA available. Using device: cuda with dtype: torch.bfloat16
+2025-10-27 16:41:25,803 - src.image_gen_app - INFO - Loading base pipeline: Qwen/Qwen-Image-Edit-2509...
+2025-10-27 16:41:28,122 - src.image_gen_app - INFO - Loading LoRA weights: Qwen-Image-Lightning/Qwen-Image-Edit-2509/Qwen-Image-Edit-2509-Lightning-8steps-V1.0-fp32.safetensors...
+2025-10-27 16:42:18,886 - src.image_gen_app - INFO - Moving pipeline to device: cuda...
+2025-10-27 16:44:59,470 - src.image_gen_app - INFO - Image generation pipeline loaded successfully.
+2025-10-27 16:44:59,498 - uvicorn.error - INFO - Application startup complete.
+2025-10-27 16:44:59,520 - uvicorn.error - INFO - Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+2025-10-27 16:53:24,734 - src.image_gen_app - INFO - Received request - Prompt: 'A simple, minimalist icon of a house. The image sh...', Images: 1
+2025-10-27 16:53:45,942 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 21.21 seconds.
+2025-10-27 16:53:45,990 - uvicorn.access - INFO - 127.0.0.1:36810 - "POST /img_generate HTTP/1.1" 200
+2025-10-27 16:54:06,493 - src.image_gen_app - INFO - Received request - Prompt: 'A simple, minimalist icon of a house. The image sh...', Images: 1
+2025-10-27 16:54:24,846 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 18.35 seconds.
+2025-10-27 16:54:24,893 - uvicorn.access - INFO - 127.0.0.1:32890 - "POST /img_generate HTTP/1.1" 200
+2025-10-27 16:59:00,549 - src.image_gen_app - INFO - Received request - Prompt: 'A simple, minimalist icon of a house. The image sh...', Images: 1
+2025-10-27 16:59:19,226 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 18.68 seconds.
+2025-10-27 16:59:19,276 - uvicorn.access - INFO - 127.0.0.1:36472 - "POST /img_generate HTTP/1.1" 200
+2025-10-27 17:03:14,118 - src.image_gen_app - INFO - Received request - Prompt: 'A simple, minimalist icon of a house. The image sh...', Images: 1
+2025-10-27 17:03:32,510 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 18.39 seconds.
+2025-10-27 17:03:32,558 - uvicorn.access - INFO - 127.0.0.1:37656 - "POST /img_generate HTTP/1.1" 200
+2025-10-27 17:07:40,111 - src.image_gen_app - INFO - Received request - Prompt: 'A simple, minimalist icon of a house. The image sh...', Images: 1
+2025-10-27 17:07:58,465 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 18.35 seconds.
+2025-10-27 17:07:58,512 - uvicorn.access - INFO - 127.0.0.1:55022 - "POST /img_generate HTTP/1.1" 200
+2025-10-27 17:16:17,073 - src.image_gen_app - INFO - Received request - Prompt: 'A simple, minimalist icon of a house. The image sh...', Images: 1
+2025-10-27 17:16:35,396 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 18.32 seconds.
+2025-10-27 17:16:35,443 - uvicorn.access - INFO - 127.0.0.1:50890 - "POST /img_generate HTTP/1.1" 200
+2025-10-27 17:19:26,313 - src.image_gen_app - INFO - Received request - Prompt: 'A simple, minimalist icon of a house. The image sh...', Images: 1
+2025-10-27 17:19:44,636 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 18.32 seconds.
+2025-10-27 17:19:44,683 - uvicorn.access - INFO - 127.0.0.1:59076 - "POST /img_generate HTTP/1.1" 200
+2025-10-27 17:20:15,094 - src.image_gen_app - INFO - Received request - Prompt: 'A simple, minimalist icon of a house. The image sh...', Images: 1
+2025-10-27 17:20:33,673 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 18.58 seconds.
+2025-10-27 17:20:33,719 - uvicorn.access - INFO - 127.0.0.1:47404 - "POST /img_generate HTTP/1.1" 200
+2025-10-27 17:22:30,851 - src.image_gen_app - INFO - Received request - Prompt: 'A simple, minimalist icon of a house. The image sh...', Images: 1
+2025-10-27 17:22:49,200 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 18.35 seconds.
+2025-10-27 17:22:49,246 - uvicorn.access - INFO - 127.0.0.1:57232 - "POST /img_generate HTTP/1.1" 200
+2025-10-27 17:23:55,183 - src.image_gen_app - INFO - Received request - Prompt: 'A clean, minimalist, and symbolic black line icon ...', Images: 1
+2025-10-27 17:24:13,893 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 18.71 seconds.
+2025-10-27 17:24:13,922 - uvicorn.access - INFO - 127.0.0.1:35062 - "POST /img_generate HTTP/1.1" 200
+2025-10-27 17:24:41,083 - src.image_gen_app - INFO - Received request - Prompt: 'A clean, minimalist, and symbolic black line icon ...', Images: 1
+2025-10-27 17:24:59,751 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 18.67 seconds.
+2025-10-27 17:24:59,780 - uvicorn.access - INFO - 127.0.0.1:49716 - "POST /img_generate HTTP/1.1" 200
+2025-10-27 17:25:04,159 - src.image_gen_app - INFO - Received request - Prompt: 'Modify the existing house icon to have two stories...', Images: 1
+2025-10-27 17:25:22,574 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 18.41 seconds.
+2025-10-27 17:25:22,671 - uvicorn.access - INFO - 127.0.0.1:52942 - "POST /img_generate HTTP/1.1" 200
+2025-10-27 17:25:30,115 - src.image_gen_app - INFO - Received request - Prompt: 'Modify the chimney on the house. Color only the ch...', Images: 1
+2025-10-27 17:25:48,506 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 18.39 seconds.
+2025-10-27 17:25:48,653 - uvicorn.access - INFO - 127.0.0.1:43920 - "POST /img_generate HTTP/1.1" 200
+2025-10-27 17:26:13,659 - src.image_gen_app - INFO - Received request - Prompt: 'Make the existing objects in the image smaller, as...', Images: 1
+2025-10-27 17:26:31,993 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 18.33 seconds.
+2025-10-27 17:26:32,085 - uvicorn.access - INFO - 127.0.0.1:53960 - "POST /img_generate HTTP/1.1" 200
+2025-10-27 17:26:36,944 - src.image_gen_app - INFO - Received request - Prompt: 'Add a simple outline of an emergency exit next to ...', Images: 1
+2025-10-27 17:26:55,354 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 18.41 seconds.
+2025-10-27 17:26:55,503 - uvicorn.access - INFO - 127.0.0.1:48066 - "POST /img_generate HTTP/1.1" 200
+2025-10-27 17:26:58,003 - src.image_gen_app - INFO - Received request - Prompt: 'Add a simple outline of an emergency button next t...', Images: 1
+2025-10-27 17:27:16,472 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 18.47 seconds.
+2025-10-27 17:27:16,626 - uvicorn.access - INFO - 127.0.0.1:56832 - "POST /img_generate HTTP/1.1" 200
+2025-10-27 17:27:21,229 - src.image_gen_app - INFO - Received request - Prompt: 'Rescale the image to add a red carpet in front of ...', Images: 1
+2025-10-27 17:27:39,595 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 18.37 seconds.
+2025-10-27 17:27:39,775 - uvicorn.access - INFO - 127.0.0.1:57948 - "POST /img_generate HTTP/1.1" 200
+2025-10-27 17:27:50,904 - src.image_gen_app - INFO - Received request - Prompt: 'color the windows of the house purple...', Images: 1
+2025-10-27 17:28:09,279 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 18.38 seconds.
+2025-10-27 17:28:09,475 - uvicorn.access - INFO - 127.0.0.1:38412 - "POST /img_generate HTTP/1.1" 200
+2025-10-27 17:28:26,547 - src.image_gen_app - INFO - Received request - Prompt: 'color the door of the house brown...', Images: 1
+2025-10-27 17:28:45,047 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 18.50 seconds.
+2025-10-27 17:28:45,252 - uvicorn.access - INFO - 127.0.0.1:38956 - "POST /img_generate HTTP/1.1" 200
+2025-10-27 17:29:22,429 - src.image_gen_app - INFO - Received request - Prompt: 'color the door of the lower floor of the house  ye...', Images: 1
+2025-10-27 17:29:41,015 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 18.59 seconds.
+2025-10-27 17:29:41,202 - uvicorn.access - INFO - 127.0.0.1:48440 - "POST /img_generate HTTP/1.1" 200
+2025-10-27 17:30:12,704 - src.image_gen_app - INFO - Received request - Prompt: 'Make the house triple floored...', Images: 1
+2025-10-27 17:30:31,302 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 18.60 seconds.
+2025-10-27 17:30:31,483 - uvicorn.access - INFO - 127.0.0.1:39234 - "POST /img_generate HTTP/1.1" 200
+2025-10-27 17:31:04,381 - src.image_gen_app - INFO - Received request - Prompt: 'Make the exit sign green...', Images: 1
+2025-10-27 17:31:22,705 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 18.32 seconds.
+2025-10-27 17:31:22,902 - uvicorn.access - INFO - 127.0.0.1:52830 - "POST /img_generate HTTP/1.1" 200
+2025-10-27 17:31:39,236 - src.image_gen_app - INFO - Received request - Prompt: 'Remove the button...', Images: 1
+2025-10-27 17:31:57,566 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 18.33 seconds.
+2025-10-27 17:31:57,753 - uvicorn.access - INFO - 127.0.0.1:50268 - "POST /img_generate HTTP/1.1" 200
+2025-10-27 17:32:21,533 - src.image_gen_app - INFO - Received request - Prompt: 'Move the door to the other side of the house...', Images: 1
+2025-10-27 17:32:39,842 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 18.31 seconds.
+2025-10-27 17:32:40,019 - uvicorn.access - INFO - 127.0.0.1:59880 - "POST /img_generate HTTP/1.1" 200
+2025-10-27 17:38:18,889 - src.image_gen_app - INFO - Received request - Prompt: 'A simple, minimalist icon of a house. The image sh...', Images: 1
+2025-10-27 17:38:37,495 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 18.61 seconds.
+2025-10-27 17:38:37,542 - uvicorn.access - INFO - 127.0.0.1:54386 - "POST /img_generate HTTP/1.1" 200
+2025-10-27 17:44:13,972 - src.image_gen_app - INFO - Received request - Prompt: 'A clean, minimalist, and symbolic icon of a house,...', Images: 1
+2025-10-27 17:44:32,456 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 18.48 seconds.
+2025-10-27 17:44:32,496 - uvicorn.access - INFO - 127.0.0.1:48476 - "POST /img_generate HTTP/1.1" 200
+2025-10-27 17:45:37,893 - src.image_gen_app - INFO - Received request - Prompt: 'A clean, minimalist, and symbolic icon of a house,...', Images: 1
+2025-10-27 17:45:56,544 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 18.65 seconds.
+2025-10-27 17:45:56,695 - uvicorn.access - INFO - 127.0.0.1:51354 - "POST /img_generate HTTP/1.1" 200
+2025-10-27 17:46:36,858 - src.image_gen_app - INFO - Received request - Prompt: 'Modify the existing house icon to have two stories...', Images: 1
+2025-10-27 17:46:55,233 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 18.37 seconds.
+2025-10-27 17:46:55,341 - uvicorn.access - INFO - 127.0.0.1:59878 - "POST /img_generate HTTP/1.1" 200
+2025-10-27 18:03:20,694 - src.image_gen_app - INFO - Received request - Prompt: 'A clean, minimalist, and symbolic black line icon ...', Images: 1
+2025-10-27 18:03:39,195 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 18.50 seconds.
+2025-10-27 18:03:39,308 - uvicorn.access - INFO - 127.0.0.1:53310 - "POST /img_generate HTTP/1.1" 200
+2025-10-27 18:04:14,973 - src.image_gen_app - INFO - Received request - Prompt: 'Modify the existing house icon to have two stories...', Images: 1
+2025-10-27 18:04:33,360 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 18.39 seconds.
+2025-10-27 18:04:33,458 - uvicorn.access - INFO - 127.0.0.1:57056 - "POST /img_generate HTTP/1.1" 200
+2025-10-27 18:19:45,302 - src.image_gen_app - INFO - Received request - Prompt: 'A clean, minimalist, and symbolic icon of a house,...', Images: 1
+2025-10-27 18:20:03,974 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 18.67 seconds.
+2025-10-27 18:20:04,012 - uvicorn.access - INFO - 127.0.0.1:46624 - "POST /img_generate HTTP/1.1" 200
+2025-10-27 18:20:10,256 - src.image_gen_app - INFO - Received request - Prompt: 'Modify the existing house icon to have two stories...', Images: 1
+2025-10-27 18:20:28,659 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 18.40 seconds.
+2025-10-27 18:20:28,766 - uvicorn.access - INFO - 127.0.0.1:53068 - "POST /img_generate HTTP/1.1" 200
+2025-10-27 18:25:00,046 - src.image_gen_app - INFO - Received request - Prompt: 'A clean, minimalist, and symbolic icon of a house,...', Images: 1
+2025-10-27 18:25:18,621 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 18.58 seconds.
+2025-10-27 18:25:18,658 - uvicorn.access - INFO - 127.0.0.1:58328 - "POST /img_generate HTTP/1.1" 200
+2025-10-27 18:25:22,466 - src.image_gen_app - INFO - Received request - Prompt: 'Modify the existing house icon to have two stories...', Images: 1
+2025-10-27 18:25:40,884 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 18.42 seconds.
+2025-10-27 18:25:40,990 - uvicorn.access - INFO - 127.0.0.1:54086 - "POST /img_generate HTTP/1.1" 200
+2025-10-27 19:01:42,988 - root - INFO - Logging configured.
+2025-10-27 19:01:43,003 - root - INFO - Logging configured.
+2025-10-27 19:01:43,005 - __main__ - INFO - Starting Uvicorn server for Image Generation Service on 0.0.0.0:8000...
+2025-10-27 19:01:43,182 - uvicorn.error - INFO - Started server process [3307330]
+2025-10-27 19:01:43,182 - uvicorn.error - INFO - Waiting for application startup.
+2025-10-27 19:01:43,183 - src.image_gen_app - INFO - Application startup: Loading model...
+2025-10-27 19:01:43,183 - src.image_gen_app - INFO - CUDA available. Using device: cuda with dtype: torch.bfloat16
+2025-10-27 19:01:44,445 - src.image_gen_app - INFO - Loading base pipeline: Qwen/Qwen-Image-Edit-2509...
+2025-10-27 19:01:46,169 - src.image_gen_app - INFO - Loading LoRA weights: Qwen-Image-Lightning/Qwen-Image-Edit-2509/Qwen-Image-Edit-2509-Lightning-8steps-V1.0-fp32.safetensors...
+2025-10-27 19:02:34,775 - src.image_gen_app - INFO - Moving pipeline to device: cuda...
+2025-10-27 19:05:21,764 - src.image_gen_app - INFO - Image generation pipeline loaded successfully.
+2025-10-27 19:05:21,794 - uvicorn.error - INFO - Application startup complete.
+2025-10-27 19:05:21,807 - uvicorn.error - INFO - Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+2025-10-27 19:13:31,287 - src.image_gen_app - INFO - Received request - Prompt: 'A sleek, minimalist icon depicting a house, render...', Images: 1
+2025-10-27 19:13:52,999 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 21.71 seconds.
+2025-10-27 19:13:53,030 - uvicorn.access - INFO - 127.0.0.1:54450 - "POST /img_generate HTTP/1.1" 200
+2025-10-27 19:13:56,816 - src.image_gen_app - INFO - Received request - Prompt: 'Modify the existing house icon to have two stories...', Images: 1
+2025-10-27 19:14:15,338 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 18.52 seconds.
+2025-10-27 19:14:15,446 - uvicorn.access - INFO - 127.0.0.1:59402 - "POST /img_generate HTTP/1.1" 200
+2025-10-27 19:17:46,496 - src.image_gen_app - INFO - Received request - Prompt: 'A sleek, minimalist icon depicting a house, render...', Images: 1
+2025-10-27 19:18:05,368 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 18.87 seconds.
+2025-10-27 19:18:05,401 - uvicorn.access - INFO - 127.0.0.1:58226 - "POST /img_generate HTTP/1.1" 200
+2025-10-27 19:18:07,925 - src.image_gen_app - INFO - Received request - Prompt: 'Modify the existing house icon to have two stories...', Images: 1
+2025-10-27 19:18:26,409 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 18.48 seconds.
+2025-10-27 19:18:26,521 - uvicorn.access - INFO - 127.0.0.1:33778 - "POST /img_generate HTTP/1.1" 200
+2025-10-27 19:24:43,161 - src.image_gen_app - INFO - Received request - Prompt: 'A sleek, minimalist icon depicting a house, render...', Images: 1
+2025-10-27 19:25:01,822 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 18.66 seconds.
+2025-10-27 19:25:01,865 - uvicorn.access - INFO - 127.0.0.1:42068 - "POST /img_generate HTTP/1.1" 200
+2025-10-27 19:25:09,666 - src.image_gen_app - INFO - Received request - Prompt: 'Add a second story to the house icon, maintaining ...', Images: 1
+2025-10-27 19:25:28,151 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 18.49 seconds.
+2025-10-27 19:25:28,300 - uvicorn.access - INFO - 127.0.0.1:55436 - "POST /img_generate HTTP/1.1" 200
+2025-10-27 19:26:07,396 - src.image_gen_app - INFO - Received request - Prompt: 'Modify the chimney on the house to be red while ke...', Images: 1
+2025-10-27 19:26:25,872 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 18.48 seconds.
+2025-10-27 19:26:26,034 - uvicorn.access - INFO - 127.0.0.1:38294 - "POST /img_generate HTTP/1.1" 200
+2025-10-27 19:26:36,744 - src.image_gen_app - INFO - Received request - Prompt: 'Scale down the house icon while maintaining all it...', Images: 1
+2025-10-27 19:26:55,479 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 18.74 seconds.
+2025-10-27 19:26:55,572 - uvicorn.access - INFO - 127.0.0.1:48104 - "POST /img_generate HTTP/1.1" 200
+2025-10-27 19:27:02,968 - src.image_gen_app - INFO - Received request - Prompt: 'Add a simple black outline of an emergency exit sy...', Images: 1
+2025-10-27 19:27:21,464 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 18.50 seconds.
+2025-10-27 19:27:21,636 - uvicorn.access - INFO - 127.0.0.1:47222 - "POST /img_generate HTTP/1.1" 200
+2025-10-27 19:27:45,737 - src.image_gen_app - INFO - Received request - Prompt: 'Add a simple red emergency button with a black out...', Images: 1
+2025-10-27 19:28:04,393 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 18.66 seconds.
+2025-10-27 19:28:04,581 - uvicorn.access - INFO - 127.0.0.1:39598 - "POST /img_generate HTTP/1.1" 200
+2025-10-27 19:28:27,828 - src.image_gen_app - INFO - Received request - Prompt: 'Add a red carpet in front of the house icon, stret...', Images: 1
+2025-10-27 19:28:46,521 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 18.69 seconds.
+2025-10-27 19:28:46,714 - uvicorn.access - INFO - 127.0.0.1:43444 - "POST /img_generate HTTP/1.1" 200
+2025-10-27 19:29:18,311 - src.image_gen_app - INFO - Received request - Prompt: 'Change the color of the house's door to brown....', Images: 1
+2025-10-27 19:29:36,905 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 18.59 seconds.
+2025-10-27 19:29:37,120 - uvicorn.access - INFO - 127.0.0.1:44908 - "POST /img_generate HTTP/1.1" 200
+2025-10-27 19:29:49,188 - src.image_gen_app - INFO - Received request - Prompt: 'Change the color of the house's windows to green...', Images: 1
+2025-10-27 19:30:07,622 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 18.43 seconds.
+2025-10-27 19:30:07,819 - uvicorn.access - INFO - 127.0.0.1:33368 - "POST /img_generate HTTP/1.1" 200
+2025-10-27 19:30:29,475 - src.image_gen_app - INFO - Received request - Prompt: 'Add two additional floors to the house, maintainin...', Images: 1
+2025-10-27 19:30:47,946 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 18.47 seconds.
+2025-10-27 19:30:48,099 - uvicorn.access - INFO - 127.0.0.1:54770 - "POST /img_generate HTTP/1.1" 200
+2025-10-27 19:31:40,520 - src.image_gen_app - INFO - Received request - Prompt: 'Move the red button with a circular shape from the...', Images: 1
+2025-10-27 19:31:58,944 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 18.42 seconds.
+2025-10-27 19:31:59,117 - uvicorn.access - INFO - 127.0.0.1:36682 - "POST /img_generate HTTP/1.1" 200
+2025-10-27 19:32:54,057 - src.image_gen_app - INFO - Received request - Prompt: 'Change the chimney to the same color as the roof (...', Images: 1
+2025-10-27 19:33:12,455 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 18.40 seconds.
+2025-10-27 19:33:12,625 - uvicorn.access - INFO - 127.0.0.1:37470 - "POST /img_generate HTTP/1.1" 200
+2025-10-27 19:33:56,485 - src.image_gen_app - INFO - Received request - Prompt: 'Change the color of the carpet to green, matching ...', Images: 1
+2025-10-27 19:34:15,119 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 18.63 seconds.
+2025-10-27 19:34:15,345 - uvicorn.access - INFO - 127.0.0.1:53936 - "POST /img_generate HTTP/1.1" 200
+2025-10-27 19:35:02,472 - src.image_gen_app - INFO - Received request - Prompt: 'A sleek, minimalist icon depicting a house, render...', Images: 1
+2025-10-27 19:35:21,212 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 18.74 seconds.
+2025-10-27 19:35:21,248 - uvicorn.access - INFO - 127.0.0.1:42200 - "POST /img_generate HTTP/1.1" 200
+2025-10-27 19:35:33,221 - src.image_gen_app - INFO - Received request - Prompt: 'Transform the existing house icon to feature a two...', Images: 1
+2025-10-27 19:35:51,808 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 18.59 seconds.
+2025-10-27 19:35:51,867 - uvicorn.access - INFO - 127.0.0.1:46496 - "POST /img_generate HTTP/1.1" 200
+2025-10-27 19:36:07,311 - src.image_gen_app - INFO - Received request - Prompt: 'A sleek, minimalist icon depicting a house, render...', Images: 1
+2025-10-27 19:36:26,084 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 18.77 seconds.
+2025-10-27 19:36:26,121 - uvicorn.access - INFO - 127.0.0.1:58094 - "POST /img_generate HTTP/1.1" 200
+2025-10-27 19:36:32,899 - src.image_gen_app - INFO - Received request - Prompt: 'Add a second story to the house icon, maintaining ...', Images: 1
+2025-10-27 19:36:51,432 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 18.53 seconds.
+2025-10-27 19:36:51,559 - uvicorn.access - INFO - 127.0.0.1:38440 - "POST /img_generate HTTP/1.1" 200
