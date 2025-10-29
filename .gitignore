@@ -2,3 +2,4 @@ Qwen-Image-Lightning/
 *__pycache__*
 generate_with_diffusers.py
 output/*
+*.old

@@ -1287,3 +1287,7 @@ AttributeError: 'ImageEditRequest' object has no attribute 'num_steps'
 2025-10-27 19:36:32,899 - src.image_gen_app - INFO - Received request - Prompt: 'Add a second story to the house icon, maintaining ...', Images: 1
 2025-10-27 19:36:51,432 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 18.53 seconds.
 2025-10-27 19:36:51,559 - uvicorn.access - INFO - 127.0.0.1:38440 - "POST /img_generate HTTP/1.1" 200
+2025-10-27 19:43:35,893 - __main__ - INFO - Ctrl+C received, initiating shutdown...
+2025-10-27 19:43:35,895 - __main__ - INFO - Waiting for servers to shut down...
+2025-10-27 19:43:35,895 - __main__ - INFO - Uvicorn runs in a separate process/loop; manual stop (Ctrl+C) might be needed if it doesn't exit.
+2025-10-27 19:43:35,895 - __main__ - INFO - Server launcher finished.

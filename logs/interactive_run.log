@@ -1423,3 +1423,57 @@ FileNotFoundError: [Errno 2] No such file or directory: 'output/interactive/step
 2025-10-27 19:36:51,749 - __main__ - INFO - Step 1 logged with status: success
 2025-10-27 19:37:24,355 - __main__ - INFO - Step 2 logged with status: fail
 2025-10-27 19:37:24,355 - __main__ - INFO - --- Interactive Session Ended ---
+2025-10-29 14:52:37,811 - root - INFO - Logging configured.
+2025-10-29 14:52:37,836 - __main__ - INFO - --- Starting Interactive Session ---
+2025-10-29 14:52:58,160 - __main__ - INFO - Creating dummy blank image for initial generation.
+2025-10-29 14:52:58,203 - __main__ - INFO - Calling text prompt enhancer...
+2025-10-29 14:52:58,203 - src.api_clients - INFO - Sending request to Prompt Enhancer (Text): http://0.0.0.0:8001/generate with prompt 'a pool with a dog swimming in it in a clown suit...'
+2025-10-29 14:53:07,506 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/generate "HTTP/1.1 200 OK"
+2025-10-29 14:53:07,507 - src.api_clients - INFO - Text Prompt enhancement successful. New prompt: 'A serene outdoor pool with crystal-clear blue water reflecting the soft glow of a sunny day. In the ...'
+2025-10-29 14:53:07,507 - __main__ - INFO - Calling image generation service with final prompt: 'A serene outdoor pool with crystal-clear blue water reflecting the soft glow of a sunny day. In the ...'
+2025-10-29 14:53:07,507 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'A serene outdoor pool with crystal-clear blue wate...'
+2025-10-29 14:53:07,535 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 500 Internal Server Error"
+2025-10-29 14:53:07,536 - src.api_clients - ERROR - Image Gen API request failed with status 500: {"detail":"Image generation failed internally: autocast.__init__() got an unexpected keyword argument 'torch_dtype'"}
+2025-10-29 14:53:07,536 - __main__ - ERROR - Image generation service did not return an image.
+2025-10-29 14:53:07,570 - __main__ - INFO - Step 0 logged with status: fail
+2025-10-29 14:57:00,443 - __main__ - INFO - Step 0 logged with status: fail
+2025-10-29 14:57:00,444 - __main__ - INFO - --- Interactive Session Ended ---
+2025-10-29 14:58:18,490 - root - INFO - Logging configured.
+2025-10-29 14:58:18,491 - __main__ - INFO - --- Starting Interactive Session ---
+2025-10-29 14:58:21,434 - __main__ - INFO - Step 0 logged with status: fail
+2025-10-29 14:58:21,434 - __main__ - INFO - --- Interactive Session Ended ---
+2025-10-29 15:01:49,043 - root - INFO - Logging configured.
+2025-10-29 15:01:49,044 - __main__ - INFO - --- Starting Interactive Session ---
+2025-10-29 15:01:50,739 - __main__ - INFO - Step 0 logged with status: fail
+2025-10-29 15:01:50,739 - __main__ - INFO - --- Interactive Session Ended ---
+2025-10-29 15:02:00,615 - root - INFO - Logging configured.
+2025-10-29 15:02:00,616 - __main__ - INFO - --- Starting Interactive Session ---
+2025-10-29 15:02:06,813 - __main__ - INFO - Creating dummy blank image for initial generation.
+2025-10-29 15:02:06,845 - __main__ - INFO - Calling text prompt enhancer...
+2025-10-29 15:02:06,845 - src.api_clients - INFO - Sending request to Prompt Enhancer (Text): http://0.0.0.0:8001/generate with prompt 'a dog in a pool...'
+2025-10-29 15:02:32,887 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/generate "HTTP/1.1 200 OK"
+2025-10-29 15:02:32,887 - src.api_clients - INFO - Text Prompt enhancement successful. New prompt: 'A serene and playful scene featuring a golden retriever dog joyfully swimming in a crystal-clear poo...'
+2025-10-29 15:02:32,887 - __main__ - INFO - Calling image generation service with final prompt: 'A serene and playful scene featuring a golden retriever dog joyfully swimming in a crystal-clear poo...'
+2025-10-29 15:02:32,887 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'A serene and playful scene featuring a golden retr...'
+2025-10-29 15:02:56,696 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-29 15:02:56,705 - src.api_clients - INFO - Image generation successful.
+2025-10-29 15:02:57,157 - __main__ - INFO - Output image saved successfully to: output/interactive/step_000_1761746576.png
+2025-10-29 15:02:57,159 - __main__ - INFO - Step 0 logged with status: success
+2025-10-29 15:03:25,656 - __main__ - INFO - Step 1 logged with status: fail
+2025-10-29 15:03:25,656 - __main__ - INFO - --- Interactive Session Ended ---
+2025-10-29 15:04:12,779 - root - INFO - Logging configured.
+2025-10-29 15:04:12,780 - __main__ - INFO - --- Starting Interactive Session ---
+2025-10-29 15:04:12,780 - __main__ - INFO - Loading initial image from: output/interactive/step_001_1761590211.png
+2025-10-29 15:04:12,807 - __main__ - INFO - Parsed filename. Resuming from step 2.
+2025-10-29 15:04:36,869 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-29 15:04:36,869 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/edit with prompt 'make the color of the window of the second floor p...' and 1 image(s).
+2025-10-29 15:05:02,795 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/edit "HTTP/1.1 200 OK"
+2025-10-29 15:05:02,796 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Change the color of the second-floor window to purple....'
+2025-10-29 15:05:02,796 - __main__ - INFO - Calling image generation service with final prompt: 'Change the color of the second-floor window to purple....'
+2025-10-29 15:05:02,796 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Change the color of the second-floor window to pur...'
+2025-10-29 15:05:22,721 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-29 15:05:22,723 - src.api_clients - INFO - Image generation successful.
+2025-10-29 15:05:22,902 - __main__ - INFO - Output image saved successfully to: output/interactive/step_002_1761746722.png
+2025-10-29 15:05:22,904 - __main__ - INFO - Step 2 logged with status: success
+2025-10-29 15:05:34,505 - __main__ - INFO - Step 3 logged with status: fail
+2025-10-29 15:05:34,505 - __main__ - INFO - --- Interactive Session Ended ---

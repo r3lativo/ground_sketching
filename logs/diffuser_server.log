@@ -1,0 +1,66 @@
+2025-10-29 14:33:45,334 - root - INFO - Logging configured.
+2025-10-29 14:39:42,785 - root - INFO - Logging configured.
+2025-10-29 14:44:21,648 - root - INFO - Logging configured.
+2025-10-29 14:45:04,477 - root - INFO - Logging configured.
+2025-10-29 14:45:29,483 - numexpr.utils - INFO - Note: detected 128 virtual cores but NumExpr set to maximum of 64, check "NUMEXPR_MAX_THREADS" environment variable.
+2025-10-29 14:45:29,483 - numexpr.utils - INFO - Note: NumExpr detected 128 cores but "NUMEXPR_MAX_THREADS" not set, so enforcing safe limit of 16.
+2025-10-29 14:45:29,483 - numexpr.utils - INFO - NumExpr defaulting to 16 threads.
+2025-10-29 14:45:33,244 - src.image_gen_app - INFO - Image Gen Config loaded and validated successfully:
+2025-10-29 14:45:33,245 - src.image_gen_app - INFO - {
+  "model_id": "Qwen/Qwen-Image-Edit-2509",
+  "lora_path": "Qwen-Image-Lightning/Qwen-Image-Edit-2509/Qwen-Image-Edit-2509-Lightning-8steps-V1.0-fp32.safetensors"
+}
+2025-10-29 14:45:33,248 - __main__ - INFO - Server config validated: Host=0.0.0.0, Port=8000
+2025-10-29 14:45:33,248 - __main__ - INFO - Starting Uvicorn server for Image Generation Service on 0.0.0.0:8000...
+2025-10-29 14:45:33,300 - uvicorn.error - INFO - Started server process [223245]
+2025-10-29 14:45:33,300 - uvicorn.error - INFO - Waiting for application startup.
+2025-10-29 14:45:33,300 - src.image_gen_app - INFO - Application startup: Loading model...
+2025-10-29 14:45:33,301 - src.image_gen_app - INFO - CUDA available. Using device: cuda with dtype: torch.bfloat16
+2025-10-29 14:45:34,612 - src.image_gen_app - INFO - Loading base pipeline: Qwen/Qwen-Image-Edit-2509...
+2025-10-29 14:45:36,219 - src.image_gen_app - INFO - Loading LoRA weights: Qwen-Image-Lightning/Qwen-Image-Edit-2509/Qwen-Image-Edit-2509-Lightning-8steps-V1.0-fp32.safetensors...
+2025-10-29 14:46:32,028 - src.image_gen_app - INFO - Moving pipeline to device: cuda...
+2025-10-29 14:49:02,971 - src.image_gen_app - INFO - Image generation pipeline loaded successfully.
+2025-10-29 14:49:02,972 - uvicorn.error - INFO - Application startup complete.
+2025-10-29 14:49:02,973 - uvicorn.error - INFO - Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+2025-10-29 14:53:07,517 - src.image_gen_app - INFO - Received request - Prompt: 'A serene outdoor pool with crystal-clear blue wate...', Images: 1
+2025-10-29 14:53:07,532 - src.image_gen_app - ERROR - Error during pipeline execution: autocast.__init__() got an unexpected keyword argument 'torch_dtype'
+Traceback (most recent call last):
+  File "/lustre/fswork/projects/rech/bgp/upa38qy/ground_sketching/src/image_gen_app.py", line 203, in generate_image
+    with torch.cuda.amp.autocast(torch_dtype=DTYPE if DTYPE in [torch.bfloat16, torch.float16] else None):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/typing_extensions.py", line 2956, in wrapper
+    return arg(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^
+TypeError: autocast.__init__() got an unexpected keyword argument 'torch_dtype'
+2025-10-29 14:53:07,535 - uvicorn.access - INFO - 127.0.0.1:60126 - "POST /img_generate HTTP/1.1" 500
+2025-10-29 14:55:39,168 - __main__ - INFO - Ctrl+C received, initiating shutdown...
+2025-10-29 14:55:39,168 - __main__ - INFO - Waiting for servers to shut down...
+2025-10-29 14:55:39,168 - __main__ - INFO - Uvicorn runs in a separate process; manual stop (Ctrl+C) might be needed if it doesn't exit.
+2025-10-29 14:55:39,169 - __main__ - INFO - Server launcher finished.
+2025-10-29 14:56:55,688 - root - INFO - Logging configured.
+2025-10-29 14:57:36,764 - numexpr.utils - INFO - Note: detected 128 virtual cores but NumExpr set to maximum of 64, check "NUMEXPR_MAX_THREADS" environment variable.
+2025-10-29 14:57:36,764 - numexpr.utils - INFO - Note: NumExpr detected 128 cores but "NUMEXPR_MAX_THREADS" not set, so enforcing safe limit of 16.
+2025-10-29 14:57:36,764 - numexpr.utils - INFO - NumExpr defaulting to 16 threads.
+2025-10-29 14:57:38,826 - src.image_gen_app - INFO - Image Gen Config loaded and validated successfully:
+2025-10-29 14:57:38,826 - src.image_gen_app - INFO - {
+  "model_id": "Qwen/Qwen-Image-Edit-2509",
+  "lora_path": "Qwen-Image-Lightning/Qwen-Image-Edit-2509/Qwen-Image-Edit-2509-Lightning-8steps-V1.0-fp32.safetensors"
+}
+2025-10-29 14:57:38,829 - __main__ - INFO - Server config validated: Host=0.0.0.0, Port=8000
+2025-10-29 14:57:38,829 - __main__ - INFO - Starting Uvicorn server for Image Generation Service on 0.0.0.0:8000...
+2025-10-29 14:57:38,917 - uvicorn.error - INFO - Started server process [231494]
+2025-10-29 14:57:38,918 - uvicorn.error - INFO - Waiting for application startup.
+2025-10-29 14:57:38,918 - src.image_gen_app - INFO - Application startup: Loading model...
+2025-10-29 14:57:38,918 - src.image_gen_app - INFO - CUDA available. Using device: cuda with dtype: torch.bfloat16
+2025-10-29 14:57:39,554 - src.image_gen_app - INFO - Loading base pipeline: Qwen/Qwen-Image-Edit-2509...
+2025-10-29 14:57:40,984 - src.image_gen_app - INFO - Loading LoRA weights: Qwen-Image-Lightning/Qwen-Image-Edit-2509/Qwen-Image-Edit-2509-Lightning-8steps-V1.0-fp32.safetensors...
+2025-10-29 14:57:48,116 - src.image_gen_app - INFO - Moving pipeline to device: cuda...
+2025-10-29 15:01:12,276 - src.image_gen_app - INFO - Image generation pipeline loaded successfully.
+2025-10-29 15:01:12,293 - uvicorn.error - INFO - Application startup complete.
+2025-10-29 15:01:12,314 - uvicorn.error - INFO - Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+2025-10-29 15:02:33,013 - src.image_gen_app - INFO - Received request - Prompt: 'A serene and playful scene featuring a golden retr...', Images: 1
+2025-10-29 15:02:56,365 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 23.35 seconds.
+2025-10-29 15:02:56,695 - uvicorn.access - INFO - 127.0.0.1:48084 - "POST /img_generate HTTP/1.1" 200
+2025-10-29 15:05:02,808 - src.image_gen_app - INFO - Received request - Prompt: 'Change the color of the second-floor window to pur...', Images: 1
+2025-10-29 15:05:22,589 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 19.78 seconds.
+2025-10-29 15:05:22,720 - uvicorn.access - INFO - 127.0.0.1:49716 - "POST /img_generate HTTP/1.1" 200

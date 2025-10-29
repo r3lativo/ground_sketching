@@ -6,6 +6,9 @@ import logging
 import time
 from PIL import Image
 import io # Needed for dummy image
+import argparse
+import re # <-- Added for filename parsing
+from typing import Optional
 
 # Assuming your source structure is correct
 from src.api_clients import (
@@ -21,12 +24,11 @@ OUTPUT_DIR = 'output/interactive'
 DUMMY_IMAGE_SIZE = (512, 512) # Small size for the initial blank image
 
 # --- Setup ---
-# Using the main logger setup, redirect output if desired
 setup_logging(log_file='logs/interactive_run.log')
 logger = logging.getLogger(__name__)
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-async def main_interactive_loop():
+async def main_interactive_loop(initial_image_path: Optional[str] = None):
     """Runs the interactive image generation and editing loop."""
     logger.info("--- Starting Interactive Session ---")
     print("\nWelcome to the Interactive Image Editor!")
@@ -34,37 +36,72 @@ async def main_interactive_loop():
 
     current_image_path = None
     current_image_pil = None
-    step_count = 0
+    step_count = 0 # Default start
 
+    # --- Pre-loop: Load initial image if provided ---
+    if initial_image_path:
+        try:
+            if not os.path.exists(initial_image_path):
+                raise FileNotFoundError(f"Image file not found at {initial_image_path}")
+            
+            logger.info(f"Loading initial image from: {initial_image_path}")
+            current_image_pil = Image.open(initial_image_path).convert("RGB")
+            current_image_path = initial_image_path
+            
+            print(f"\nSuccessfully loaded initial image: {initial_image_path}")
+
+            # --- New logic to parse step count from filename ---
+            filename = os.path.basename(initial_image_path)
+            # Try to match the format 'step_001_...'
+            match = re.match(r"step_(\d+)_.*", filename)
+            
+            if match:
+                last_step = int(match.group(1))
+                step_count = last_step + 1 # Start at the *next* step
+                logger.info(f"Parsed filename. Resuming from step {step_count}.")
+                print(f"Resuming from step {step_count}.")
+            else:
+                logger.warning(f"Could not parse step number from filename '{filename}'. Starting edits at step 1.")
+                step_count = 1 # Default behavior if image is loaded but name format is unknown
+                print("You can now start editing (starting at step 1).")
+            # --- End new logic ---
+
+        except Exception as e:
+            logger.error(f"Failed to load initial image '{initial_image_path}': {e}", exc_info=True)
+            print(f"\n[Error] Could not load initial image: {e}")
+            print("Starting with a blank canvas instead.\n")
+            # On failure, step_count remains 0, and loop starts at T2I
+
+    # --- Main Loop ---
     while True:
         step_start_time = time.time()
         log_data = {
-            "negative_prompt": "text, blurry ", # Default negative prompt used by generator
+            "negative_prompt": "text, blurry ",
         }
-        status = "fail" # Default status
+        status = "fail"
 
         try:
             # --- Get User Input ---
             if step_count == 0:
+                # Text-to-Image block
                 initial_prompt = input("Enter the initial text prompt to generate an image: ")
                 if initial_prompt.lower() == 'quit': break
                 log_data["initial_prompt"] = initial_prompt
 
-                # Create a dummy blank image for the first "edit" (T2I simulation)
                 logger.info("Creating dummy blank image for initial generation.")
                 current_image_pil = Image.new('RGB', DUMMY_IMAGE_SIZE, color='white')
                 input_images_b64 = [pil_to_base64(current_image_pil)]
 
-                # --- Enhance Text Prompt (for initial generation) ---
                 logger.info("Calling text prompt enhancer...")
                 final_prompt = await call_text_prompt_enhancer(initial_prompt)
                 if not final_prompt:
                     logger.warning("Text enhancement failed. Using initial prompt.")
-                    final_prompt = initial_prompt # Fallback
+                    final_prompt = initial_prompt
                 log_data["final_prompt"] = final_prompt
 
             else:
-                print(f"\nCurrent image: {current_image_path}")
+                # Image-to-Image Edit block
+                print(f"\nCurrent image: {current_image_path} (editing for step {step_count})")
                 edit_prompt = input("Enter the edit instruction (or 'quit'): ")
                 if edit_prompt.lower() == 'quit': break
                 log_data["initial_prompt"] = edit_prompt
@@ -76,12 +113,11 @@ async def main_interactive_loop():
 
                 input_images_b64 = [pil_to_base64(current_image_pil)]
 
-                # --- Enhance Edit Prompt (for subsequent edits) ---
                 logger.info("Calling edit prompt enhancer...")
                 final_prompt = await call_edit_prompt_enhancer(edit_prompt, input_images_b64)
                 if not final_prompt:
                     logger.warning("Edit enhancement failed. Using initial prompt.")
-                    final_prompt = edit_prompt # Fallback
+                    final_prompt = edit_prompt
                 log_data["final_prompt"] = final_prompt
 
             # --- Generate/Edit Image ---
@@ -92,42 +128,22 @@ async def main_interactive_loop():
                 # CLEANUP
                 def cleanup(outpt_img):
                     from PIL import Image, ImageFilter
-                    # Define your "allowed" colors
                     WHITE = (255, 255, 255)
                     BLACK = (0, 0, 0)
                     allowed_colors=[WHITE, BLACK]
-
-                    # Open the image and convert to RGB (in case it's RGBA or grayscale)
                     img = outpt_img.convert("RGB")
-
-                    # Get all pixel data
                     pixels = img.load() 
-
                     for i in range(img.width):
                         for j in range(img.height):
-                            
                             current_color = pixels[i, j]
-                            
-                            # If the pixel is not one of our exact allowed colors...
                             if current_color not in allowed_colors:
-                                # Check if it's "close" to black or red (e.g., an artifact)
-                                # This is a simple distance check.
-                                # A "stray spot" will be some shade of gray, e.g., (240, 240, 240)
-                                
-                                # Simple check: Is it mostly white/grayish?
                                 if current_color[0] > 180 and current_color[1] > 180 and current_color[2] > 180:
                                     pixels[i, j] = WHITE
-                                # Is it mostly black-ish?
                                 elif current_color[0] < 50 and current_color[1] < 50 and current_color[2] < 50:
                                     pixels[i, j] = BLACK
-                                # Otherwise, it's an unknown artifact, so just make it white.
-                                
-
-                    
+                                # else:
+                                #     pixels[i, j] = WHITE
                     return img
-
-                #output_image_b64 = cleanup(output_image_b64)
-
 
                 # --- Decode and Save ---
                 try:
@@ -135,6 +151,7 @@ async def main_interactive_loop():
                     cleaned_output_image_pil = cleanup(output_image_pil)
 
                     timestamp = int(time.time())
+                    # The filename will now correctly use the incremented step_count
                     output_filename = f"step_{step_count:03d}_{timestamp}.png"
                     output_path = os.path.join(OUTPUT_DIR, output_filename)
                     cleaned_output_image_pil.save(output_path)
@@ -147,16 +164,14 @@ async def main_interactive_loop():
                     current_image_pil = cleaned_output_image_pil
                     log_data["output_file"] = output_path
                     status = "success"
-                    step_count += 1
+                    step_count += 1 # Increment for the *next* loop
 
                 except Exception as e:
                     logger.error(f"Failed to decode or save output image: {e}", exc_info=True)
                     print(f"Error saving image: {e}")
-                    # Keep previous image state if save fails
             else:
                 logger.error("Image generation service did not return an image.")
                 print("Error: Image generation failed.")
-                # Keep previous image state
 
         except KeyboardInterrupt:
             logger.warning("User interrupted session.")
@@ -165,25 +180,39 @@ async def main_interactive_loop():
         except Exception as e:
             logger.error(f"An unexpected error occurred in step {step_count}: {e}", exc_info=True)
             print(f"An error occurred: {e}")
-            # Optionally break or try to continue? For now, continue loop state.
 
         finally:
-            # --- Log Step Result ---
             log_data["status"] = status
             log_data["latency_s"] = time.time() - step_start_time
             log_experiment_step(LOG_FILE, log_data)
-            logger.info(f"Step {step_count-1 if status=='success' else step_count} logged with status: {status}")
+            # Correct logging of the step that just finished
+            current_logged_step = step_count if status == 'fail' else step_count - 1
+            logger.info(f"Step {current_logged_step} logged with status: {status}")
 
     logger.info("--- Interactive Session Ended ---")
     print("\nGoodbye!")
 
 
 if __name__ == "__main__":
-    # Ensure the servers are running before executing this script
     print(f"Make sure both servers (Image Gen and Prompt Enhancer) are running.")
+    
+    parser = argparse.ArgumentParser(
+        description="Run an interactive image editing session.",
+        formatter_class=argparse.RawTextHelpFormatter
+    )
+    parser.add_argument(
+        "-i", "--image",
+        type=str,
+        default=None,
+        help="Optional path to an initial image to start editing.\n"
+             "If the filename is 'step_NNN_...', editing will resume at step NNN+1.\n"
+             "If not provided, the session starts with text-to-image."
+    )
+    args = parser.parse_args()
+
     print("Starting interactive session...")
     try:
-        asyncio.run(main_interactive_loop())
+        asyncio.run(main_interactive_loop(initial_image_path=args.image))
     except Exception as e:
         logger.critical(f"Interactive loop failed critically: {e}", exc_info=True)
     finally:
