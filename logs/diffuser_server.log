@@ -64,3 +64,70 @@ TypeError: autocast.__init__() got an unexpected keyword argument 'torch_dtype'
 2025-10-29 15:05:02,808 - src.image_gen_app - INFO - Received request - Prompt: 'Change the color of the second-floor window to pur...', Images: 1
 2025-10-29 15:05:22,589 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 19.78 seconds.
 2025-10-29 15:05:22,720 - uvicorn.access - INFO - 127.0.0.1:49716 - "POST /img_generate HTTP/1.1" 200
+2025-10-29 15:27:16,173 - __main__ - INFO - Ctrl+C received, initiating shutdown...
+2025-10-29 15:27:16,186 - __main__ - INFO - Waiting for servers to shut down...
+2025-10-29 15:27:16,186 - __main__ - INFO - Uvicorn runs in a separate process; manual stop (Ctrl+C) might be needed if it doesn't exit.
+2025-10-29 15:27:16,187 - __main__ - INFO - Server launcher finished.
+2025-10-29 15:27:25,704 - root - INFO - Logging configured.
+2025-10-29 15:27:55,344 - numexpr.utils - INFO - Note: detected 128 virtual cores but NumExpr set to maximum of 64, check "NUMEXPR_MAX_THREADS" environment variable.
+2025-10-29 15:27:55,344 - numexpr.utils - INFO - Note: NumExpr detected 128 cores but "NUMEXPR_MAX_THREADS" not set, so enforcing safe limit of 16.
+2025-10-29 15:27:55,344 - numexpr.utils - INFO - NumExpr defaulting to 16 threads.
+2025-10-29 15:27:57,630 - src.image_gen_app - INFO - Image Gen Config loaded and validated successfully:
+2025-10-29 15:27:57,632 - src.image_gen_app - INFO - {
+  "model_id": "Qwen/Qwen-Image-Edit-2509",
+  "lora_path": "Qwen-Image-Lightning/Qwen-Image-Edit-2509/Qwen-Image-Edit-2509-Lightning-8steps-V1.0-fp32.safetensors"
+}
+2025-10-29 15:27:57,636 - __main__ - INFO - Server config validated: Host=0.0.0.0, Port=8000
+2025-10-29 15:27:57,636 - __main__ - INFO - Starting Uvicorn server for Image Generation Service on 0.0.0.0:8000...
+2025-10-29 15:27:57,728 - uvicorn.error - INFO - Started server process [246864]
+2025-10-29 15:27:57,728 - uvicorn.error - INFO - Waiting for application startup.
+2025-10-29 15:27:57,728 - src.image_gen_app - INFO - Application startup: Loading model...
+2025-10-29 15:27:57,728 - src.image_gen_app - INFO - CUDA available. Using device: cuda with dtype: torch.bfloat16
+2025-10-29 15:27:58,628 - src.image_gen_app - INFO - Loading base pipeline: Qwen/Qwen-Image-Edit-2509...
+2025-10-29 15:28:00,056 - src.image_gen_app - INFO - Loading LoRA weights: Qwen-Image-Lightning/Qwen-Image-Edit-2509/Qwen-Image-Edit-2509-Lightning-8steps-V1.0-fp32.safetensors...
+2025-10-29 15:28:10,207 - src.image_gen_app - INFO - Moving pipeline to device: cuda...
+2025-10-29 15:30:48,241 - src.image_gen_app - INFO - Image generation pipeline loaded successfully.
+2025-10-29 15:30:48,243 - uvicorn.error - INFO - Application startup complete.
+2025-10-29 15:30:48,244 - uvicorn.error - INFO - Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+2025-10-29 15:45:05,901 - src.image_gen_app - INFO - Received request - Prompt: 'A serene, cozy, and inviting house scene with a wa...', Images: 1
+2025-10-29 15:45:27,684 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 21.78 seconds.
+2025-10-29 15:45:28,012 - uvicorn.access - INFO - 127.0.0.1:46308 - "POST /img_generate HTTP/1.1" 200
+2025-10-29 15:47:59,537 - src.image_gen_app - INFO - Received request - Prompt: 'A serene, cozy, and inviting house scene bathed in...', Images: 1
+2025-10-29 15:48:19,624 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 20.09 seconds.
+2025-10-29 15:48:19,988 - uvicorn.access - INFO - 127.0.0.1:60882 - "POST /img_generate HTTP/1.1" 200
+2025-10-29 15:49:02,135 - src.image_gen_app - INFO - Received request - Prompt: 'A festive, high-quality illustration of a cozy, ce...', Images: 1
+2025-10-29 15:49:22,114 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 19.98 seconds.
+2025-10-29 15:49:22,414 - uvicorn.access - INFO - 127.0.0.1:45906 - "POST /img_generate HTTP/1.1" 200
+2025-10-29 15:51:00,581 - src.image_gen_app - INFO - Received request - Prompt: 'A festive, high-quality illustration of a cozy, ce...', Images: 1
+2025-10-29 15:51:20,594 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 20.01 seconds.
+2025-10-29 15:51:20,808 - uvicorn.access - INFO - 127.0.0.1:60726 - "POST /img_generate HTTP/1.1" 200
+2025-10-29 15:53:11,092 - src.image_gen_app - INFO - Received request - Prompt: 'A cozy, rustic-style house with a warm, inviting a...', Images: 1
+2025-10-29 15:53:31,009 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 19.92 seconds.
+2025-10-29 15:53:31,373 - uvicorn.access - INFO - 127.0.0.1:38168 - "POST /img_generate HTTP/1.1" 200
+2025-10-29 15:53:59,443 - src.image_gen_app - INFO - Received request - Prompt: 'A cozy, rustic-style house with a warm, inviting a...', Images: 1
+2025-10-29 15:54:19,432 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 19.99 seconds.
+2025-10-29 15:54:19,796 - uvicorn.access - INFO - 127.0.0.1:35658 - "POST /img_generate HTTP/1.1" 200
+2025-10-29 15:58:11,513 - src.image_gen_app - INFO - Received request - Prompt: 'Add a medium-sized, fluffy dog sitting on the stai...', Images: 1
+2025-10-29 15:58:31,159 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 19.65 seconds.
+2025-10-29 15:58:31,362 - uvicorn.access - INFO - 127.0.0.1:46288 - "POST /img_generate HTTP/1.1" 200
+2025-10-29 15:58:55,857 - src.image_gen_app - INFO - Received request - Prompt: 'Add a medium-sized, friendly-looking dog sitting o...', Images: 1
+2025-10-29 15:59:15,541 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 19.68 seconds.
+2025-10-29 15:59:15,739 - uvicorn.access - INFO - 127.0.0.1:60150 - "POST /img_generate HTTP/1.1" 200
+2025-10-29 16:12:37,355 - src.image_gen_app - INFO - Received request - Prompt: 'Add a medium-sized, fluffy dog sitting on the stai...', Images: 1
+2025-10-29 16:12:57,090 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 19.73 seconds.
+2025-10-29 16:12:57,294 - uvicorn.access - INFO - 127.0.0.1:46896 - "POST /img_generate HTTP/1.1" 200
+2025-10-29 16:13:14,963 - src.image_gen_app - INFO - Received request - Prompt: 'Add a medium-sized, friendly-looking dog sitting o...', Images: 1
+2025-10-29 16:13:34,633 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 19.67 seconds.
+2025-10-29 16:13:34,832 - uvicorn.access - INFO - 127.0.0.1:43412 - "POST /img_generate HTTP/1.1" 200
+2025-10-29 16:14:23,412 - src.image_gen_app - INFO - Received request - Prompt: 'Add a medium-sized, friendly-looking dog sitting o...', Images: 1
+2025-10-29 16:14:43,100 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 19.69 seconds.
+2025-10-29 16:14:43,298 - uvicorn.access - INFO - 127.0.0.1:57398 - "POST /img_generate HTTP/1.1" 200
+2025-10-29 16:15:10,302 - src.image_gen_app - INFO - Received request - Prompt: 'Add a medium-sized, friendly-looking dog sitting o...', Images: 1
+2025-10-29 16:15:29,962 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 19.66 seconds.
+2025-10-29 16:15:30,161 - uvicorn.access - INFO - 127.0.0.1:52388 - "POST /img_generate HTTP/1.1" 200
+2025-10-29 16:15:43,495 - src.image_gen_app - INFO - Received request - Prompt: 'Change the dog's fur color to purple while keeping...', Images: 1
+2025-10-29 16:16:03,229 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 19.73 seconds.
+2025-10-29 16:16:03,429 - uvicorn.access - INFO - 127.0.0.1:39230 - "POST /img_generate HTTP/1.1" 200
+2025-10-29 16:16:29,509 - src.image_gen_app - INFO - Received request - Prompt: 'Change the dog's fur color to purple while keeping...', Images: 1
+2025-10-29 16:16:49,338 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 19.83 seconds.
+2025-10-29 16:16:49,538 - uvicorn.access - INFO - 127.0.0.1:50788 - "POST /img_generate HTTP/1.1" 200

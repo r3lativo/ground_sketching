@@ -10,8 +10,13 @@ import logging
 import base64
 from io import BytesIO
 from PIL import Image
+import torch
 
 from src.utils import setup_logging, load_config
+
+
+torch.backends.cudnn.deterministic = True
+torch.backends.cudnn.benchmark = False
 
 # --- Setup ---
 setup_logging(log_file='logs/vllm_server.log')
@@ -25,12 +30,18 @@ class VLLMConfig(BaseModel):
     port: int
     tensor_parallel_size: int
     gpu_memory_utilization: float
-    seed: int
-    temperature: float
-    top_p: float
     dtype: str
     max_model_len: int
     trust_remote_code: bool
+    seed: int
+
+# --- Request Body Model ---
+class GenerateRequest(BaseModel):
+    messages: List[Dict[str, Any]] = Field(..., description="List of message objects (e.g., {'role': 'user', 'content': ...})")
+    seed: int
+    top_p: float
+    temperature: float
+    max_tokens: int
 
 # --- Load Configuration ---
 try:
@@ -55,10 +66,6 @@ except Exception as e:
     logger.critical(f"FATAL: Failed to load config: {e}", exc_info=True)
     raise SystemExit("Failed to load config.")
 
-
-# --- Request Body Model ---
-class GenerateRequest(BaseModel):
-    messages: List[Dict[str, Any]] = Field(..., description="List of message objects (e.g., {'role': 'user', 'content': ...})")
 
 # --- VLLM Setup ---
 logger.info(f"Loading LLM: {config.model_id} with dtype: {config.dtype}")
@@ -135,10 +142,10 @@ async def handle_generation(request: GenerateRequest):
     logger.debug(f"Received request messages: {request.messages}")
 
     sampling_params = SamplingParams(
-        temperature=config.temperature,
-        top_p=config.top_p,
-        seed=config.seed,
-        max_tokens=5000,
+        temperature=request.temperature,
+        top_p=request.top_p,
+        seed=request.seed,
+        max_tokens=request.max_tokens,
     )
 
     try:
@@ -170,10 +177,10 @@ async def handle_edit(request: GenerateRequest):
     logger.debug(f"Received edit request messages: {request.messages}")
 
     sampling_params = SamplingParams(
-        temperature=config.temperature,
-        top_p=config.top_p,
-        seed=config.seed,
-        max_tokens=5000,
+        temperature=request.temperature,
+        top_p=request.top_p,
+        seed=request.seed,
+        max_tokens=request.max_tokens,
     )
 
     try:

@@ -31,8 +31,6 @@ logger = logging.getLogger(__name__)
 # --- Configuration Model ---
 class ImageGenConfig(BaseModel):
     model_id: str
-    # lora_path is optional. The code will run the base model if this
-    # is missing or set to null in the config, which matches the original logic.
     lora_path: Optional[str] = None
 
 # --- Global State Variables ---

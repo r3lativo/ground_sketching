@@ -16,12 +16,13 @@ from src.api_clients import (
     call_edit_prompt_enhancer,
     call_image_gen
 )
-from src.utils import setup_logging, pil_to_base64, base64_to_pil, log_experiment_step
+from src.utils import setup_logging, pil_to_base64, base64_to_pil, log_experiment_step, load_config
 
 # --- Configuration ---
 LOG_FILE = 'logs/interactive_session.csv'
 OUTPUT_DIR = 'output/interactive'
-DUMMY_IMAGE_SIZE = (512, 512) # Small size for the initial blank image
+DUMMY_IMAGE_SIZE = (1024, 1024) # Small size for the initial blank image
+CONFIG = load_config()
 
 # --- Setup ---
 setup_logging(log_file='logs/interactive_run.log')
@@ -76,7 +77,14 @@ async def main_interactive_loop(initial_image_path: Optional[str] = None):
     while True:
         step_start_time = time.time()
         log_data = {
-            "negative_prompt": "text, blurry ",
+            "negative_prompt": CONFIG["image_gen_client"]["negative_prompt"],
+            "true_cfg_scale": CONFIG["image_gen_client"]["true_cfg_scale"],
+            "num_inference_steps": CONFIG["image_gen_client"]["num_inference_steps"],
+            "IMGseed": CONFIG["image_gen_client"]["seed"],
+
+            "VLseed": CONFIG["prompt_enhancer_client"]["seed"],
+            "top_p": CONFIG["prompt_enhancer_client"]["top_p"],
+            "temperature": CONFIG["prompt_enhancer_client"]["temperature"],
         }
         status = "fail"
 
@@ -183,7 +191,6 @@ async def main_interactive_loop(initial_image_path: Optional[str] = None):
 
         finally:
             log_data["status"] = status
-            log_data["latency_s"] = time.time() - step_start_time
             log_experiment_step(LOG_FILE, log_data)
             # Correct logging of the step that just finished
             current_logged_step = step_count if status == 'fail' else step_count - 1

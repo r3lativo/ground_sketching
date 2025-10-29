@@ -9,6 +9,9 @@ from typing import List, Optional, Dict, Any
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 import torch # Added for seed generation fallback in call_image_gen
 
+torch.backends.cudnn.deterministic = True
+torch.backends.cudnn.benchmark = False
+
 logger = logging.getLogger(__name__)
 
 # --- Configuration & Template Loading ---
@@ -61,7 +64,7 @@ async def call_image_gen(
 ) -> Optional[str]:
     """Calls the image generation service API."""
     endpoint = f"{IMAGE_GEN_URL}/img_generate"
-    image_gen_config = CONFIG.get('image_gen_service', {})
+    image_gen_config = CONFIG.get('image_gen_client', {})
     payload = {
         "prompt": prompt,
         "images": base64_images,
@@ -107,18 +110,18 @@ async def call_text_prompt_enhancer(
     """
     endpoint = f"{ENHANCER_API_BASE_URL}/generate"
     logger.info(f"Sending request to Prompt Enhancer (Text): {endpoint} with prompt '{initial_prompt[:50]}...'")
-
+    prompt_enhancer_client_config = CONFIG["prompt_enhancer_client"]
     messages = [
         {"role": "system", "content": POLISH_SYSTEM_PROMPT},
         {"role": "user", "content": initial_prompt}
     ]
 
     payload = {
-        # "model": ENHANCER_MODEL_ID,
         "messages": messages,
-        # "max_tokens": max_tokens,
-        # "temperature": temperature,
-        # Add other OpenAI compatible parameters if needed (e.g., "top_p": 0.9)
+        "seed": prompt_enhancer_client_config["seed"],
+        "top_p": prompt_enhancer_client_config["top_p"],
+        "temperature": prompt_enhancer_client_config["temperature"],
+        "max_tokens": prompt_enhancer_client_config["max_tokens"],
     }
 
     try:
@@ -160,8 +163,6 @@ async def call_text_prompt_enhancer(
 async def call_edit_prompt_enhancer(
     initial_prompt: str,
     base64_images: List[str],
-    #max_tokens: int,
-    #temperature: float,
     timeout: int = 120,
 ) -> Optional[str]:
     """
@@ -180,16 +181,19 @@ async def call_edit_prompt_enhancer(
         })
     content.append({"type": "text", "text": initial_prompt})
 
+    prompt_enhancer_client_config = CONFIG["prompt_enhancer_client"]
+
     messages = [
         {"role": "system", "content": EDIT_SYSTEM_PROMPT},
         {"role": "user", "content": content}
     ]
 
     payload = {
-        # "model": ENHANCER_MODEL_ID,
         "messages": messages,
-        # "max_tokens": max_tokens,
-        # "temperature": temperature,
+        "seed": prompt_enhancer_client_config["seed"],
+        "top_p": prompt_enhancer_client_config["top_p"],
+        "temperature": prompt_enhancer_client_config["temperature"],
+        "max_tokens": prompt_enhancer_client_config["max_tokens"],
     }
 
     try:

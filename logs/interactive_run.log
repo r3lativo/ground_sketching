@@ -1477,3 +1477,219 @@ FileNotFoundError: [Errno 2] No such file or directory: 'output/interactive/step
 2025-10-29 15:05:22,904 - __main__ - INFO - Step 2 logged with status: success
 2025-10-29 15:05:34,505 - __main__ - INFO - Step 3 logged with status: fail
 2025-10-29 15:05:34,505 - __main__ - INFO - --- Interactive Session Ended ---
+2025-10-29 15:32:20,035 - root - INFO - Logging configured.
+2025-10-29 15:32:20,038 - __main__ - INFO - --- Starting Interactive Session ---
+2025-10-29 15:32:25,210 - __main__ - INFO - Step 0 logged with status: fail
+2025-10-29 15:32:25,210 - __main__ - INFO - --- Interactive Session Ended ---
+2025-10-29 15:44:42,619 - root - INFO - Logging configured.
+2025-10-29 15:44:42,620 - __main__ - INFO - --- Starting Interactive Session ---
+2025-10-29 15:44:52,087 - __main__ - INFO - Creating dummy blank image for initial generation.
+2025-10-29 15:44:52,145 - __main__ - INFO - Calling text prompt enhancer...
+2025-10-29 15:44:52,145 - src.api_clients - INFO - Sending request to Prompt Enhancer (Text): http://0.0.0.0:8001/generate with prompt 'a house with a lamp...'
+2025-10-29 15:45:05,891 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/generate "HTTP/1.1 200 OK"
+2025-10-29 15:45:05,891 - src.api_clients - INFO - Text Prompt enhancement successful. New prompt: 'A serene, cozy, and inviting house scene with a warm, glowing lamp as the central focal point. The h...'
+2025-10-29 15:45:05,891 - __main__ - INFO - Calling image generation service with final prompt: 'A serene, cozy, and inviting house scene with a warm, glowing lamp as the central focal point. The h...'
+2025-10-29 15:45:05,891 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'A serene, cozy, and inviting house scene with a wa...'
+2025-10-29 15:45:28,013 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-29 15:45:28,020 - src.api_clients - INFO - Image generation successful.
+2025-10-29 15:45:28,498 - __main__ - INFO - Output image saved successfully to: output/interactive/step_000_1761749128.png
+2025-10-29 15:45:28,501 - __main__ - INFO - Step 0 logged with status: success
+2025-10-29 15:47:12,692 - __main__ - INFO - Step 1 logged with status: fail
+2025-10-29 15:47:12,692 - __main__ - INFO - --- Interactive Session Ended ---
+2025-10-29 15:47:25,999 - root - INFO - Logging configured.
+2025-10-29 15:47:26,000 - __main__ - INFO - --- Starting Interactive Session ---
+2025-10-29 15:47:45,298 - __main__ - INFO - Creating dummy blank image for initial generation.
+2025-10-29 15:47:45,333 - __main__ - INFO - Calling text prompt enhancer...
+2025-10-29 15:47:45,333 - src.api_clients - INFO - Sending request to Prompt Enhancer (Text): http://0.0.0.0:8001/generate with prompt 'a house with a lamp...'
+2025-10-29 15:47:59,528 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/generate "HTTP/1.1 200 OK"
+2025-10-29 15:47:59,528 - src.api_clients - INFO - Text Prompt enhancement successful. New prompt: 'A serene, cozy, and inviting house scene bathed in warm, ambient light from a glowing lamp. The hous...'
+2025-10-29 15:47:59,529 - __main__ - INFO - Calling image generation service with final prompt: 'A serene, cozy, and inviting house scene bathed in warm, ambient light from a glowing lamp. The hous...'
+2025-10-29 15:47:59,529 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'A serene, cozy, and inviting house scene bathed in...'
+2025-10-29 15:48:19,989 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-29 15:48:19,994 - src.api_clients - INFO - Image generation successful.
+2025-10-29 15:48:20,455 - __main__ - INFO - Output image saved successfully to: output/interactive/step_000_1761749300.png
+2025-10-29 15:48:20,457 - __main__ - INFO - Step 0 logged with status: success
+2025-10-29 15:48:25,904 - __main__ - INFO - Step 1 logged with status: fail
+2025-10-29 15:48:25,904 - __main__ - INFO - --- Interactive Session Ended ---
+2025-10-29 15:48:42,215 - root - INFO - Logging configured.
+2025-10-29 15:48:42,216 - __main__ - INFO - --- Starting Interactive Session ---
+2025-10-29 15:48:51,962 - __main__ - INFO - Creating dummy blank image for initial generation.
+2025-10-29 15:48:51,998 - __main__ - INFO - Calling text prompt enhancer...
+2025-10-29 15:48:51,998 - src.api_clients - INFO - Sending request to Prompt Enhancer (Text): http://0.0.0.0:8001/generate with prompt 'a mug with santa claus inside...'
+2025-10-29 15:49:02,126 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/generate "HTTP/1.1 200 OK"
+2025-10-29 15:49:02,127 - src.api_clients - INFO - Text Prompt enhancement successful. New prompt: 'A festive, high-quality illustration of a cozy, ceramic mug with a warm, inviting design. Inside the...'
+2025-10-29 15:49:02,127 - __main__ - INFO - Calling image generation service with final prompt: 'A festive, high-quality illustration of a cozy, ceramic mug with a warm, inviting design. Inside the...'
+2025-10-29 15:49:02,127 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'A festive, high-quality illustration of a cozy, ce...'
+2025-10-29 15:49:22,415 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-29 15:49:22,419 - src.api_clients - INFO - Image generation successful.
+2025-10-29 15:49:22,853 - __main__ - INFO - Output image saved successfully to: output/interactive/step_000_1761749362.png
+2025-10-29 15:49:22,855 - __main__ - INFO - Step 0 logged with status: success
+2025-10-29 15:50:36,270 - __main__ - INFO - Step 1 logged with status: fail
+2025-10-29 15:50:36,270 - __main__ - INFO - --- Interactive Session Ended ---
+2025-10-29 15:50:47,231 - root - INFO - Logging configured.
+2025-10-29 15:50:47,232 - __main__ - INFO - --- Starting Interactive Session ---
+2025-10-29 15:50:51,610 - __main__ - INFO - Creating dummy blank image for initial generation.
+2025-10-29 15:50:51,646 - __main__ - INFO - Calling text prompt enhancer...
+2025-10-29 15:50:51,646 - src.api_clients - INFO - Sending request to Prompt Enhancer (Text): http://0.0.0.0:8001/generate with prompt 'a mug with santa claus inside...'
+2025-10-29 15:51:00,572 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/generate "HTTP/1.1 200 OK"
+2025-10-29 15:51:00,572 - src.api_clients - INFO - Text Prompt enhancement successful. New prompt: 'A festive, high-quality illustration of a cozy, ceramic mug with a warm, inviting design. Inside the...'
+2025-10-29 15:51:00,572 - __main__ - INFO - Calling image generation service with final prompt: 'A festive, high-quality illustration of a cozy, ceramic mug with a warm, inviting design. Inside the...'
+2025-10-29 15:51:00,573 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'A festive, high-quality illustration of a cozy, ce...'
+2025-10-29 15:51:20,809 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-29 15:51:20,812 - src.api_clients - INFO - Image generation successful.
+2025-10-29 15:51:21,118 - __main__ - INFO - Output image saved successfully to: output/interactive/step_000_1761749480.png
+2025-10-29 15:51:21,120 - __main__ - INFO - Step 0 logged with status: success
+2025-10-29 15:52:32,773 - __main__ - INFO - Step 1 logged with status: fail
+2025-10-29 15:52:32,773 - __main__ - INFO - --- Interactive Session Ended ---
+2025-10-29 15:52:38,480 - root - INFO - Logging configured.
+2025-10-29 15:52:38,481 - __main__ - INFO - --- Starting Interactive Session ---
+2025-10-29 15:53:02,846 - __main__ - INFO - Creating dummy blank image for initial generation.
+2025-10-29 15:53:02,882 - __main__ - INFO - Calling text prompt enhancer...
+2025-10-29 15:53:02,882 - src.api_clients - INFO - Sending request to Prompt Enhancer (Text): http://0.0.0.0:8001/generate with prompt 'a house with a lamp...'
+2025-10-29 15:53:11,083 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/generate "HTTP/1.1 200 OK"
+2025-10-29 15:53:11,083 - src.api_clients - INFO - Text Prompt enhancement successful. New prompt: 'A cozy, rustic-style house with a warm, inviting ambiance, set in a serene countryside or suburban s...'
+2025-10-29 15:53:11,084 - __main__ - INFO - Calling image generation service with final prompt: 'A cozy, rustic-style house with a warm, inviting ambiance, set in a serene countryside or suburban s...'
+2025-10-29 15:53:11,084 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'A cozy, rustic-style house with a warm, inviting a...'
+2025-10-29 15:53:31,374 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-29 15:53:31,381 - src.api_clients - INFO - Image generation successful.
+2025-10-29 15:53:31,773 - __main__ - INFO - Output image saved successfully to: output/interactive/step_000_1761749611.png
+2025-10-29 15:53:31,775 - __main__ - INFO - Step 0 logged with status: success
+2025-10-29 15:53:41,798 - __main__ - INFO - Step 1 logged with status: fail
+2025-10-29 15:53:41,798 - __main__ - INFO - --- Interactive Session Ended ---
+2025-10-29 15:53:46,023 - root - INFO - Logging configured.
+2025-10-29 15:53:46,024 - __main__ - INFO - --- Starting Interactive Session ---
+2025-10-29 15:53:51,189 - __main__ - INFO - Creating dummy blank image for initial generation.
+2025-10-29 15:53:51,224 - __main__ - INFO - Calling text prompt enhancer...
+2025-10-29 15:53:51,224 - src.api_clients - INFO - Sending request to Prompt Enhancer (Text): http://0.0.0.0:8001/generate with prompt 'a house with a lamp...'
+2025-10-29 15:53:59,431 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/generate "HTTP/1.1 200 OK"
+2025-10-29 15:53:59,432 - src.api_clients - INFO - Text Prompt enhancement successful. New prompt: 'A cozy, rustic-style house with a warm, inviting ambiance, set in a serene countryside or suburban s...'
+2025-10-29 15:53:59,432 - __main__ - INFO - Calling image generation service with final prompt: 'A cozy, rustic-style house with a warm, inviting ambiance, set in a serene countryside or suburban s...'
+2025-10-29 15:53:59,432 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'A cozy, rustic-style house with a warm, inviting a...'
+2025-10-29 15:54:19,797 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-29 15:54:19,803 - src.api_clients - INFO - Image generation successful.
+2025-10-29 15:54:20,194 - __main__ - INFO - Output image saved successfully to: output/interactive/step_000_1761749660.png
+2025-10-29 15:54:20,196 - __main__ - INFO - Step 0 logged with status: success
+2025-10-29 15:56:44,469 - __main__ - INFO - Step 1 logged with status: fail
+2025-10-29 15:56:44,469 - __main__ - INFO - --- Interactive Session Ended ---
+2025-10-29 15:57:57,278 - root - INFO - Logging configured.
+2025-10-29 15:57:57,279 - __main__ - INFO - --- Starting Interactive Session ---
+2025-10-29 15:57:57,279 - __main__ - INFO - Loading initial image from: output/interactive/step_000_1761749660.png
+2025-10-29 15:57:57,316 - __main__ - INFO - Parsed filename. Resuming from step 1.
+2025-10-29 15:58:06,642 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-29 15:58:06,643 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/edit with prompt 'add a dog on the stairs...' and 1 image(s).
+2025-10-29 15:58:11,500 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/edit "HTTP/1.1 200 OK"
+2025-10-29 15:58:11,500 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Add a medium-sized, fluffy dog sitting on the stairs, facing the camera, with a warm and friendly ex...'
+2025-10-29 15:58:11,500 - __main__ - INFO - Calling image generation service with final prompt: 'Add a medium-sized, fluffy dog sitting on the stairs, facing the camera, with a warm and friendly ex...'
+2025-10-29 15:58:11,501 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Add a medium-sized, fluffy dog sitting on the stai...'
+2025-10-29 15:58:31,362 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-29 15:58:31,367 - src.api_clients - INFO - Image generation successful.
+2025-10-29 15:58:31,692 - __main__ - INFO - Output image saved successfully to: output/interactive/step_001_1761749911.png
+2025-10-29 15:58:31,695 - __main__ - INFO - Step 1 logged with status: success
+2025-10-29 15:58:42,411 - __main__ - INFO - Step 2 logged with status: fail
+2025-10-29 15:58:42,411 - __main__ - INFO - --- Interactive Session Ended ---
+2025-10-29 15:58:46,048 - root - INFO - Logging configured.
+2025-10-29 15:58:46,049 - __main__ - INFO - --- Starting Interactive Session ---
+2025-10-29 15:58:46,049 - __main__ - INFO - Loading initial image from: output/interactive/step_000_1761749660.png
+2025-10-29 15:58:46,090 - __main__ - INFO - Parsed filename. Resuming from step 1.
+2025-10-29 15:58:54,109 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-29 15:58:54,109 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/edit with prompt 'add a dog on the stairs...' and 1 image(s).
+2025-10-29 15:58:55,844 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/edit "HTTP/1.1 200 OK"
+2025-10-29 15:58:55,845 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Add a medium-sized, friendly-looking dog sitting on the stairs, facing the camera, with a warm and i...'
+2025-10-29 15:58:55,845 - __main__ - INFO - Calling image generation service with final prompt: 'Add a medium-sized, friendly-looking dog sitting on the stairs, facing the camera, with a warm and i...'
+2025-10-29 15:58:55,845 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Add a medium-sized, friendly-looking dog sitting o...'
+2025-10-29 15:59:15,740 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-29 15:59:15,744 - src.api_clients - INFO - Image generation successful.
+2025-10-29 15:59:16,079 - __main__ - INFO - Output image saved successfully to: output/interactive/step_001_1761749955.png
+2025-10-29 15:59:16,081 - __main__ - INFO - Step 1 logged with status: success
+2025-10-29 16:10:47,679 - __main__ - INFO - Step 2 logged with status: fail
+2025-10-29 16:10:47,688 - __main__ - INFO - --- Interactive Session Ended ---
+2025-10-29 16:12:29,732 - root - INFO - Logging configured.
+2025-10-29 16:12:29,733 - __main__ - INFO - --- Starting Interactive Session ---
+2025-10-29 16:12:29,733 - __main__ - INFO - Loading initial image from: output/interactive/step_000_1761749660.png
+2025-10-29 16:12:29,789 - __main__ - INFO - Parsed filename. Resuming from step 1.
+2025-10-29 16:12:32,944 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-29 16:12:32,945 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/edit with prompt 'add a dog on the stairs...' and 1 image(s).
+2025-10-29 16:12:37,342 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/edit "HTTP/1.1 200 OK"
+2025-10-29 16:12:37,342 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Add a medium-sized, fluffy dog sitting on the stairs, facing the camera, with a warm and friendly ex...'
+2025-10-29 16:12:37,343 - __main__ - INFO - Calling image generation service with final prompt: 'Add a medium-sized, fluffy dog sitting on the stairs, facing the camera, with a warm and friendly ex...'
+2025-10-29 16:12:37,343 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Add a medium-sized, fluffy dog sitting on the stai...'
+2025-10-29 16:12:57,294 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-29 16:12:57,299 - src.api_clients - INFO - Image generation successful.
+2025-10-29 16:12:57,622 - __main__ - INFO - Output image saved successfully to: output/interactive/step_001_1761750777.png
+2025-10-29 16:12:57,624 - __main__ - INFO - Step 1 logged with status: success
+2025-10-29 16:13:05,665 - __main__ - INFO - Step 2 logged with status: fail
+2025-10-29 16:13:05,665 - __main__ - INFO - --- Interactive Session Ended ---
+2025-10-29 16:13:10,518 - root - INFO - Logging configured.
+2025-10-29 16:13:10,519 - __main__ - INFO - --- Starting Interactive Session ---
+2025-10-29 16:13:10,519 - __main__ - INFO - Loading initial image from: output/interactive/step_000_1761749660.png
+2025-10-29 16:13:10,556 - __main__ - INFO - Parsed filename. Resuming from step 1.
+2025-10-29 16:13:13,206 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-29 16:13:13,206 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/edit with prompt 'add a dog on the stairs...' and 1 image(s).
+2025-10-29 16:13:14,950 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/edit "HTTP/1.1 200 OK"
+2025-10-29 16:13:14,951 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Add a medium-sized, friendly-looking dog sitting on the stairs, facing the camera, with a warm and i...'
+2025-10-29 16:13:14,951 - __main__ - INFO - Calling image generation service with final prompt: 'Add a medium-sized, friendly-looking dog sitting on the stairs, facing the camera, with a warm and i...'
+2025-10-29 16:13:14,951 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Add a medium-sized, friendly-looking dog sitting o...'
+2025-10-29 16:13:34,833 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-29 16:13:34,837 - src.api_clients - INFO - Image generation successful.
+2025-10-29 16:13:35,157 - __main__ - INFO - Output image saved successfully to: output/interactive/step_001_1761750814.png
+2025-10-29 16:13:35,159 - __main__ - INFO - Step 1 logged with status: success
+2025-10-29 16:14:14,785 - __main__ - INFO - Step 2 logged with status: fail
+2025-10-29 16:14:14,786 - __main__ - INFO - --- Interactive Session Ended ---
+2025-10-29 16:14:18,737 - root - INFO - Logging configured.
+2025-10-29 16:14:18,738 - __main__ - INFO - --- Starting Interactive Session ---
+2025-10-29 16:14:18,738 - __main__ - INFO - Loading initial image from: output/interactive/step_000_1761749660.png
+2025-10-29 16:14:18,774 - __main__ - INFO - Parsed filename. Resuming from step 1.
+2025-10-29 16:14:21,621 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-29 16:14:21,621 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/edit with prompt 'add a dog on the stairs...' and 1 image(s).
+2025-10-29 16:14:23,399 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/edit "HTTP/1.1 200 OK"
+2025-10-29 16:14:23,400 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Add a medium-sized, friendly-looking dog sitting on the stairs, facing the camera, with a warm and i...'
+2025-10-29 16:14:23,400 - __main__ - INFO - Calling image generation service with final prompt: 'Add a medium-sized, friendly-looking dog sitting on the stairs, facing the camera, with a warm and i...'
+2025-10-29 16:14:23,400 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Add a medium-sized, friendly-looking dog sitting o...'
+2025-10-29 16:14:43,299 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-29 16:14:43,304 - src.api_clients - INFO - Image generation successful.
+2025-10-29 16:14:43,630 - __main__ - INFO - Output image saved successfully to: output/interactive/step_001_1761750883.png
+2025-10-29 16:14:43,632 - __main__ - INFO - Step 1 logged with status: success
+2025-10-29 16:14:55,518 - __main__ - INFO - Step 2 logged with status: fail
+2025-10-29 16:14:55,518 - __main__ - INFO - --- Interactive Session Ended ---
+2025-10-29 16:15:02,351 - root - INFO - Logging configured.
+2025-10-29 16:15:02,352 - __main__ - INFO - --- Starting Interactive Session ---
+2025-10-29 16:15:02,352 - __main__ - INFO - Loading initial image from: output/interactive/step_000_1761749660.png
+2025-10-29 16:15:02,389 - __main__ - INFO - Parsed filename. Resuming from step 1.
+2025-10-29 16:15:08,555 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-29 16:15:08,555 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/edit with prompt 'add a dog on the stairs...' and 1 image(s).
+2025-10-29 16:15:10,289 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/edit "HTTP/1.1 200 OK"
+2025-10-29 16:15:10,289 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Add a medium-sized, friendly-looking dog sitting on the stairs, facing the camera, with a warm and i...'
+2025-10-29 16:15:10,289 - __main__ - INFO - Calling image generation service with final prompt: 'Add a medium-sized, friendly-looking dog sitting on the stairs, facing the camera, with a warm and i...'
+2025-10-29 16:15:10,289 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Add a medium-sized, friendly-looking dog sitting o...'
+2025-10-29 16:15:30,161 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-29 16:15:30,165 - src.api_clients - INFO - Image generation successful.
+2025-10-29 16:15:30,486 - __main__ - INFO - Output image saved successfully to: output/interactive/step_001_1761750930.png
+2025-10-29 16:15:30,488 - __main__ - INFO - Step 1 logged with status: success
+2025-10-29 16:15:41,702 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-29 16:15:41,702 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/edit with prompt 'change the color of the dog to purple...' and 1 image(s).
+2025-10-29 16:15:43,482 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/edit "HTTP/1.1 200 OK"
+2025-10-29 16:15:43,483 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Change the dog's fur color to purple while keeping its current pose and expression....'
+2025-10-29 16:15:43,483 - __main__ - INFO - Calling image generation service with final prompt: 'Change the dog's fur color to purple while keeping its current pose and expression....'
+2025-10-29 16:15:43,483 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Change the dog's fur color to purple while keeping...'
+2025-10-29 16:16:03,430 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-29 16:16:03,434 - src.api_clients - INFO - Image generation successful.
+2025-10-29 16:16:03,749 - __main__ - INFO - Output image saved successfully to: output/interactive/step_002_1761750963.png
+2025-10-29 16:16:03,750 - __main__ - INFO - Step 2 logged with status: success
+2025-10-29 16:16:07,243 - __main__ - INFO - Step 3 logged with status: fail
+2025-10-29 16:16:07,243 - __main__ - INFO - --- Interactive Session Ended ---
+2025-10-29 16:16:23,511 - root - INFO - Logging configured.
+2025-10-29 16:16:23,512 - __main__ - INFO - --- Starting Interactive Session ---
+2025-10-29 16:16:23,512 - __main__ - INFO - Loading initial image from: output/interactive/step_001_1761750930.png
+2025-10-29 16:16:23,549 - __main__ - INFO - Parsed filename. Resuming from step 2.
+2025-10-29 16:16:28,103 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-29 16:16:28,103 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/edit with prompt 'change the color of the dog to purple...' and 1 image(s).
+2025-10-29 16:16:29,496 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/edit "HTTP/1.1 200 OK"
+2025-10-29 16:16:29,497 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Change the dog's fur color to purple while keeping its current pose and expression....'
+2025-10-29 16:16:29,497 - __main__ - INFO - Calling image generation service with final prompt: 'Change the dog's fur color to purple while keeping its current pose and expression....'
+2025-10-29 16:16:29,497 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Change the dog's fur color to purple while keeping...'
+2025-10-29 16:16:49,539 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-29 16:16:49,542 - src.api_clients - INFO - Image generation successful.
+2025-10-29 16:16:49,867 - __main__ - INFO - Output image saved successfully to: output/interactive/step_002_1761751009.png
+2025-10-29 16:16:49,870 - __main__ - INFO - Step 2 logged with status: success
+2025-10-29 16:17:05,447 - __main__ - INFO - Step 3 logged with status: fail
+2025-10-29 16:17:05,447 - __main__ - INFO - --- Interactive Session Ended ---

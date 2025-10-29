@@ -14,7 +14,8 @@ logger = logging.getLogger(__name__)
 
 LOG_HEADER = [
     "timestamp", "status", "initial_prompt", "final_prompt",
-    "negative_prompt", "output_file", "latency_s"
+    "negative_prompt", "VLseed", "IMGseed", "true_cfg_scale",
+    "num_inference_steps", "top_p", "temperature", "output_file",
 ]
 
 
