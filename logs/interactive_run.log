@@ -1693,3 +1693,675 @@ FileNotFoundError: [Errno 2] No such file or directory: 'output/interactive/step
 2025-10-29 16:16:49,870 - __main__ - INFO - Step 2 logged with status: success
 2025-10-29 16:17:05,447 - __main__ - INFO - Step 3 logged with status: fail
 2025-10-29 16:17:05,447 - __main__ - INFO - --- Interactive Session Ended ---
+2025-10-29 16:20:24,152 - root - INFO - Logging configured.
+2025-10-29 16:20:24,154 - __main__ - INFO - --- Starting Interactive Session ---
+2025-10-29 16:20:41,597 - __main__ - INFO - Creating dummy blank image for initial generation.
+2025-10-29 16:20:41,631 - __main__ - INFO - Calling text prompt enhancer...
+2025-10-29 16:20:41,631 - src.api_clients - INFO - Sending request to Prompt Enhancer (Text): http://0.0.0.0:8001/generate with prompt 'A simple, minimalist icon of a house. The image sh...'
+2025-10-29 16:20:49,297 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/generate "HTTP/1.1 200 OK"
+2025-10-29 16:20:49,297 - src.api_clients - INFO - Text Prompt enhancement successful. New prompt: 'A clean, minimalist icon of a house, rendered in a simple yet symbolic style. The image should consi...'
+2025-10-29 16:20:49,297 - __main__ - INFO - Calling image generation service with final prompt: 'A clean, minimalist icon of a house, rendered in a simple yet symbolic style. The image should consi...'
+2025-10-29 16:20:49,298 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'A clean, minimalist icon of a house, rendered in a...'
+2025-10-29 16:21:09,223 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-29 16:21:09,225 - src.api_clients - INFO - Image generation successful.
+2025-10-29 16:21:09,415 - __main__ - INFO - Output image saved successfully to: output/interactive/step_000_1761751269.png
+2025-10-29 16:21:09,417 - __main__ - INFO - Step 0 logged with status: success
+2025-10-29 16:21:14,070 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-29 16:21:14,070 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/edit with prompt 'Modify the existing house icon to have two stories...' and 1 image(s).
+2025-10-29 16:21:16,307 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/edit "HTTP/1.1 200 OK"
+2025-10-29 16:21:16,307 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Add a second story to the house icon, maintaining the minimalist black outline style. Ensure the ove...'
+2025-10-29 16:21:16,308 - __main__ - INFO - Calling image generation service with final prompt: 'Add a second story to the house icon, maintaining the minimalist black outline style. Ensure the ove...'
+2025-10-29 16:21:16,308 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Add a second story to the house icon, maintaining ...'
+2025-10-29 16:21:36,055 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-29 16:21:36,056 - src.api_clients - INFO - Image generation successful.
+2025-10-29 16:21:36,214 - __main__ - INFO - Output image saved successfully to: output/interactive/step_001_1761751296.png
+2025-10-29 16:21:36,216 - __main__ - INFO - Step 1 logged with status: success
+2025-10-29 16:21:42,945 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-29 16:21:42,945 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/edit with prompt 'Modify the chimney on the house. Color only the ch...' and 1 image(s).
+2025-10-29 16:21:45,177 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/edit "HTTP/1.1 200 OK"
+2025-10-29 16:21:45,178 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Color the chimney red while keeping the rest of the house in its minimalist, black outline style. En...'
+2025-10-29 16:21:45,178 - __main__ - INFO - Calling image generation service with final prompt: 'Color the chimney red while keeping the rest of the house in its minimalist, black outline style. En...'
+2025-10-29 16:21:45,178 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Color the chimney red while keeping the rest of th...'
+2025-10-29 16:22:05,022 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-29 16:22:05,023 - src.api_clients - INFO - Image generation successful.
+2025-10-29 16:22:05,200 - __main__ - INFO - Output image saved successfully to: output/interactive/step_002_1761751325.png
+2025-10-29 16:22:05,202 - __main__ - INFO - Step 2 logged with status: success
+2025-10-29 16:22:13,209 - __main__ - INFO - Step 3 logged with status: fail
+2025-10-29 16:22:13,209 - __main__ - INFO - --- Interactive Session Ended ---
+2025-10-29 16:22:19,670 - root - INFO - Logging configured.
+2025-10-29 16:22:19,671 - __main__ - INFO - --- Starting Interactive Session ---
+2025-10-29 16:22:23,603 - __main__ - INFO - Creating dummy blank image for initial generation.
+2025-10-29 16:22:23,638 - __main__ - INFO - Calling text prompt enhancer...
+2025-10-29 16:22:23,638 - src.api_clients - INFO - Sending request to Prompt Enhancer (Text): http://0.0.0.0:8001/generate with prompt 'A simple, minimalist icon of a house. The image sh...'
+2025-10-29 16:22:31,452 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/generate "HTTP/1.1 200 OK"
+2025-10-29 16:22:31,453 - src.api_clients - INFO - Text Prompt enhancement successful. New prompt: 'A clean, minimalist icon of a house, rendered in a simple yet symbolic style. The image should consi...'
+2025-10-29 16:22:31,453 - __main__ - INFO - Calling image generation service with final prompt: 'A clean, minimalist icon of a house, rendered in a simple yet symbolic style. The image should consi...'
+2025-10-29 16:22:31,453 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'A clean, minimalist icon of a house, rendered in a...'
+2025-10-29 16:22:51,699 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-29 16:22:51,701 - src.api_clients - INFO - Image generation successful.
+2025-10-29 16:22:51,880 - __main__ - INFO - Output image saved successfully to: output/interactive/step_000_1761751371.png
+2025-10-29 16:22:51,881 - __main__ - INFO - Step 0 logged with status: success
+2025-10-29 16:22:55,210 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-29 16:22:55,210 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/edit with prompt 'Modify the existing house icon to have two stories...' and 1 image(s).
+2025-10-29 16:22:57,793 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/edit "HTTP/1.1 200 OK"
+2025-10-29 16:22:57,794 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Add a second story to the house icon, maintaining the minimalist black outline style. Ensure the new...'
+2025-10-29 16:22:57,794 - __main__ - INFO - Calling image generation service with final prompt: 'Add a second story to the house icon, maintaining the minimalist black outline style. Ensure the new...'
+2025-10-29 16:22:57,794 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Add a second story to the house icon, maintaining ...'
+2025-10-29 16:23:17,645 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-29 16:23:17,646 - src.api_clients - INFO - Image generation successful.
+2025-10-29 16:23:17,802 - __main__ - INFO - Output image saved successfully to: output/interactive/step_001_1761751397.png
+2025-10-29 16:23:17,804 - __main__ - INFO - Step 1 logged with status: success
+2025-10-29 16:23:20,795 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-29 16:23:20,795 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/edit with prompt 'Modify the chimney on the house. Color only the ch...' and 1 image(s).
+2025-10-29 16:23:23,139 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/edit "HTTP/1.1 200 OK"
+2025-10-29 16:23:23,140 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Color the chimney red while keeping the rest of the house in its minimalist, black outline style. En...'
+2025-10-29 16:23:23,140 - __main__ - INFO - Calling image generation service with final prompt: 'Color the chimney red while keeping the rest of the house in its minimalist, black outline style. En...'
+2025-10-29 16:23:23,140 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Color the chimney red while keeping the rest of th...'
+2025-10-29 16:23:42,943 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-29 16:23:42,945 - src.api_clients - INFO - Image generation successful.
+2025-10-29 16:23:43,107 - __main__ - INFO - Output image saved successfully to: output/interactive/step_002_1761751423.png
+2025-10-29 16:23:43,108 - __main__ - INFO - Step 2 logged with status: success
+2025-10-29 16:26:43,897 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-29 16:26:43,897 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/edit with prompt 'Make the existing objects in the image smaller, as...' and 1 image(s).
+2025-10-29 16:26:46,858 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/edit "HTTP/1.1 200 OK"
+2025-10-29 16:26:46,859 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Scale down the house icon to make it appear smaller, as if viewed from a distance, while maintaining...'
+2025-10-29 16:26:46,859 - __main__ - INFO - Calling image generation service with final prompt: 'Scale down the house icon to make it appear smaller, as if viewed from a distance, while maintaining...'
+2025-10-29 16:26:46,859 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Scale down the house icon to make it appear smalle...'
+2025-10-29 16:27:06,563 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-29 16:27:06,564 - src.api_clients - INFO - Image generation successful.
+2025-10-29 16:27:06,702 - __main__ - INFO - Output image saved successfully to: output/interactive/step_003_1761751626.png
+2025-10-29 16:27:06,703 - __main__ - INFO - Step 3 logged with status: success
+2025-10-29 16:27:40,370 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-29 16:27:40,370 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/edit with prompt 'Add a simple outline of an emergency exit next to ...' and 1 image(s).
+2025-10-29 16:27:43,376 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/edit "HTTP/1.1 200 OK"
+2025-10-29 16:27:43,376 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Add a simple black outline of an emergency exit symbol to the left of the house. The symbol should b...'
+2025-10-29 16:27:43,376 - __main__ - INFO - Calling image generation service with final prompt: 'Add a simple black outline of an emergency exit symbol to the left of the house. The symbol should b...'
+2025-10-29 16:27:43,377 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Add a simple black outline of an emergency exit sy...'
+2025-10-29 16:28:03,309 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-29 16:28:03,310 - src.api_clients - INFO - Image generation successful.
+2025-10-29 16:28:03,466 - __main__ - INFO - Output image saved successfully to: output/interactive/step_004_1761751683.png
+2025-10-29 16:28:03,469 - __main__ - INFO - Step 4 logged with status: success
+2025-10-29 16:28:24,955 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-29 16:28:24,955 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/edit with prompt 'Add a simple outline of an emergency button next t...' and 1 image(s).
+2025-10-29 16:28:27,636 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/edit "HTTP/1.1 200 OK"
+2025-10-29 16:28:27,636 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Add a simple red emergency button with a black outline next to the emergency exit. The button should...'
+2025-10-29 16:28:27,636 - __main__ - INFO - Calling image generation service with final prompt: 'Add a simple red emergency button with a black outline next to the emergency exit. The button should...'
+2025-10-29 16:28:27,636 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Add a simple red emergency button with a black out...'
+2025-10-29 16:28:47,523 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-29 16:28:47,524 - src.api_clients - INFO - Image generation successful.
+2025-10-29 16:28:47,696 - __main__ - INFO - Output image saved successfully to: output/interactive/step_005_1761751727.png
+2025-10-29 16:28:47,698 - __main__ - INFO - Step 5 logged with status: success
+2025-10-29 16:33:15,674 - __main__ - INFO - Step 6 logged with status: fail
+2025-10-29 16:33:15,674 - __main__ - INFO - --- Interactive Session Ended ---
+2025-10-29 16:33:19,976 - root - INFO - Logging configured.
+2025-10-29 16:33:19,977 - __main__ - INFO - --- Starting Interactive Session ---
+2025-10-29 16:33:35,498 - __main__ - INFO - Creating dummy blank image for initial generation.
+2025-10-29 16:33:35,534 - __main__ - INFO - Calling text prompt enhancer...
+2025-10-29 16:33:35,534 - src.api_clients - INFO - Sending request to Prompt Enhancer (Text): http://0.0.0.0:8001/generate with prompt 'A simple, minimalist icon of a house. The image sh...'
+2025-10-29 16:33:42,844 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/generate "HTTP/1.1 200 OK"
+2025-10-29 16:33:42,844 - src.api_clients - INFO - Text Prompt enhancement successful. New prompt: 'A clean, minimalist icon of a house, rendered in a simple and symbolic style. The image should consi...'
+2025-10-29 16:33:42,845 - __main__ - INFO - Calling image generation service with final prompt: 'A clean, minimalist icon of a house, rendered in a simple and symbolic style. The image should consi...'
+2025-10-29 16:33:42,845 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'A clean, minimalist icon of a house, rendered in a...'
+2025-10-29 16:34:02,742 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-29 16:34:02,744 - src.api_clients - INFO - Image generation successful.
+2025-10-29 16:34:02,946 - __main__ - INFO - Output image saved successfully to: output/interactive/step_000_1761752042.png
+2025-10-29 16:34:02,947 - __main__ - INFO - Step 0 logged with status: success
+2025-10-29 16:35:22,838 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-29 16:35:22,838 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/edit with prompt 'Modify the existing house icon to have two stories...' and 1 image(s).
+2025-10-29 16:35:25,568 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/edit "HTTP/1.1 200 OK"
+2025-10-29 16:35:25,568 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Add a second story to the house icon, maintaining the minimalist black outline style. Ensure the new...'
+2025-10-29 16:35:25,568 - __main__ - INFO - Calling image generation service with final prompt: 'Add a second story to the house icon, maintaining the minimalist black outline style. Ensure the new...'
+2025-10-29 16:35:25,568 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Add a second story to the house icon, maintaining ...'
+2025-10-29 16:35:45,253 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-29 16:35:45,254 - src.api_clients - INFO - Image generation successful.
+2025-10-29 16:35:45,407 - __main__ - INFO - Output image saved successfully to: output/interactive/step_001_1761752145.png
+2025-10-29 16:35:45,408 - __main__ - INFO - Step 1 logged with status: success
+2025-10-29 16:36:27,335 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-29 16:36:27,335 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/edit with prompt 'Modify the chimney on the house. Color only the ch...' and 1 image(s).
+2025-10-29 16:36:29,814 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/edit "HTTP/1.1 200 OK"
+2025-10-29 16:36:29,814 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Color the chimney red while keeping the rest of the house in its original black outline style. Ensur...'
+2025-10-29 16:36:29,815 - __main__ - INFO - Calling image generation service with final prompt: 'Color the chimney red while keeping the rest of the house in its original black outline style. Ensur...'
+2025-10-29 16:36:29,815 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Color the chimney red while keeping the rest of th...'
+2025-10-29 16:36:49,599 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-29 16:36:49,600 - src.api_clients - INFO - Image generation successful.
+2025-10-29 16:36:49,771 - __main__ - INFO - Output image saved successfully to: output/interactive/step_002_1761752209.png
+2025-10-29 16:36:49,771 - __main__ - INFO - Step 2 logged with status: success
+2025-10-29 16:37:30,885 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-29 16:37:30,886 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/edit with prompt 'Make the existing objects in the image smaller, as...' and 1 image(s).
+2025-10-29 16:37:33,871 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/edit "HTTP/1.1 200 OK"
+2025-10-29 16:37:33,871 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Scale down the house icon to make it appear smaller, as if viewed from a distance, while preserving ...'
+2025-10-29 16:37:33,871 - __main__ - INFO - Calling image generation service with final prompt: 'Scale down the house icon to make it appear smaller, as if viewed from a distance, while preserving ...'
+2025-10-29 16:37:33,871 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Scale down the house icon to make it appear smalle...'
+2025-10-29 16:37:53,588 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-29 16:37:53,589 - src.api_clients - INFO - Image generation successful.
+2025-10-29 16:37:53,737 - __main__ - INFO - Output image saved successfully to: output/interactive/step_003_1761752273.png
+2025-10-29 16:37:53,739 - __main__ - INFO - Step 3 logged with status: success
+2025-10-29 16:37:56,263 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-29 16:37:56,263 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/edit with prompt 'Add a simple outline of an emergency exit next to ...' and 1 image(s).
+2025-10-29 16:37:59,411 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/edit "HTTP/1.1 200 OK"
+2025-10-29 16:37:59,412 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Add a simple black outline of an emergency exit to the left of the house, maintaining a realistic si...'
+2025-10-29 16:37:59,412 - __main__ - INFO - Calling image generation service with final prompt: 'Add a simple black outline of an emergency exit to the left of the house, maintaining a realistic si...'
+2025-10-29 16:37:59,412 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Add a simple black outline of an emergency exit to...'
+2025-10-29 16:38:19,200 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-29 16:38:19,202 - src.api_clients - INFO - Image generation successful.
+2025-10-29 16:38:19,353 - __main__ - INFO - Output image saved successfully to: output/interactive/step_004_1761752299.png
+2025-10-29 16:38:19,354 - __main__ - INFO - Step 4 logged with status: success
+2025-10-29 16:39:03,449 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-29 16:39:03,450 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/edit with prompt 'Add a simple outline of an emergency button next t...' and 1 image(s).
+2025-10-29 16:39:06,900 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/edit "HTTP/1.1 200 OK"
+2025-10-29 16:39:06,901 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Add a simple, clean outline of an emergency button next to the emergency exit. The button should be ...'
+2025-10-29 16:39:06,901 - __main__ - INFO - Calling image generation service with final prompt: 'Add a simple, clean outline of an emergency button next to the emergency exit. The button should be ...'
+2025-10-29 16:39:06,901 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Add a simple, clean outline of an emergency button...'
+2025-10-29 16:39:26,907 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-29 16:39:26,909 - src.api_clients - INFO - Image generation successful.
+2025-10-29 16:39:27,074 - __main__ - INFO - Output image saved successfully to: output/interactive/step_005_1761752367.png
+2025-10-29 16:39:27,075 - __main__ - INFO - Step 5 logged with status: success
+2025-10-29 16:39:53,144 - __main__ - INFO - Step 6 logged with status: fail
+2025-10-29 16:39:53,144 - __main__ - INFO - --- Interactive Session Ended ---
+2025-10-29 16:40:57,629 - root - INFO - Logging configured.
+2025-10-29 16:40:57,630 - __main__ - INFO - --- Starting Interactive Session ---
+2025-10-29 16:40:57,631 - __main__ - INFO - Loading initial image from: output/interactive/step_004_1761752299.png
+2025-10-29 16:40:57,657 - __main__ - INFO - Parsed filename. Resuming from step 5.
+2025-10-29 16:41:08,412 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-29 16:41:08,412 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/edit with prompt 'Add a simple outline of an emergency button on the...' and 1 image(s).
+2025-10-29 16:41:11,469 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/edit "HTTP/1.1 200 OK"
+2025-10-29 16:41:11,469 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Add a simple red emergency button with a black outline on the emergency exit door. The button should...'
+2025-10-29 16:41:11,469 - __main__ - INFO - Calling image generation service with final prompt: 'Add a simple red emergency button with a black outline on the emergency exit door. The button should...'
+2025-10-29 16:41:11,469 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Add a simple red emergency button with a black out...'
+2025-10-29 16:41:31,263 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-29 16:41:31,265 - src.api_clients - INFO - Image generation successful.
+2025-10-29 16:41:31,435 - __main__ - INFO - Output image saved successfully to: output/interactive/step_005_1761752491.png
+2025-10-29 16:41:31,436 - __main__ - INFO - Step 5 logged with status: success
+2025-10-29 16:41:53,325 - __main__ - INFO - Step 6 logged with status: fail
+2025-10-29 16:41:53,325 - __main__ - INFO - --- Interactive Session Ended ---
+2025-10-29 16:43:33,894 - root - INFO - Logging configured.
+2025-10-29 16:43:33,896 - __main__ - INFO - --- Starting Interactive Session ---
+2025-10-29 16:43:38,602 - __main__ - INFO - Creating dummy blank image for initial generation.
+2025-10-29 16:43:38,638 - __main__ - INFO - Calling text prompt enhancer...
+2025-10-29 16:43:38,638 - src.api_clients - INFO - Sending request to Prompt Enhancer (Text): http://0.0.0.0:8001/generate with prompt 'A simple, minimalist icon of a house. The image sh...'
+2025-10-29 16:43:46,035 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/generate "HTTP/1.1 200 OK"
+2025-10-29 16:43:46,036 - src.api_clients - INFO - Text Prompt enhancement successful. New prompt: 'A clean, minimalist icon of a house, rendered in a simple and symbolic style. The image should consi...'
+2025-10-29 16:43:46,036 - __main__ - INFO - Calling image generation service with final prompt: 'A clean, minimalist icon of a house, rendered in a simple and symbolic style. The image should consi...'
+2025-10-29 16:43:46,036 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'A clean, minimalist icon of a house, rendered in a...'
+2025-10-29 16:44:05,791 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-29 16:44:05,792 - src.api_clients - INFO - Image generation successful.
+2025-10-29 16:44:05,923 - __main__ - INFO - Output image saved successfully to: output/interactive/step_000_1761752645.png
+2025-10-29 16:44:05,923 - __main__ - INFO - Step 0 logged with status: success
+2025-10-29 16:44:05,951 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-29 16:44:05,951 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/edit with prompt '...' and 1 image(s).
+2025-10-29 16:44:08,098 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/edit "HTTP/1.1 200 OK"
+2025-10-29 16:44:08,098 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Add a chimney on the roof and a window on the front of the house, keeping the overall style simple a...'
+2025-10-29 16:44:08,098 - __main__ - INFO - Calling image generation service with final prompt: 'Add a chimney on the roof and a window on the front of the house, keeping the overall style simple a...'
+2025-10-29 16:44:08,098 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Add a chimney on the roof and a window on the fron...'
+2025-10-29 16:44:28,104 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-29 16:44:28,106 - src.api_clients - INFO - Image generation successful.
+2025-10-29 16:44:28,298 - __main__ - INFO - Output image saved successfully to: output/interactive/step_001_1761752668.png
+2025-10-29 16:44:28,299 - __main__ - INFO - Step 1 logged with status: success
+2025-10-29 16:44:28,326 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-29 16:44:28,326 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/edit with prompt 'Modify the existing house icon to have two stories...' and 1 image(s).
+2025-10-29 16:44:31,564 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/edit "HTTP/1.1 200 OK"
+2025-10-29 16:44:31,565 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Add a second story to the house icon, maintaining the minimalist black outline style. Ensure the new...'
+2025-10-29 16:44:31,565 - __main__ - INFO - Calling image generation service with final prompt: 'Add a second story to the house icon, maintaining the minimalist black outline style. Ensure the new...'
+2025-10-29 16:44:31,565 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Add a second story to the house icon, maintaining ...'
+2025-10-29 16:44:43,787 - __main__ - INFO - Step 2 logged with status: fail
+2025-10-29 16:45:49,104 - root - INFO - Logging configured.
+2025-10-29 16:45:49,106 - __main__ - INFO - --- Starting Interactive Session ---
+2025-10-29 16:46:00,210 - __main__ - INFO - Creating dummy blank image for initial generation.
+2025-10-29 16:46:00,246 - __main__ - INFO - Calling text prompt enhancer...
+2025-10-29 16:46:00,246 - src.api_clients - INFO - Sending request to Prompt Enhancer (Text): http://0.0.0.0:8001/generate with prompt 'A simple, minimalist icon of a house. The image sh...'
+2025-10-29 16:46:07,632 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/generate "HTTP/1.1 200 OK"
+2025-10-29 16:46:07,632 - src.api_clients - INFO - Text Prompt enhancement successful. New prompt: 'A clean, minimalist icon of a house, rendered in a simple and symbolic style. The image should consi...'
+2025-10-29 16:46:07,632 - __main__ - INFO - Calling image generation service with final prompt: 'A clean, minimalist icon of a house, rendered in a simple and symbolic style. The image should consi...'
+2025-10-29 16:46:07,632 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'A clean, minimalist icon of a house, rendered in a...'
+2025-10-29 16:46:27,457 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-29 16:46:27,457 - src.api_clients - INFO - Image generation successful.
+2025-10-29 16:46:27,590 - __main__ - INFO - Output image saved successfully to: output/interactive/step_000_1761752787.png
+2025-10-29 16:46:27,591 - __main__ - INFO - Step 0 logged with status: success
+2025-10-29 16:46:27,619 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-29 16:46:27,619 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/edit with prompt 'Modify the existing house icon to have two stories...' and 1 image(s).
+2025-10-29 16:46:29,857 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/edit "HTTP/1.1 200 OK"
+2025-10-29 16:46:29,857 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Add a second story to the house icon, maintaining the minimalist black outline style. Ensure the new...'
+2025-10-29 16:46:29,858 - __main__ - INFO - Calling image generation service with final prompt: 'Add a second story to the house icon, maintaining the minimalist black outline style. Ensure the new...'
+2025-10-29 16:46:29,858 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Add a second story to the house icon, maintaining ...'
+2025-10-29 16:46:49,723 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-29 16:46:49,725 - src.api_clients - INFO - Image generation successful.
+2025-10-29 16:46:49,924 - __main__ - INFO - Output image saved successfully to: output/interactive/step_001_1761752809.png
+2025-10-29 16:46:49,925 - __main__ - INFO - Step 1 logged with status: success
+2025-10-29 16:46:49,954 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-29 16:46:49,954 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/edit with prompt 'Modify the chimney on the house. Color only the ch...' and 1 image(s).
+2025-10-29 16:46:52,592 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/edit "HTTP/1.1 200 OK"
+2025-10-29 16:46:52,592 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Modify the chimney on the house by coloring it red while keeping the rest of the house in the same m...'
+2025-10-29 16:46:52,593 - __main__ - INFO - Calling image generation service with final prompt: 'Modify the chimney on the house by coloring it red while keeping the rest of the house in the same m...'
+2025-10-29 16:46:52,593 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Modify the chimney on the house by coloring it red...'
+2025-10-29 16:47:12,475 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-29 16:47:12,477 - src.api_clients - INFO - Image generation successful.
+2025-10-29 16:47:12,670 - __main__ - INFO - Output image saved successfully to: output/interactive/step_002_1761752832.png
+2025-10-29 16:47:12,671 - __main__ - INFO - Step 2 logged with status: success
+2025-10-29 16:47:12,703 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-29 16:47:12,703 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/edit with prompt 'Make the existing objects in the image smaller, as...' and 1 image(s).
+2025-10-29 16:47:15,610 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/edit "HTTP/1.1 200 OK"
+2025-10-29 16:47:15,610 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Scale down the house and chimney to make them appear smaller, as if viewed from a distance. Expand t...'
+2025-10-29 16:47:15,610 - __main__ - INFO - Calling image generation service with final prompt: 'Scale down the house and chimney to make them appear smaller, as if viewed from a distance. Expand t...'
+2025-10-29 16:47:15,610 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Scale down the house and chimney to make them appe...'
+2025-10-29 16:47:35,651 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-29 16:47:35,653 - src.api_clients - INFO - Image generation successful.
+2025-10-29 16:47:35,859 - __main__ - INFO - Output image saved successfully to: output/interactive/step_003_1761752855.png
+2025-10-29 16:47:35,860 - __main__ - INFO - Step 3 logged with status: success
+2025-10-29 16:47:35,884 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-29 16:47:35,884 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/edit with prompt 'Add a simple outline of an emergency exit next to ...' and 1 image(s).
+2025-10-29 16:47:39,172 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/edit "HTTP/1.1 200 OK"
+2025-10-29 16:47:39,172 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Add a simple black outline of an emergency exit door to the left of the house, maintaining a realist...'
+2025-10-29 16:47:39,173 - __main__ - INFO - Calling image generation service with final prompt: 'Add a simple black outline of an emergency exit door to the left of the house, maintaining a realist...'
+2025-10-29 16:47:39,173 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Add a simple black outline of an emergency exit do...'
+2025-10-29 16:47:59,209 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-29 16:47:59,211 - src.api_clients - INFO - Image generation successful.
+2025-10-29 16:47:59,425 - __main__ - INFO - Output image saved successfully to: output/interactive/step_004_1761752879.png
+2025-10-29 16:47:59,426 - __main__ - INFO - Step 4 logged with status: success
+2025-10-29 16:52:03,843 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-29 16:52:03,843 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/edit with prompt 'Add a simple outline of an emergency button on the...' and 1 image(s).
+2025-10-29 16:52:07,492 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/edit "HTTP/1.1 200 OK"
+2025-10-29 16:52:07,493 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Add a small red emergency button with a black outline on the emergency exit door. Ensure the button'...'
+2025-10-29 16:52:07,493 - __main__ - INFO - Calling image generation service with final prompt: 'Add a small red emergency button with a black outline on the emergency exit door. Ensure the button'...'
+2025-10-29 16:52:07,493 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Add a small red emergency button with a black outl...'
+2025-10-29 16:52:08,657 - __main__ - INFO - Step 5 logged with status: fail
+2025-10-29 16:52:48,832 - root - INFO - Logging configured.
+2025-10-29 16:52:48,833 - __main__ - INFO - --- Starting Interactive Session ---
+2025-10-29 16:52:50,861 - __main__ - INFO - Creating dummy blank image for initial generation.
+2025-10-29 16:52:50,896 - __main__ - INFO - Calling text prompt enhancer...
+2025-10-29 16:52:50,896 - src.api_clients - INFO - Sending request to Prompt Enhancer (Text): http://0.0.0.0:8001/generate with prompt 'A simple, minimalist icon of a house. The image sh...'
+2025-10-29 16:52:53,032 - __main__ - INFO - Step 0 logged with status: fail
+2025-10-29 16:52:58,188 - root - INFO - Logging configured.
+2025-10-29 16:52:58,189 - __main__ - INFO - --- Starting Interactive Session ---
+2025-10-29 16:53:25,498 - __main__ - INFO - Creating dummy blank image for initial generation.
+2025-10-29 16:53:25,535 - __main__ - INFO - Calling text prompt enhancer...
+2025-10-29 16:53:25,535 - src.api_clients - INFO - Sending request to Prompt Enhancer (Text): http://0.0.0.0:8001/generate with prompt 'A view of a park in a simple and minimalist style....'
+2025-10-29 16:53:37,578 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/generate "HTTP/1.1 200 OK"
+2025-10-29 16:53:37,579 - src.api_clients - INFO - Text Prompt enhancement successful. New prompt: 'A minimalist, symbolic illustration of a park rendered in a clean, abstract style. The scene is comp...'
+2025-10-29 16:53:37,579 - __main__ - INFO - Calling image generation service with final prompt: 'A minimalist, symbolic illustration of a park rendered in a clean, abstract style. The scene is comp...'
+2025-10-29 16:53:37,579 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'A minimalist, symbolic illustration of a park rend...'
+2025-10-29 16:53:57,656 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-29 16:53:57,658 - src.api_clients - INFO - Image generation successful.
+2025-10-29 16:53:57,950 - __main__ - INFO - Output image saved successfully to: output/interactive/step_000_1761753237.png
+2025-10-29 16:53:57,952 - __main__ - INFO - Step 0 logged with status: success
+2025-10-29 16:54:35,844 - __main__ - INFO - Step 1 logged with status: fail
+2025-10-29 16:54:35,844 - __main__ - INFO - --- Interactive Session Ended ---
+2025-10-29 16:54:40,246 - root - INFO - Logging configured.
+2025-10-29 16:54:40,247 - __main__ - INFO - --- Starting Interactive Session ---
+2025-10-29 16:55:04,667 - __main__ - INFO - Creating dummy blank image for initial generation.
+2025-10-29 16:55:04,702 - __main__ - INFO - Calling text prompt enhancer...
+2025-10-29 16:55:04,702 - src.api_clients - INFO - Sending request to Prompt Enhancer (Text): http://0.0.0.0:8001/generate with prompt 'A simple, minimalist icon of a house. The image sh...'
+2025-10-29 16:55:06,258 - __main__ - INFO - Step 0 logged with status: fail
+2025-10-29 16:55:10,405 - root - INFO - Logging configured.
+2025-10-29 16:55:10,406 - __main__ - INFO - --- Starting Interactive Session ---
+2025-10-29 16:55:14,714 - __main__ - INFO - Creating dummy blank image for initial generation.
+2025-10-29 16:55:14,750 - __main__ - INFO - Calling text prompt enhancer...
+2025-10-29 16:55:14,750 - src.api_clients - INFO - Sending request to Prompt Enhancer (Text): http://0.0.0.0:8001/generate with prompt 'A view of a park in a simple and minimalist style....'
+2025-10-29 16:55:30,673 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/generate "HTTP/1.1 200 OK"
+2025-10-29 16:55:30,674 - src.api_clients - INFO - Text Prompt enhancement successful. New prompt: 'A minimalist, symbolic representation of a park, rendered in a clean and uncluttered style. The scen...'
+2025-10-29 16:55:30,674 - __main__ - INFO - Calling image generation service with final prompt: 'A minimalist, symbolic representation of a park, rendered in a clean and uncluttered style. The scen...'
+2025-10-29 16:55:30,674 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'A minimalist, symbolic representation of a park, r...'
+2025-10-29 16:55:50,931 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-29 16:55:50,934 - src.api_clients - INFO - Image generation successful.
+2025-10-29 16:55:51,106 - __main__ - INFO - Output image saved successfully to: output/interactive/step_000_1761753351.png
+2025-10-29 16:55:51,108 - __main__ - INFO - Step 0 logged with status: success
+2025-10-29 16:58:03,771 - __main__ - INFO - Step 1 logged with status: fail
+2025-10-29 16:58:03,772 - __main__ - INFO - --- Interactive Session Ended ---
+2025-10-29 16:58:08,698 - root - INFO - Logging configured.
+2025-10-29 16:58:08,699 - __main__ - INFO - --- Starting Interactive Session ---
+2025-10-29 16:58:15,171 - __main__ - INFO - Creating dummy blank image for initial generation.
+2025-10-29 16:58:15,207 - __main__ - INFO - Calling text prompt enhancer...
+2025-10-29 16:58:15,207 - src.api_clients - INFO - Sending request to Prompt Enhancer (Text): http://0.0.0.0:8001/generate with prompt 'A bird's eye view of a park in a simple and minima...'
+2025-10-29 16:58:31,724 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/generate "HTTP/1.1 200 OK"
+2025-10-29 16:58:31,725 - src.api_clients - INFO - Text Prompt enhancement successful. New prompt: 'Aerial view of a serene park rendered in a minimalist and symbolic style, emphasizing simplicity and...'
+2025-10-29 16:58:31,725 - __main__ - INFO - Calling image generation service with final prompt: 'Aerial view of a serene park rendered in a minimalist and symbolic style, emphasizing simplicity and...'
+2025-10-29 16:58:31,725 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Aerial view of a serene park rendered in a minimal...'
+2025-10-29 16:58:51,984 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-29 16:58:51,986 - src.api_clients - INFO - Image generation successful.
+2025-10-29 16:58:52,140 - __main__ - INFO - Output image saved successfully to: output/interactive/step_000_1761753532.png
+2025-10-29 16:58:52,142 - __main__ - INFO - Step 0 logged with status: success
+2025-10-29 17:02:19,270 - __main__ - INFO - Step 1 logged with status: fail
+2025-10-29 17:02:19,270 - __main__ - INFO - --- Interactive Session Ended ---
+2025-10-29 17:02:23,564 - root - INFO - Logging configured.
+2025-10-29 17:02:23,565 - __main__ - INFO - --- Starting Interactive Session ---
+2025-10-29 17:02:47,091 - __main__ - INFO - Creating dummy blank image for initial generation.
+2025-10-29 17:02:47,126 - __main__ - INFO - Calling text prompt enhancer...
+2025-10-29 17:02:47,126 - src.api_clients - INFO - Sending request to Prompt Enhancer (Text): http://0.0.0.0:8001/generate with prompt 'A bird's eye view of a park in a simple and minima...'
+2025-10-29 17:03:02,787 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/generate "HTTP/1.1 200 OK"
+2025-10-29 17:03:02,788 - src.api_clients - INFO - Text Prompt enhancement successful. New prompt: 'Aerial view of a serene park rendered in a minimalist and symbolic style, emphasizing simplicity and...'
+2025-10-29 17:03:02,788 - __main__ - INFO - Calling image generation service with final prompt: 'Aerial view of a serene park rendered in a minimalist and symbolic style, emphasizing simplicity and...'
+2025-10-29 17:03:02,788 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Aerial view of a serene park rendered in a minimal...'
+2025-10-29 17:03:23,023 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-29 17:03:23,024 - src.api_clients - INFO - Image generation successful.
+2025-10-29 17:03:23,165 - __main__ - INFO - Output image saved successfully to: output/interactive/step_000_1761753803.png
+2025-10-29 17:03:23,167 - __main__ - INFO - Step 0 logged with status: success
+2025-10-29 17:27:57,371 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-29 17:27:57,373 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/edit with prompt 'emove any occurrence of ponds with dotted outline ...' and 1 image(s).
+2025-10-29 17:28:00,215 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/edit "HTTP/1.1 200 OK"
+2025-10-29 17:28:00,217 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Remove all dotted outlines of ponds and ducks....'
+2025-10-29 17:28:00,217 - __main__ - INFO - Calling image generation service with final prompt: 'Remove all dotted outlines of ponds and ducks....'
+2025-10-29 17:28:00,217 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Remove all dotted outlines of ponds and ducks....'
+2025-10-29 17:28:20,197 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-29 17:28:20,199 - src.api_clients - INFO - Image generation successful.
+2025-10-29 17:28:20,371 - __main__ - INFO - Output image saved successfully to: output/interactive/step_001_1761755300.png
+2025-10-29 17:28:20,374 - __main__ - INFO - Step 1 logged with status: success
+2025-10-29 17:32:45,887 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-29 17:32:45,887 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/edit with prompt 'Remove any occurrence of ponds with dotted outline...' and 1 image(s).
+2025-10-29 17:32:49,637 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/edit "HTTP/1.1 200 OK"
+2025-10-29 17:32:49,638 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Remove all ponds and ducks with dotted outlines. Add a simple, clean, and symbolic black continuous ...'
+2025-10-29 17:32:49,638 - __main__ - INFO - Calling image generation service with final prompt: 'Remove all ponds and ducks with dotted outlines. Add a simple, clean, and symbolic black continuous ...'
+2025-10-29 17:32:49,638 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Remove all ponds and ducks with dotted outlines. A...'
+2025-10-29 17:33:09,494 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-29 17:33:09,496 - src.api_clients - INFO - Image generation successful.
+2025-10-29 17:33:09,667 - __main__ - INFO - Output image saved successfully to: output/interactive/step_002_1761755589.png
+2025-10-29 17:33:09,669 - __main__ - INFO - Step 2 logged with status: success
+2025-10-29 17:33:46,186 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-29 17:33:46,186 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/edit with prompt 'Add some ducks in the pond...' and 1 image(s).
+2025-10-29 17:33:47,995 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/edit "HTTP/1.1 200 OK"
+2025-10-29 17:33:47,996 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Add three small ducks swimming in the pond, positioned near the center of the pond....'
+2025-10-29 17:33:47,996 - __main__ - INFO - Calling image generation service with final prompt: 'Add three small ducks swimming in the pond, positioned near the center of the pond....'
+2025-10-29 17:33:47,996 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Add three small ducks swimming in the pond, positi...'
+2025-10-29 17:34:07,926 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-29 17:34:07,928 - src.api_clients - INFO - Image generation successful.
+2025-10-29 17:34:08,118 - __main__ - INFO - Output image saved successfully to: output/interactive/step_003_1761755648.png
+2025-10-29 17:34:08,120 - __main__ - INFO - Step 3 logged with status: success
+2025-10-29 17:38:33,114 - __main__ - INFO - Step 4 logged with status: fail
+2025-10-29 17:38:33,114 - __main__ - INFO - --- Interactive Session Ended ---
+2025-10-29 17:38:46,319 - root - INFO - Logging configured.
+2025-10-29 17:38:46,320 - __main__ - INFO - --- Starting Interactive Session ---
+2025-10-29 17:38:49,882 - __main__ - INFO - Creating dummy blank image for initial generation.
+2025-10-29 17:38:49,940 - __main__ - INFO - Calling text prompt enhancer...
+2025-10-29 17:38:49,940 - src.api_clients - INFO - Sending request to Prompt Enhancer (Text): http://0.0.0.0:8001/generate with prompt 'A bird's eye view of a park in a simple and minima...'
+2025-10-29 17:39:02,989 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/generate "HTTP/1.1 200 OK"
+2025-10-29 17:39:02,990 - src.api_clients - INFO - Text Prompt enhancement successful. New prompt: 'Aerial view of a minimalist park scene rendered in a clean, symbolic style. The composition is simpl...'
+2025-10-29 17:39:02,990 - __main__ - INFO - Calling image generation service with final prompt: 'Aerial view of a minimalist park scene rendered in a clean, symbolic style. The composition is simpl...'
+2025-10-29 17:39:02,990 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Aerial view of a minimalist park scene rendered in...'
+2025-10-29 17:39:23,102 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-29 17:39:23,104 - src.api_clients - INFO - Image generation successful.
+2025-10-29 17:39:23,267 - __main__ - INFO - Output image saved successfully to: output/interactive/step_000_1761755963.png
+2025-10-29 17:39:23,269 - __main__ - INFO - Step 0 logged with status: success
+2025-10-29 17:40:34,674 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-29 17:40:34,674 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/edit with prompt 'Remove any objects that resemble a pond and have d...' and 1 image(s).
+2025-10-29 17:40:36,455 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/edit "HTTP/1.1 200 OK"
+2025-10-29 17:40:36,456 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Remove the dotted outline object resembling a pond and the dotted outline object resembling a duck....'
+2025-10-29 17:40:36,456 - __main__ - INFO - Calling image generation service with final prompt: 'Remove the dotted outline object resembling a pond and the dotted outline object resembling a duck....'
+2025-10-29 17:40:36,456 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Remove the dotted outline object resembling a pond...'
+2025-10-29 17:40:56,239 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-29 17:40:56,241 - src.api_clients - INFO - Image generation successful.
+2025-10-29 17:40:56,431 - __main__ - INFO - Output image saved successfully to: output/interactive/step_001_1761756056.png
+2025-10-29 17:40:56,434 - __main__ - INFO - Step 1 logged with status: success
+2025-10-29 17:41:00,611 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-29 17:41:00,611 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/edit with prompt 'Modify the image to add a simple outline of a pond...' and 1 image(s).
+2025-10-29 17:41:03,726 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/edit "HTTP/1.1 200 OK"
+2025-10-29 17:41:03,726 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Add a simple black continuous outline of a pond near the duck, keeping the style clean and symbolic....'
+2025-10-29 17:41:03,727 - __main__ - INFO - Calling image generation service with final prompt: 'Add a simple black continuous outline of a pond near the duck, keeping the style clean and symbolic....'
+2025-10-29 17:41:03,727 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Add a simple black continuous outline of a pond ne...'
+2025-10-29 17:41:23,596 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-29 17:41:23,599 - src.api_clients - INFO - Image generation successful.
+2025-10-29 17:41:23,797 - __main__ - INFO - Output image saved successfully to: output/interactive/step_002_1761756083.png
+2025-10-29 17:41:23,798 - __main__ - INFO - Step 2 logged with status: success
+2025-10-29 17:43:13,788 - __main__ - INFO - Step 3 logged with status: fail
+2025-10-29 17:43:13,788 - __main__ - INFO - --- Interactive Session Ended ---
+2025-10-29 17:43:17,659 - root - INFO - Logging configured.
+2025-10-29 17:43:17,660 - __main__ - INFO - --- Starting Interactive Session ---
+2025-10-29 17:44:14,146 - __main__ - INFO - Creating dummy blank image for initial generation.
+2025-10-29 17:44:14,182 - __main__ - INFO - Calling text prompt enhancer...
+2025-10-29 17:44:14,182 - src.api_clients - INFO - Sending request to Prompt Enhancer (Text): http://0.0.0.0:8001/generate with prompt '...'
+2025-10-29 17:44:14,278 - __main__ - INFO - Step 0 logged with status: fail
+2025-10-29 17:44:19,062 - root - INFO - Logging configured.
+2025-10-29 17:44:19,063 - __main__ - INFO - --- Starting Interactive Session ---
+2025-10-29 17:44:30,668 - __main__ - INFO - Creating dummy blank image for initial generation.
+2025-10-29 17:44:30,703 - __main__ - INFO - Calling text prompt enhancer...
+2025-10-29 17:44:30,703 - src.api_clients - INFO - Sending request to Prompt Enhancer (Text): http://0.0.0.0:8001/generate with prompt 'A bird's eye view of a park in a simple and minima...'
+2025-10-29 17:44:43,532 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/generate "HTTP/1.1 200 OK"
+2025-10-29 17:44:43,533 - src.api_clients - INFO - Text Prompt enhancement successful. New prompt: 'Aerial view of a serene park rendered in a clean, minimalist, and symbolic style. The scene is compo...'
+2025-10-29 17:44:43,533 - __main__ - INFO - Calling image generation service with final prompt: 'Aerial view of a serene park rendered in a clean, minimalist, and symbolic style. The scene is compo...'
+2025-10-29 17:44:43,533 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Aerial view of a serene park rendered in a clean, ...'
+2025-10-29 17:45:03,817 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-29 17:45:03,819 - src.api_clients - INFO - Image generation successful.
+2025-10-29 17:45:03,977 - __main__ - INFO - Output image saved successfully to: output/interactive/step_000_1761756303.png
+2025-10-29 17:45:03,979 - __main__ - INFO - Step 0 logged with status: success
+2025-10-29 17:46:42,922 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-29 17:46:42,923 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/edit with prompt 'emove any objects that resemble a pond and have do...' and 1 image(s).
+2025-10-29 17:46:45,162 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/edit "HTTP/1.1 200 OK"
+2025-10-29 17:46:45,163 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Remove any objects that resemble a pond with dotted outlines and any objects that resemble a bird (e...'
+2025-10-29 17:46:45,163 - __main__ - INFO - Calling image generation service with final prompt: 'Remove any objects that resemble a pond with dotted outlines and any objects that resemble a bird (e...'
+2025-10-29 17:46:45,163 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Remove any objects that resemble a pond with dotte...'
+2025-10-29 17:47:04,926 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-29 17:47:04,928 - src.api_clients - INFO - Image generation successful.
+2025-10-29 17:47:05,092 - __main__ - INFO - Output image saved successfully to: output/interactive/step_001_1761756425.png
+2025-10-29 17:47:05,094 - __main__ - INFO - Step 1 logged with status: success
+2025-10-29 17:48:02,022 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-29 17:48:02,022 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/edit with prompt 'Modify the image to add a simple outline of a pond...' and 1 image(s).
+2025-10-29 17:48:04,521 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/edit "HTTP/1.1 200 OK"
+2025-10-29 17:48:04,521 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Add a simple black outline of a pond near the bottom-left area of the image, keeping it clean and sy...'
+2025-10-29 17:48:04,521 - __main__ - INFO - Calling image generation service with final prompt: 'Add a simple black outline of a pond near the bottom-left area of the image, keeping it clean and sy...'
+2025-10-29 17:48:04,521 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Add a simple black outline of a pond near the bott...'
+2025-10-29 17:48:24,384 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-29 17:48:24,386 - src.api_clients - INFO - Image generation successful.
+2025-10-29 17:48:24,564 - __main__ - INFO - Output image saved successfully to: output/interactive/step_002_1761756504.png
+2025-10-29 17:48:24,565 - __main__ - INFO - Step 2 logged with status: success
+2025-10-29 17:57:32,388 - __main__ - INFO - Step 3 logged with status: fail
+2025-10-29 17:57:32,388 - __main__ - INFO - --- Interactive Session Ended ---
+2025-10-30 14:33:39,123 - root - INFO - Logging configured.
+2025-10-30 14:33:39,157 - __main__ - INFO - --- Starting Interactive Session ---
+2025-10-30 14:42:47,769 - __main__ - INFO - Creating dummy blank image for initial generation.
+2025-10-30 14:42:47,831 - __main__ - INFO - Calling text prompt enhancer...
+2025-10-30 14:42:47,831 - src.api_clients - INFO - Sending request to Prompt Enhancer (Text): http://0.0.0.0:8001/generate with prompt 'A bird's eye view of a visitor services area of a ...'
+2025-10-30 14:43:02,573 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/generate "HTTP/1.1 200 OK"
+2025-10-30 14:43:02,574 - src.api_clients - INFO - Text Prompt enhancement successful. New prompt: 'Aerial view of a visitor services area at a zoo, depicted in a clean, minimalist, and symbolic style...'
+2025-10-30 14:43:02,574 - __main__ - INFO - Calling image generation service with final prompt: 'Aerial view of a visitor services area at a zoo, depicted in a clean, minimalist, and symbolic style...'
+2025-10-30 14:43:02,574 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Aerial view of a visitor services area at a zoo, d...'
+2025-10-30 14:43:26,252 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-30 14:43:26,255 - src.api_clients - INFO - Image generation successful.
+2025-10-30 14:43:26,438 - __main__ - INFO - Output image saved successfully to: output/interactive/step_000_1761831806.png
+2025-10-30 14:43:26,462 - __main__ - INFO - Step 0 logged with status: success
+2025-10-30 14:44:10,933 - __main__ - INFO - Step 1 logged with status: fail
+2025-10-30 14:44:10,933 - __main__ - INFO - --- Interactive Session Ended ---
+2025-10-30 14:44:54,273 - root - INFO - Logging configured.
+2025-10-30 14:44:54,274 - __main__ - INFO - --- Starting Interactive Session ---
+2025-10-30 14:45:05,279 - __main__ - INFO - Creating dummy blank image for initial generation.
+2025-10-30 14:45:05,314 - __main__ - INFO - Calling text prompt enhancer...
+2025-10-30 14:45:05,314 - src.api_clients - INFO - Sending request to Prompt Enhancer (Text): http://0.0.0.0:8001/generate with prompt '...'
+2025-10-30 14:45:06,407 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/generate "HTTP/1.1 200 OK"
+2025-10-30 14:45:06,408 - src.api_clients - INFO - Text Prompt enhancement successful. New prompt: 'Please provide the original Prompt that needs to be rewritten. I'm ready to refine and expand it for...'
+2025-10-30 14:45:06,408 - __main__ - INFO - Calling image generation service with final prompt: 'Please provide the original Prompt that needs to be rewritten. I'm ready to refine and expand it for...'
+2025-10-30 14:45:06,408 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Please provide the original Prompt that needs to b...'
+2025-10-30 14:45:06,781 - __main__ - INFO - Step 0 logged with status: fail
+2025-10-30 14:45:10,690 - root - INFO - Logging configured.
+2025-10-30 14:45:10,691 - __main__ - INFO - --- Starting Interactive Session ---
+2025-10-30 14:45:14,546 - __main__ - INFO - Creating dummy blank image for initial generation.
+2025-10-30 14:45:14,582 - __main__ - INFO - Calling text prompt enhancer...
+2025-10-30 14:45:14,582 - src.api_clients - INFO - Sending request to Prompt Enhancer (Text): http://0.0.0.0:8001/generate with prompt 'An isometric view of a visitor services area of a ...'
+2025-10-30 14:45:22,980 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/generate "HTTP/1.1 200 OK"
+2025-10-30 14:45:22,980 - src.api_clients - INFO - Text Prompt enhancement successful. New prompt: 'An isometric view of a visitor services area at a zoo, rendered in a clean, minimalist, and symbolic...'
+2025-10-30 14:45:22,980 - __main__ - INFO - Calling image generation service with final prompt: 'An isometric view of a visitor services area at a zoo, rendered in a clean, minimalist, and symbolic...'
+2025-10-30 14:45:22,980 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'An isometric view of a visitor services area at a ...'
+2025-10-30 14:45:46,614 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-30 14:45:46,616 - src.api_clients - INFO - Image generation successful.
+2025-10-30 14:45:46,780 - __main__ - INFO - Output image saved successfully to: output/interactive/step_000_1761831946.png
+2025-10-30 14:45:46,782 - __main__ - INFO - Step 0 logged with status: success
+2025-10-30 14:46:27,523 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-30 14:46:27,523 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/edit with prompt 'Make the existing objects in the image smaller, as...' and 1 image(s).
+2025-10-30 14:46:32,701 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/edit "HTTP/1.1 200 OK"
+2025-10-30 14:46:32,702 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Scale down all objects in the image to make them appear smaller, as if viewed from a greater distanc...'
+2025-10-30 14:46:32,702 - __main__ - INFO - Calling image generation service with final prompt: 'Scale down all objects in the image to make them appear smaller, as if viewed from a greater distanc...'
+2025-10-30 14:46:32,702 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Scale down all objects in the image to make them a...'
+2025-10-30 14:46:52,583 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-30 14:46:52,585 - src.api_clients - INFO - Image generation successful.
+2025-10-30 14:46:52,732 - __main__ - INFO - Output image saved successfully to: output/interactive/step_001_1761832012.png
+2025-10-30 14:46:52,734 - __main__ - INFO - Step 1 logged with status: success
+2025-10-30 14:47:35,576 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-30 14:47:35,576 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/edit with prompt 'Add a simple outline of a first-aid station next t...' and 1 image(s).
+2025-10-30 14:47:39,632 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/edit "HTTP/1.1 200 OK"
+2025-10-30 14:47:39,633 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Add a simple black outline of a first-aid station to the left of the house, ensuring its size is pro...'
+2025-10-30 14:47:39,633 - __main__ - INFO - Calling image generation service with final prompt: 'Add a simple black outline of a first-aid station to the left of the house, ensuring its size is pro...'
+2025-10-30 14:47:39,633 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Add a simple black outline of a first-aid station ...'
+2025-10-30 14:47:59,605 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-30 14:47:59,607 - src.api_clients - INFO - Image generation successful.
+2025-10-30 14:47:59,779 - __main__ - INFO - Output image saved successfully to: output/interactive/step_002_1761832079.png
+2025-10-30 14:47:59,781 - __main__ - INFO - Step 2 logged with status: success
+2025-10-30 14:48:36,858 - __main__ - INFO - Step 3 logged with status: fail
+2025-10-30 14:48:36,858 - __main__ - INFO - --- Interactive Session Ended ---
+2025-10-30 14:48:41,492 - root - INFO - Logging configured.
+2025-10-30 14:48:41,493 - __main__ - INFO - --- Starting Interactive Session ---
+2025-10-30 14:48:44,414 - __main__ - INFO - Creating dummy blank image for initial generation.
+2025-10-30 14:48:44,449 - __main__ - INFO - Calling text prompt enhancer...
+2025-10-30 14:48:44,449 - src.api_clients - INFO - Sending request to Prompt Enhancer (Text): http://0.0.0.0:8001/generate with prompt 'An bird's eye view of a visitor services area of a...'
+2025-10-30 14:48:55,040 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/generate "HTTP/1.1 200 OK"
+2025-10-30 14:48:55,040 - src.api_clients - INFO - Text Prompt enhancement successful. New prompt: 'Aerial view of a visitor services area at a zoo, depicted in a clean, minimalist, and symbolic style...'
+2025-10-30 14:48:55,040 - __main__ - INFO - Calling image generation service with final prompt: 'Aerial view of a visitor services area at a zoo, depicted in a clean, minimalist, and symbolic style...'
+2025-10-30 14:48:55,041 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Aerial view of a visitor services area at a zoo, d...'
+2025-10-30 14:49:15,191 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-30 14:49:15,193 - src.api_clients - INFO - Image generation successful.
+2025-10-30 14:49:15,334 - __main__ - INFO - Output image saved successfully to: output/interactive/step_000_1761832155.png
+2025-10-30 14:49:15,337 - __main__ - INFO - Step 0 logged with status: success
+2025-10-30 14:49:34,507 - __main__ - INFO - Step 1 logged with status: fail
+2025-10-30 14:49:34,507 - __main__ - INFO - --- Interactive Session Ended ---
+2025-10-30 14:49:38,789 - root - INFO - Logging configured.
+2025-10-30 14:49:38,790 - __main__ - INFO - --- Starting Interactive Session ---
+2025-10-30 14:50:04,731 - __main__ - INFO - Creating dummy blank image for initial generation.
+2025-10-30 14:50:04,766 - __main__ - INFO - Calling text prompt enhancer...
+2025-10-30 14:50:04,766 - src.api_clients - INFO - Sending request to Prompt Enhancer (Text): http://0.0.0.0:8001/generate with prompt 'A first person view of a visitor services area of ...'
+2025-10-30 14:50:12,856 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/generate "HTTP/1.1 200 OK"
+2025-10-30 14:50:12,856 - src.api_clients - INFO - Text Prompt enhancement successful. New prompt: 'A first-person perspective of a visitor services area at a zoo, rendered in a minimalist and clean v...'
+2025-10-30 14:50:12,856 - __main__ - INFO - Calling image generation service with final prompt: 'A first-person perspective of a visitor services area at a zoo, rendered in a minimalist and clean v...'
+2025-10-30 14:50:12,856 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'A first-person perspective of a visitor services a...'
+2025-10-30 14:50:32,989 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-30 14:50:32,991 - src.api_clients - INFO - Image generation successful.
+2025-10-30 14:50:33,141 - __main__ - INFO - Output image saved successfully to: output/interactive/step_000_1761832233.png
+2025-10-30 14:50:33,143 - __main__ - INFO - Step 0 logged with status: success
+2025-10-30 14:51:20,436 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-30 14:51:20,437 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/edit with prompt 'Make the existing objects in the image smaller, as...' and 1 image(s).
+2025-10-30 14:51:23,391 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/edit "HTTP/1.1 200 OK"
+2025-10-30 14:51:23,391 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Scale down all objects in the image to make them appear smaller, as if viewed from a greater distanc...'
+2025-10-30 14:51:23,391 - __main__ - INFO - Calling image generation service with final prompt: 'Scale down all objects in the image to make them appear smaller, as if viewed from a greater distanc...'
+2025-10-30 14:51:23,392 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Scale down all objects in the image to make them a...'
+2025-10-30 14:51:43,247 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-30 14:51:43,248 - src.api_clients - INFO - Image generation successful.
+2025-10-30 14:51:43,415 - __main__ - INFO - Output image saved successfully to: output/interactive/step_001_1761832303.png
+2025-10-30 14:51:43,417 - __main__ - INFO - Step 1 logged with status: success
+2025-10-30 14:54:17,260 - __main__ - INFO - Step 2 logged with status: fail
+2025-10-30 14:54:17,260 - __main__ - INFO - --- Interactive Session Ended ---
+2025-10-30 14:54:21,365 - root - INFO - Logging configured.
+2025-10-30 14:54:21,366 - __main__ - INFO - --- Starting Interactive Session ---
+2025-10-30 14:54:27,906 - __main__ - INFO - Creating dummy blank image for initial generation.
+2025-10-30 14:54:27,941 - __main__ - INFO - Calling text prompt enhancer...
+2025-10-30 14:54:27,941 - src.api_clients - INFO - Sending request to Prompt Enhancer (Text): http://0.0.0.0:8001/generate with prompt ' first person view of a visitor services area of a...'
+2025-10-30 14:54:41,358 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/generate "HTTP/1.1 200 OK"
+2025-10-30 14:54:41,358 - src.api_clients - INFO - Text Prompt enhancement successful. New prompt: 'First-person view of a visitor services area at a zoo, depicted in a clean, minimalist, and symbolic...'
+2025-10-30 14:54:41,359 - __main__ - INFO - Calling image generation service with final prompt: 'First-person view of a visitor services area at a zoo, depicted in a clean, minimalist, and symbolic...'
+2025-10-30 14:54:41,359 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'First-person view of a visitor services area at a ...'
+2025-10-30 14:55:01,867 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-30 14:55:01,873 - src.api_clients - INFO - Image generation successful.
+2025-10-30 14:55:02,174 - __main__ - INFO - Output image saved successfully to: output/interactive/step_000_1761832502.png
+2025-10-30 14:55:02,176 - __main__ - INFO - Step 0 logged with status: success
+2025-10-30 14:55:45,629 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-30 14:55:45,630 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/edit with prompt 'Make the existing image smaller, as if viewed from...' and 1 image(s).
+2025-10-30 14:55:48,502 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/edit "HTTP/1.1 200 OK"
+2025-10-30 14:55:48,503 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Zoom out the image to make it appear smaller, creating a larger field of view. Expand the canvas by ...'
+2025-10-30 14:55:48,503 - __main__ - INFO - Calling image generation service with final prompt: 'Zoom out the image to make it appear smaller, creating a larger field of view. Expand the canvas by ...'
+2025-10-30 14:55:48,503 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Zoom out the image to make it appear smaller, crea...'
+2025-10-30 14:56:08,474 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-30 14:56:08,476 - src.api_clients - INFO - Image generation successful.
+2025-10-30 14:56:08,679 - __main__ - INFO - Output image saved successfully to: output/interactive/step_001_1761832568.png
+2025-10-30 14:56:08,681 - __main__ - INFO - Step 1 logged with status: success
+2025-10-30 14:56:28,483 - __main__ - INFO - Step 2 logged with status: fail
+2025-10-30 14:56:28,484 - __main__ - INFO - --- Interactive Session Ended ---
+2025-10-30 14:56:33,213 - root - INFO - Logging configured.
+2025-10-30 14:56:33,214 - __main__ - INFO - --- Starting Interactive Session ---
+2025-10-30 14:56:35,886 - __main__ - INFO - Creating dummy blank image for initial generation.
+2025-10-30 14:56:35,921 - __main__ - INFO - Calling text prompt enhancer...
+2025-10-30 14:56:35,921 - src.api_clients - INFO - Sending request to Prompt Enhancer (Text): http://0.0.0.0:8001/generate with prompt 'A first person view of a visitor services area of ...'
+2025-10-30 14:56:51,094 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/generate "HTTP/1.1 200 OK"
+2025-10-30 14:56:51,094 - src.api_clients - INFO - Text Prompt enhancement successful. New prompt: 'A first-person perspective of a visitor services area at a zoo, rendered in a minimalist and clean s...'
+2025-10-30 14:56:51,094 - __main__ - INFO - Calling image generation service with final prompt: 'A first-person perspective of a visitor services area at a zoo, rendered in a minimalist and clean s...'
+2025-10-30 14:56:51,094 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'A first-person perspective of a visitor services a...'
+2025-10-30 14:57:11,588 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-30 14:57:11,592 - src.api_clients - INFO - Image generation successful.
+2025-10-30 14:57:11,868 - __main__ - INFO - Output image saved successfully to: output/interactive/step_000_1761832631.png
+2025-10-30 14:57:11,869 - __main__ - INFO - Step 0 logged with status: success
+2025-10-30 14:57:45,007 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-30 14:57:45,007 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/edit with prompt 'Make the existing image smaller, as if viewed from...' and 1 image(s).
+2025-10-30 14:57:47,965 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/edit "HTTP/1.1 200 OK"
+2025-10-30 14:57:47,965 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Shrink the entire image to make it appear as if viewed from a farther distance, expanding the canvas...'
+2025-10-30 14:57:47,966 - __main__ - INFO - Calling image generation service with final prompt: 'Shrink the entire image to make it appear as if viewed from a farther distance, expanding the canvas...'
+2025-10-30 14:57:47,966 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Shrink the entire image to make it appear as if vi...'
+2025-10-30 14:58:07,983 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-30 14:58:07,985 - src.api_clients - INFO - Image generation successful.
+2025-10-30 14:58:08,163 - __main__ - INFO - Output image saved successfully to: output/interactive/step_001_1761832688.png
+2025-10-30 14:58:08,164 - __main__ - INFO - Step 1 logged with status: success
+2025-10-30 15:00:18,088 - __main__ - INFO - Step 2 logged with status: fail
+2025-10-30 15:00:18,088 - __main__ - INFO - --- Interactive Session Ended ---
+2025-10-30 15:00:26,251 - root - INFO - Logging configured.
+2025-10-30 15:00:26,252 - __main__ - INFO - --- Starting Interactive Session ---
+2025-10-30 15:00:30,840 - __main__ - INFO - Creating dummy blank image for initial generation.
+2025-10-30 15:00:30,875 - __main__ - INFO - Calling text prompt enhancer...
+2025-10-30 15:00:30,875 - src.api_clients - INFO - Sending request to Prompt Enhancer (Text): http://0.0.0.0:8001/generate with prompt 'A first person view of a visitor services area in ...'
+2025-10-30 15:00:42,706 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/generate "HTTP/1.1 200 OK"
+2025-10-30 15:00:42,707 - src.api_clients - INFO - Text Prompt enhancement successful. New prompt: 'A first-person perspective view of a visitor services area, rendered in a clean and minimalist style...'
+2025-10-30 15:00:42,707 - __main__ - INFO - Calling image generation service with final prompt: 'A first-person perspective view of a visitor services area, rendered in a clean and minimalist style...'
+2025-10-30 15:00:42,707 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'A first-person perspective view of a visitor servi...'
+2025-10-30 15:01:02,992 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-30 15:01:02,995 - src.api_clients - INFO - Image generation successful.
+2025-10-30 15:01:03,246 - __main__ - INFO - Output image saved successfully to: output/interactive/step_000_1761832863.png
+2025-10-30 15:01:03,247 - __main__ - INFO - Step 0 logged with status: success
+2025-10-30 15:07:30,055 - __main__ - INFO - Step 1 logged with status: fail
+2025-10-30 15:07:30,056 - __main__ - INFO - --- Interactive Session Ended ---
+2025-10-30 15:07:34,592 - root - INFO - Logging configured.
+2025-10-30 15:07:34,593 - __main__ - INFO - --- Starting Interactive Session ---
+2025-10-30 15:07:57,940 - __main__ - INFO - Creating dummy blank image for initial generation.
+2025-10-30 15:07:57,975 - __main__ - INFO - Calling text prompt enhancer...
+2025-10-30 15:07:57,975 - src.api_clients - INFO - Sending request to Prompt Enhancer (Text): http://0.0.0.0:8001/generate with prompt 'A first person view of a visitor services area in ...'
+2025-10-30 15:08:07,047 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/generate "HTTP/1.1 200 OK"
+2025-10-30 15:08:07,047 - src.api_clients - INFO - Text Prompt enhancement successful. New prompt: 'A first-person perspective of a visitor services area rendered in a clean, minimalist, and symbolic ...'
+2025-10-30 15:08:07,047 - __main__ - INFO - Calling image generation service with final prompt: 'A first-person perspective of a visitor services area rendered in a clean, minimalist, and symbolic ...'
+2025-10-30 15:08:07,047 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'A first-person perspective of a visitor services a...'
+2025-10-30 15:08:27,177 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-30 15:08:27,179 - src.api_clients - INFO - Image generation successful.
+2025-10-30 15:08:27,356 - __main__ - INFO - Output image saved successfully to: output/interactive/step_000_1761833307.png
+2025-10-30 15:08:27,358 - __main__ - INFO - Step 0 logged with status: success
+2025-10-30 15:08:36,789 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-30 15:08:36,789 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/edit with prompt 'Shrink all existing objects in the image uniformly...' and 1 image(s).
+2025-10-30 15:08:40,280 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/edit "HTTP/1.1 200 OK"
+2025-10-30 15:08:40,280 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Uniformly shrink all objects in the image, simulating a zoom-out effect. Expand the canvas to includ...'
+2025-10-30 15:08:40,281 - __main__ - INFO - Calling image generation service with final prompt: 'Uniformly shrink all objects in the image, simulating a zoom-out effect. Expand the canvas to includ...'
+2025-10-30 15:08:40,281 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Uniformly shrink all objects in the image, simulat...'
+2025-10-30 15:09:00,281 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-30 15:09:00,283 - src.api_clients - INFO - Image generation successful.
+2025-10-30 15:09:00,462 - __main__ - INFO - Output image saved successfully to: output/interactive/step_001_1761833340.png
+2025-10-30 15:09:00,464 - __main__ - INFO - Step 1 logged with status: success
+2025-10-30 15:09:53,330 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-30 15:09:53,330 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/edit with prompt 'Shrink all existing objects in the image uniformly...' and 1 image(s).
+2025-10-30 15:09:56,785 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/edit "HTTP/1.1 200 OK"
+2025-10-30 15:09:56,786 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Uniformly shrink all objects in the image, simulating a zoom-out effect. Expand the canvas to includ...'
+2025-10-30 15:09:56,786 - __main__ - INFO - Calling image generation service with final prompt: 'Uniformly shrink all objects in the image, simulating a zoom-out effect. Expand the canvas to includ...'
+2025-10-30 15:09:56,786 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Uniformly shrink all objects in the image, simulat...'
+2025-10-30 15:10:16,746 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-30 15:10:16,748 - src.api_clients - INFO - Image generation successful.
+2025-10-30 15:10:16,906 - __main__ - INFO - Output image saved successfully to: output/interactive/step_002_1761833416.png
+2025-10-30 15:10:16,908 - __main__ - INFO - Step 2 logged with status: success
+2025-10-30 15:11:56,162 - __main__ - INFO - Step 3 logged with status: fail
+2025-10-30 15:11:56,162 - __main__ - INFO - --- Interactive Session Ended ---
+2025-10-30 15:12:00,471 - root - INFO - Logging configured.
+2025-10-30 15:12:00,472 - __main__ - INFO - --- Starting Interactive Session ---
+2025-10-30 15:12:13,981 - __main__ - INFO - Creating dummy blank image for initial generation.
+2025-10-30 15:12:14,017 - __main__ - INFO - Calling text prompt enhancer...
+2025-10-30 15:12:14,017 - src.api_clients - INFO - Sending request to Prompt Enhancer (Text): http://0.0.0.0:8001/generate with prompt 'A first person view of a visitor services area in ...'
+2025-10-30 15:12:23,179 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/generate "HTTP/1.1 200 OK"
+2025-10-30 15:12:23,180 - src.api_clients - INFO - Text Prompt enhancement successful. New prompt: 'A first-person perspective of a visitor services area rendered in a clean, minimalist, and symbolic ...'
+2025-10-30 15:12:23,180 - __main__ - INFO - Calling image generation service with final prompt: 'A first-person perspective of a visitor services area rendered in a clean, minimalist, and symbolic ...'
+2025-10-30 15:12:23,180 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'A first-person perspective of a visitor services a...'
+2025-10-30 15:12:43,365 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-30 15:12:43,368 - src.api_clients - INFO - Image generation successful.
+2025-10-30 15:12:43,558 - __main__ - INFO - Output image saved successfully to: output/interactive/step_000_1761833563.png
+2025-10-30 15:12:43,559 - __main__ - INFO - Step 0 logged with status: success
+2025-10-30 15:12:48,794 - __main__ - INFO - Calling edit prompt enhancer...
+2025-10-30 15:12:48,794 - src.api_clients - INFO - Sending request to Prompt Enhancer (Edit): http://0.0.0.0:8001/edit with prompt 'Shrink all existing objects in the image uniformly...' and 1 image(s).
+2025-10-30 15:12:52,184 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8001/edit "HTTP/1.1 200 OK"
+2025-10-30 15:12:52,184 - src.api_clients - INFO - Edit Prompt enhancement successful. New prompt: 'Uniformly shrink all objects in the image, simulating a zoom-out effect. Expand the canvas to includ...'
+2025-10-30 15:12:52,184 - __main__ - INFO - Calling image generation service with final prompt: 'Uniformly shrink all objects in the image, simulating a zoom-out effect. Expand the canvas to includ...'
+2025-10-30 15:12:52,184 - src.api_clients - INFO - Sending request to Image Gen API: http://0.0.0.0:8000/img_generate with prompt 'Uniformly shrink all objects in the image, simulat...'
+2025-10-30 15:13:12,433 - httpx - INFO - HTTP Request: POST http://0.0.0.0:8000/img_generate "HTTP/1.1 200 OK"
+2025-10-30 15:13:12,435 - src.api_clients - INFO - Image generation successful.
+2025-10-30 15:13:12,607 - __main__ - INFO - Output image saved successfully to: output/interactive/step_001_1761833592.png
+2025-10-30 15:13:12,609 - __main__ - INFO - Step 1 logged with status: success
