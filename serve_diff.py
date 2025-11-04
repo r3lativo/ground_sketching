@@ -12,8 +12,11 @@ from pydantic import BaseModel, ValidationError
 from src.utils import setup_logging, load_config
 # Call setup_logging *before* importing the app
 # This ensures this launcher's log config takes precedence
-setup_logging(log_file='logs/diffuser_server.log')
+setup_logging(log_file='logs/diff_server.log')
 logger = logging.getLogger(__name__)
+
+import os
+os.environ['NUMEXPR_MAX_THREADS'] = '128'
 
 # Now, import the app. It will use the logging config we just set up.
 from src.image_gen_app import app as image_gen_app
@@ -45,7 +48,7 @@ if __name__ == "__main__":
     try:
         # --- 2. Load and Validate Config ---
         # Use the utility function to load the config
-        full_config = load_config('config/server_config.yaml')
+        full_config = load_config(config_path='config/server_config.yaml')
         raw_server_config = full_config.get('image_gen_service')
 
         if raw_server_config is None:

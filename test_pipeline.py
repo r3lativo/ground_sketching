@@ -7,7 +7,7 @@ from PIL import Image
 import time
 
 # Assuming your source structure is correct
-from src.api_clients import call_edit_prompt_enhancer, call_image_gen
+from src.api_clients import call_edit_prompt_polisher, call_image_gen
 from src.utils import setup_logging, pil_to_base64, base64_to_pil, load_config
 
 # --- Configuration ---
@@ -30,7 +30,7 @@ OUTPUT_FILENAME = f"test_output_{int(time.time())}.png"
 setup_logging(log_file=LOG_FILE)
 logger = logging.getLogger(__name__)
 os.makedirs(OUTPUT_DIR, exist_ok=True)
-load_config()
+load_config(config_path='config/server_config.yaml')
 
 async def run_test():
     """Runs a single test case through the enhance -> generate pipeline."""
@@ -65,15 +65,15 @@ async def run_test():
     logger.info(f"Initial prompt: '{INITIAL_PROMPT}'")
     enhanced_prompt = None
     try:
-        enhanced_prompt = await call_edit_prompt_enhancer(INITIAL_PROMPT, input_images_b64)
+        enhanced_prompt = await call_edit_prompt_polisher(INITIAL_PROMPT, input_images_b64)
         if enhanced_prompt:
             logger.info(f"Enhanced prompt: '{enhanced_prompt}'")
         else:
             logger.warning("Prompt enhancement failed or returned empty. Using initial prompt.")
             enhanced_prompt = INITIAL_PROMPT # Fallback
     except Exception as e:
-        logger.error(f"Error calling prompt enhancer: {e}", exc_info=True)
-        logger.warning("Using initial prompt due to enhancer error.")
+        logger.error(f"Error calling prompt polisher: {e}", exc_info=True)
+        logger.warning("Using initial prompt due to polisher error.")
         enhanced_prompt = INITIAL_PROMPT # Fallback
 
     # 3. Generate Image
@@ -103,7 +103,7 @@ async def run_test():
 
 if __name__ == "__main__":
     # Ensure the servers are running before executing this script
-    print(f"Make sure both servers (Image Gen on port {config.get('image_gen_service',{}).get('port', 8000)} and Prompt Enhancer on port {config.get('prompt_enhancer_service',{}).get('port', 8001)}) are running.")
+    print(f"Make sure both servers (Image Gen on port {config.get('image_gen_service',{}).get('port', 8000)} and Prompt Enhancer on port {config.get('prompt_polisher_service',{}).get('port', 8001)}) are running.")
     print("Executing test pipeline...")
     asyncio.run(run_test())
     print("Test script finished. Check logs/test_pipeline.log and the output/ directory.")

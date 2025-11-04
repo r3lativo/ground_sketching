@@ -1,17 +1,25 @@
 # Hey, I have arrived in a park
-A bird's eye view of a park in a simple and minimalist style. Do not have more than six objects to denote that it is a park. Every object should be only made out of black dotted outlines on a solid white background. Make the space between each dot very large. The style should be clean and symbolic. Do not use any shadows or any other specific style where additional information other than the dotted outlines are used. DO not fill any object with dots or other colors. Just provide their dotted outlines.
+A park in a simple and minimalist style. Use only a maximum of three objects to denote that it is a park. These objects should not be part of any background. If possible try to denote the park using objects which are distincly identifiable. It should be only made out of blue outlines on a solid white background. The style should be clean and iconic. Do not use any shadows or any other specific style other than the blue outlines. Do not add any background information unless specified. The edges of the image should be blank.
 
 ## Uhm, I see a large pond with a few ducks.
-Remove any objects that resemble a pond and have dotted outlines. Remove any objects that resemble a duck and have dotted outlines. $$$ Modify the image to add a simple outline of a pond in the image. The pond should have black continuous outline. The style should be clean and symbolic. All other elements should remain unchanged. Do not use any shadows or any other specific style where additional information other than the ones mentioned above are used.
+Remove any pond with blue outlines. Remove any duck with blue outlines.
+$$$
+Add a simple large pond with black outline. The style should be clean and iconic. It should be identifiable as a pond. All other elements should remain unchanged. Do not use any shadows or any other specific style where additional information other than the ones mentioned above are used. Do not use anything other than black outlines.
+$$$
+In the pond, add a few ducks with black outline. The style should be clean and iconic. They should be identifiable as ducks. All other elements should remain unchanged. Do not use any shadows or any other specific style where additional information other than the ones mentioned above are used. Do not use anything other than black outlines.
 
 
 
 # Hey Michael, I'm at the visitor services area in a large zoo. There's a first aid station here.
-A visitor services area in a simple and minimalist style. It should be only made out of black outlines on a solid white background. The style should be clean and symbolic. Do not use any shadows or any other specific style other than the black outlines. Do not add any background information unless specified. The edges of the image should be blank.
+A visitor services area in a simple and minimalist style. Use only a maximum of three objects to denote that it is a visitor services area. These objects should not be part of any background. If possible try to denote the visitor service area using objects which are distincly identifiable. It should be only made out of blue outlines on a solid white background. The style should be clean and iconic. Do not use any shadows or any other specific style other than the blue outlines. Do not add any background information unless specified. The edges of the image should be blank.
 
 Make the existing image objects smaller, as if viewed from further away with larger field of view. Expand the canvas around them to show more empty space. Preserve all current details of the objects in the image except for their size.
 
 Shrink all existing objects in the image uniformly, as if the camera has pulled back from the first person point of view, increasing the field of view. Expand the canvas around these now smaller objects, filling the new areas with the same empty or continuous background as the original edges of the image. Preserve all current details of the objects except for their reduced size, without introducing any new items or elements.
+
+List all the objects and reduce their size one by one.
+
+Listing all the objects one by one, reduce their size and keep only the reduced objects in the image as if the camera has pulled back from the first person point of view, increasing the field of view. Expand the canvas around these now smaller objects, filling the new areas with the same empty or continuous background as the original edges of the image. Preserve all current details of the objects except for their reduced size, without introducing any new items or elements.
 
 Add a simple outline of a first-aid station next to the house. It's size should be in realistic ratio with respect to other objects. The first-aid station should only have a black outline. The style should be clean and symbolic. All other elements should remain unchanged. Do not use any shadows or any other specific style other than the ones mentioned above.
 

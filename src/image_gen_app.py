@@ -6,11 +6,11 @@ import logging
 import time
 import sys
 from contextlib import asynccontextmanager
-from typing import Optional
+from typing import Optional, List
 
 import torch
 import yaml
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, ValidationError, Field
 from fastapi import FastAPI, HTTPException
 from diffusers import (
     DiffusionPipeline,
@@ -23,7 +23,6 @@ import threading
 
 # Assuming utils.py and image_gen.py are accessible via src path
 from src.utils import pil_to_base64, base64_to_pil, load_config
-from src.api_models import ImageEditRequest, ImageEditResponse
 
 # --- Logging ---
 logger = logging.getLogger(__name__)
@@ -32,6 +31,22 @@ logger = logging.getLogger(__name__)
 class ImageGenConfig(BaseModel):
     model_id: str
     lora_path: Optional[str] = None
+
+# --- Edit Request Model  ---
+class ImageEditRequest(BaseModel):
+    prompt: str = Field(..., description="The editing instruction for the model.")
+    images: List[str] = Field(..., min_items=1, max_items=3, description="List of Base64 encoded input images (1 to 3 images).")
+    seed: int = 0
+    true_cfg_scale: float
+    negative_prompt: str
+    num_inference_steps: int
+
+# --- Edit Response Model  ---
+class ImageEditResponse(BaseModel):
+    image: str = Field(..., description="Base64 encoded output image (PNG format).")
+    # Optional: You could also return the seed used, execution time, etc.
+    # seed_used: int
+    # processing_time_ms: float
 
 # --- Global State Variables ---
 pipeline = None
@@ -52,7 +67,7 @@ try:
     config = ImageGenConfig(**raw_service_config)
     
     logger.info("Image Gen Config loaded and validated successfully:")
-    logger.info(f"{config.model_dump_json(indent=2)}")
+    logger.info(f"{config.model_dump_json()}")
 
 except (ValidationError, ValueError) as e:
     logger.critical(f"--- CONFIGURATION ERROR ---")

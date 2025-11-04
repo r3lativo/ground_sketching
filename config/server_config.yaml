@@ -12,7 +12,7 @@ image_gen_client:
   true_cfg_scale: 4.0
   negative_prompt: " "
 
-prompt_enhancer_service:
+prompt_polisher_service:
   host: "0.0.0.0"
   port: 8001
   model_id: "/lustre/fsmisc/dataset/HuggingFace_Models/Qwen/Qwen2.5-VL-32B-Instruct"
@@ -23,8 +23,11 @@ prompt_enhancer_service:
   trust_remote_code: true
   max_model_len: 15000
 
-prompt_enhancer_client:
+prompt_polisher_client:
   seed: 0
   top_p: 0.9
   temperature: 0.7
   max_tokens: 5000
+  jinja_env: 'config'  # The fodler where jinja files are
+  polish_template: 'polish.jinja2'
+  edit_template: 'polish_edit.jinja2'

@@ -14,11 +14,10 @@ import torch
 
 from src.utils import setup_logging, load_config
 
-
+# --- Setup ---
 torch.backends.cudnn.deterministic = True
 torch.backends.cudnn.benchmark = False
 
-# --- Setup ---
 setup_logging(log_file='logs/vllm_server.log')
 logger = logging.getLogger(__name__)
 
@@ -45,21 +44,21 @@ class GenerateRequest(BaseModel):
 
 # --- Load Configuration ---
 try:
-    raw_config_dict = load_config('config/server_config.yaml').get("prompt_enhancer_service")
+    raw_config_dict = load_config(config_path='config/server_config.yaml').get("prompt_polisher_service")
     
     if raw_config_dict is None:
-        raise ValueError("'prompt_enhancer_service' section not found in config/server_config.yaml")
+        raise ValueError("'prompt_polisher_service' section not found in config/server_config.yaml")
 
     # Parse the dictionary into our model
     # THIS WILL RAISE A 'ValidationError' IF ANY KEY IS MISSING
     config = VLLMConfig(**raw_config_dict)
     
     logger.info("Configuration loaded and validated successfully:")
-    logger.info(f"{config.model_dump_json(indent=2)}")
+    logger.info(f"{config.model_dump_json()}")
 
 except ValidationError as e:
     logger.critical(f"--- CONFIGURATION ERROR ---")
-    logger.critical(f"FATAL: Missing or invalid keys in 'prompt_enhancer_service' section of config/server_config.yaml:")
+    logger.critical(f"FATAL: Missing or invalid keys in 'prompt_polisher_service' section of config/server_config.yaml:")
     logger.critical(f"\n{e}")
     raise SystemExit("Invalid configuration. Please check the log.")
 except Exception as e:
@@ -68,7 +67,7 @@ except Exception as e:
 
 
 # --- VLLM Setup ---
-logger.info(f"Loading LLM: {config.model_id} with dtype: {config.dtype}")
+logger.info(f"Loading LLM: '{config.model_id}' with dtype: {config.dtype}")
 try:
     llm = LLM(
         model=config.model_id,
@@ -76,7 +75,8 @@ try:
         dtype=config.dtype,
         gpu_memory_utilization=config.gpu_memory_utilization,
         max_model_len=config.max_model_len,
-        trust_remote_code=config.trust_remote_code,
+        #trust_remote_code=config.trust_remote_code,
+        # The argument `trust_remote_code` is to be used with Auto classes. It has no effect here and is ignored.
         tensor_parallel_size=config.tensor_parallel_size
     )
     processor = AutoProcessor.from_pretrained(config.model_id, trust_remote_code=config.trust_remote_code)
@@ -220,9 +220,7 @@ async def handle_edit(request: GenerateRequest):
 
 if __name__ == "__main__":
     # This part will only be reached if the config validation passes
-    print("#" * 50)
-    print("IMPORTANT: Ensure 'export VLLM_ENABLE_V1_MULTIPROCESSING=0' is set in your environment before running.")
-    print(f"Starting VLLM server on {config.host}:{config.port}")
-    print("#" * 50)
+    logger.info("IMPORTANT: Ensure 'export VLLM_ENABLE_V1_MULTIPROCESSING=0' is set in your environment before running.")
+    logger.info(f"Starting VLLM server on http://{config.host}:{config.port}")
     
     uvicorn.run(app, host=config.host, port=config.port)
