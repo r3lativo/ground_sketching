@@ -22,6 +22,7 @@ from src.utils import (
     pil_to_base64,
     base64_to_pil,
     log_experiment_step,
+    update_last_log_comment,
     load_config,
     clean_image_artifacts,
     check_server
@@ -79,7 +80,7 @@ async def handle_text_to_image_step(direct: bool) -> Tuple[Optional[str], Option
     """
     initial_prompt = input("Enter the initial text prompt to generate an image: ")
     if initial_prompt.lower() == 'quit':
-        return None, None, None, True
+        return time.time(), None, None, None, True
     
     step_start_time = time.time()
 
@@ -109,7 +110,7 @@ async def handle_text_and_image_to_image_step(direct: bool, current_image_pil: I
     """
     edit_prompt = input("Enter the edit instruction (or 'quit'): ")
     if edit_prompt.lower() == 'quit':
-        return None, None, None, True
+        return time.time(), None, None, None, True
     
     step_start_time = time.time()
 
@@ -215,7 +216,7 @@ async def main_interactive_loop(initial_image_path: Optional[str] = None, direct
                     break
                 
                 print(f"\nCurrent image: {current_image_path} (editing for step {step_count})")
-                final_prompt, input_images_b64, initial_prompt, user_quit = await handle_text_and_image_to_image_step(direct, current_image_pil)
+                step_start_time, final_prompt, input_images_b64, initial_prompt, user_quit = await handle_text_and_image_to_image_step(direct, current_image_pil)
             
             if user_quit:
                 break
@@ -253,8 +254,26 @@ async def main_interactive_loop(initial_image_path: Optional[str] = None, direct
         finally:
             # --- 4. Log and Summarize ---
             if not user_quit:
+                
+                # First, save the log as-is
                 log_and_print_step_summary(log_data, status, step_count, step_start_time)
 
+                # THEN, if successful, ask for the optional comment
+                if status == "success":
+                    try:
+                        comment = input("###\nOPTIONAL COMMENT on output (press Enter to skip): ")
+                        if comment:
+                            # If comment provided, call the update function
+                            experiment_file = interactive_config.get('experiment_file')
+                            update_last_log_comment(experiment_file, comment)
+                    
+                    except (KeyboardInterrupt, EOFError):
+                        # If user quits *during* comment prompt, the log is already
+                        # safely saved. We just print a newline and let the
+                        # loop exit or continue.
+                        print("\nSkipping comment. Log was already saved.")
+                        pass # The main loop will handle the exit
+                
     print("\nGoodbye!")
 
 
