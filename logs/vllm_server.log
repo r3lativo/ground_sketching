@@ -10,3 +10,10 @@
 2025-11-04 14:13:48,175 - __main__ - INFO - LLM and processor loaded successfully.
 2025-11-04 14:13:48,208 - __main__ - INFO - IMPORTANT: Ensure 'export VLLM_ENABLE_V1_MULTIPROCESSING=0' is set in your environment before running.
 2025-11-04 14:13:48,208 - __main__ - INFO - Starting VLLM server on http://0.0.0.0:8001
+2025-11-04 14:55:45,741 - root - INFO - Logging configured.
+2025-11-04 14:55:45,748 - __main__ - INFO - Configuration loaded and validated successfully:
+2025-11-04 14:55:45,750 - __main__ - INFO - {"model_id":"/lustre/fsmisc/dataset/HuggingFace_Models/Qwen/Qwen2.5-VL-32B-Instruct","host":"0.0.0.0","port":8001,"tensor_parallel_size":1,"gpu_memory_utilization":0.9,"dtype":"bfloat16","max_model_len":15000,"trust_remote_code":true,"seed":0}
+2025-11-04 14:55:45,750 - __main__ - INFO - Loading LLM: '/lustre/fsmisc/dataset/HuggingFace_Models/Qwen/Qwen2.5-VL-32B-Instruct' with dtype: bfloat16
+2025-11-04 14:58:20,349 - __main__ - INFO - LLM and processor loaded successfully.
+2025-11-04 14:58:20,352 - __main__ - INFO - IMPORTANT: Ensure 'export VLLM_ENABLE_V1_MULTIPROCESSING=0' is set in your environment before running.
+2025-11-04 14:58:20,352 - __main__ - INFO - Starting VLLM server on http://0.0.0.0:8001

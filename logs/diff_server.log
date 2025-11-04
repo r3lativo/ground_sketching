@@ -60,3 +60,36 @@
 2025-11-04 14:39:31,161 - src.image_gen_app - INFO - Received request - Prompt: 'a cat...', Images: 1
 2025-11-04 14:39:51,062 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 19.90 seconds.
 2025-11-04 14:39:51,406 - uvicorn.access - INFO - 127.0.0.1:52734 - "POST /img_generate HTTP/1.1" 200
+2025-11-04 14:55:05,640 - root - INFO - Logging configured.
+2025-11-04 14:55:48,074 - src.image_gen_app - INFO - Image Gen Config loaded and validated successfully:
+2025-11-04 14:55:48,075 - src.image_gen_app - INFO - {"model_id":"Qwen/Qwen-Image-Edit-2509","lora_path":"Qwen-Image-Lightning/Qwen-Image-Edit-2509/Qwen-Image-Edit-2509-Lightning-8steps-V1.0-fp32.safetensors"}
+2025-11-04 14:55:48,081 - __main__ - INFO - Server config validated: Host=0.0.0.0, Port=8000
+2025-11-04 14:55:48,081 - __main__ - INFO - Starting Uvicorn server for Image Generation Service on 0.0.0.0:8000...
+2025-11-04 14:55:48,213 - uvicorn.error - INFO - Started server process [424412]
+2025-11-04 14:55:48,213 - uvicorn.error - INFO - Waiting for application startup.
+2025-11-04 14:55:48,214 - src.image_gen_app - INFO - Application startup: Loading model...
+2025-11-04 14:55:48,214 - src.image_gen_app - INFO - CUDA available. Using device: cuda with dtype: torch.bfloat16
+2025-11-04 14:55:49,864 - src.image_gen_app - INFO - Loading base pipeline: Qwen/Qwen-Image-Edit-2509...
+2025-11-04 14:55:51,378 - src.image_gen_app - INFO - Loading LoRA weights: Qwen-Image-Lightning/Qwen-Image-Edit-2509/Qwen-Image-Edit-2509-Lightning-8steps-V1.0-fp32.safetensors...
+2025-11-04 14:55:59,718 - src.image_gen_app - INFO - Moving pipeline to device: cuda...
+2025-11-04 14:59:01,041 - src.image_gen_app - INFO - Image generation pipeline loaded successfully.
+2025-11-04 14:59:01,051 - uvicorn.error - INFO - Application startup complete.
+2025-11-04 14:59:01,052 - uvicorn.error - INFO - Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+2025-11-04 15:06:53,127 - src.image_gen_app - INFO - Received request - Prompt: 'A charming, playful, and whimsical scene featuring...', Images: 1
+2025-11-04 15:07:16,452 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 23.32 seconds.
+2025-11-04 15:07:16,849 - uvicorn.access - INFO - 127.0.0.1:43242 - "POST /img_generate HTTP/1.1" 200
+2025-11-04 15:14:59,249 - src.image_gen_app - INFO - Received request - Prompt: 'A charming, playful, and whimsical scene featuring...', Images: 1
+2025-11-04 15:15:19,693 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 20.44 seconds.
+2025-11-04 15:15:20,064 - uvicorn.access - INFO - 127.0.0.1:60342 - "POST /img_generate HTTP/1.1" 200
+2025-11-04 15:17:17,437 - src.image_gen_app - INFO - Received request - Prompt: 'A charming, playful, and whimsical scene featuring...', Images: 1
+2025-11-04 15:18:07,643 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 50.21 seconds.
+2025-11-04 15:18:08,008 - uvicorn.access - INFO - 127.0.0.1:33708 - "POST /img_generate HTTP/1.1" 200
+2025-11-04 15:19:57,951 - src.image_gen_app - INFO - Received request - Prompt: 'A clean, minimalist, and iconic illustration of a ...', Images: 1
+2025-11-04 15:20:18,359 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 20.41 seconds.
+2025-11-04 15:20:18,409 - uvicorn.access - INFO - 127.0.0.1:45958 - "POST /img_generate HTTP/1.1" 200
+2025-11-04 15:21:12,944 - src.image_gen_app - INFO - Received request - Prompt: 'A sumptuous, autumnal dish rich in texture and col...', Images: 1
+2025-11-04 15:21:33,243 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 20.30 seconds.
+2025-11-04 15:21:33,501 - uvicorn.access - INFO - 127.0.0.1:49716 - "POST /img_generate HTTP/1.1" 200
+2025-11-04 15:29:26,431 - src.image_gen_app - INFO - Received request - Prompt: 'A serene and elegant underwater scene centered aro...', Images: 1
+2025-11-04 15:29:46,974 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 20.54 seconds.
+2025-11-04 15:29:47,370 - uvicorn.access - INFO - 127.0.0.1:57678 - "POST /img_generate HTTP/1.1" 200
