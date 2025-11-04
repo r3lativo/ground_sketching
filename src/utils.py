@@ -10,6 +10,7 @@ import csv
 import os
 from datetime import datetime
 from PIL import Image, ImageFilter
+import socket
 
 logger = logging.getLogger(__name__)
 
@@ -17,6 +18,7 @@ LOG_HEADER = [
     "timestamp", "status", "initial_prompt", "final_prompt",
     "negative_prompt", "VLseed", "IMGseed", "true_cfg_scale",
     "num_inference_steps", "top_p", "temperature", "output_file",
+    "comment",
 ]
 
 
@@ -91,6 +93,58 @@ def log_experiment_step(log_filepath: str, data: dict):
         logger.error(f"Failed to write to log file {log_filepath}: {e}", exc_info=True)
 
 
+def update_last_log_comment(log_filepath: str, comment: str):
+    """
+    Updates the 'comment' field of the last row in the CSV log file.
+    
+    This is done by reading the whole file, modifying the last entry in memory,
+    and rewriting the entire file.
+    """
+    if not comment: # Do nothing if comment is empty
+        return
+    
+    try:
+        if not os.path.isfile(log_filepath):
+            logger.warning(f"Log file {log_filepath} not found. Cannot update comment.")
+            return
+        
+        rows = []
+        fieldnames = LOG_HEADER # Default to our known header
+        
+        # Read all rows into memory
+        with open(log_filepath, 'r', newline='', encoding='utf-8') as csvfile:
+            reader = csv.DictReader(csvfile)
+            if reader.fieldnames: # Get fieldnames from file if it exists
+                fieldnames = reader.fieldnames
+                # Ensure 'comment' is a known fieldname
+                if 'comment' not in fieldnames:
+                    logger.warning("'comment' field not in log header. File may be from old version.")
+                    # We will proceed, but DictWriter will add it as a new column
+                    # which might be messy. It's better that LOG_HEADER is correct.
+                    fieldnames.append('comment')
+                    
+            for row in reader:
+                rows.append(row)
+        
+        if not rows:
+            logger.warning(f"Log file {log_filepath} is empty. Cannot update comment.")
+            return
+        
+        # Modify the last row
+        rows[-1]['comment'] = comment
+        
+        # Rewrite the entire file
+        with open(log_filepath, 'w', newline='', encoding='utf-8') as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer.writeheader()
+            writer.writerows(rows)
+        
+        logger.info(f"Successfully updated comment for last entry in {log_filepath}")
+
+    except Exception as e:
+        logger.error(f"Failed to update log file {log_filepath} with comment: {e}", exc_info=True)
+
+
 def clean_image_artifacts(input_image, white_threshold=180, black_threshold=50):
     """
     Cleans up artifacts in an image by clamping near-white and near-black 
@@ -144,3 +198,25 @@ def clean_image_artifacts(input_image, white_threshold=180, black_threshold=50):
             # will be left *unchanged* by this logic.
             
     return img_rgb
+
+def check_server(host: str, port: int, timeout: int = 3) -> bool:
+    """
+    Synchronously checks if a server is reachable at a given host and port.
+    """
+    check_host = "127.0.0.1" if host == "0.0.0.0" else host
+    
+    print(f"{check_host}:{port}...", end="", flush=True)
+    
+    try:
+        # Create a socket, set timeout, and try to connect
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.settimeout(timeout)
+            s.connect((check_host, port))
+        
+        # 'with' statement auto-closes the socket.
+        print(" [OK]")
+        return True
+    except Exception as e:
+        # Catches timeout, connection refused, etc.
+        print(f" [FAILED] ({e})")
+        return False

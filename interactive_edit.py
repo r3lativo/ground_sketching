@@ -8,17 +8,24 @@ from PIL import Image
 import io
 import argparse
 import re
-from typing import Optional
+from typing import Optional, Tuple
 import sys
 import datetime
-import socket
 
 from src.api_clients import (
     call_text_prompt_polisher,
     call_edit_prompt_polisher,
     call_image_gen
 )
-from src.utils import setup_logging, pil_to_base64, base64_to_pil, log_experiment_step, load_config, clean_image_artifacts
+from src.utils import (
+    setup_logging,
+    pil_to_base64,
+    base64_to_pil,
+    log_experiment_step,
+    load_config,
+    clean_image_artifacts,
+    check_server
+)
 
 # --- Configuration ---
 server_config = load_config(config_path='config/server_config.yaml')
@@ -29,78 +36,167 @@ dummy_img_size = (dummy_img_height, dummy_img_height)
 # --- Setup ---
 os.makedirs(interactive_config.get('output_dir'), exist_ok=True)
 
-def check_server(host: str, port: int, timeout: int = 3) -> bool:
+def load_initial_state(initial_image_path: Optional[str]) -> Tuple[Optional[Image.Image], Optional[str], int]:
     """
-    Synchronously checks if a server is reachable at a given host and port.
+    Loads the initial image if provided and determines the starting step count.
     """
-    check_host = "127.0.0.1" if host == "0.0.0.0" else host
-    
-    print(f"{check_host}:{port}...", end="", flush=True)
-    
-    try:
-        # Create a socket, set timeout, and try to connect
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.settimeout(timeout)
-            s.connect((check_host, port))
-        
-        # 'with' statement auto-closes the socket.
-        print(" [OK]")
-        return True
-    except Exception as e:
-        # Catches timeout, connection refused, etc.
-        print(f" [FAILED] ({e})")
-        return False
+    if not initial_image_path:
+        return None, None, 0
 
-async def main_interactive_loop(initial_image_path: Optional[str] = None, direct: bool = False, raw: bool = False):
+    try:
+        if not os.path.exists(initial_image_path):
+            raise FileNotFoundError(f"Image file not found at {initial_image_path}")
+        
+        current_image_pil = Image.open(initial_image_path).convert("RGB")
+        current_image_path = initial_image_path
+        print(f"\nSuccessfully loaded initial image: {initial_image_path}")
+
+        # Parse step count from filename
+        filename = os.path.basename(initial_image_path)
+        match = re.match(r"step_(\d+)_.*", filename)
+        
+        if match:
+            last_step = int(match.group(1))
+            step_count = last_step + 1
+            print(f"Resuming from step {step_count}.")
+        else:
+            print(f"Could not parse step number from filename '{filename}'.")
+            step_count = 1
+            print("You can now start editing (starting at step 1).")
+        
+        return current_image_pil, current_image_path, step_count
+
+    except Exception as e:
+        print(f"\n[Error] Could not load initial image: {e}")
+        print("Starting with a blank canvas instead.\n")
+        return None, None, 0
+
+
+async def handle_text_to_image_step(direct: bool) -> Tuple[Optional[str], Optional[list], Optional[str], bool]:
+    """
+    Handles the T2I step: gets prompt, creates dummy image, and polishes prompt.
+    Returns: (step_start_time, final_prompt, input_images_b64, initial_prompt, user_quit)
+    """
+    initial_prompt = input("Enter the initial text prompt to generate an image: ")
+    if initial_prompt.lower() == 'quit':
+        return None, None, None, True
+    
+    step_start_time = time.time()
+
+    print("Creating dummy blank image for initial generation.")
+    dummy_image_pil = Image.new('RGB', dummy_img_size, color='white')
+    input_images_b64 = [pil_to_base64(dummy_image_pil)]
+
+    final_prompt = initial_prompt
+    if not direct:
+        print("Calling text prompt polisher...")
+        final_prompt = await call_text_prompt_polisher(initial_prompt)
+        print(f"Final prompt:\n{final_prompt}")
+    else:
+        print("Bypassing text prompt polisher!")
+    
+    if not final_prompt:
+        print("Text enhancement failed. Using initial prompt.")
+        final_prompt = initial_prompt
+
+    return step_start_time, final_prompt, input_images_b64, initial_prompt, False
+
+
+async def handle_text_and_image_to_image_step(direct: bool, current_image_pil: Image.Image) -> Tuple[Optional[str], Optional[list], Optional[str], bool]:
+    """
+    Handles the TI2I step: gets prompt, uses current image, and polishes prompt.
+    Returns: (step_start_time, final_prompt, input_images_b64, initial_prompt, user_quit)
+    """
+    edit_prompt = input("Enter the edit instruction (or 'quit'): ")
+    if edit_prompt.lower() == 'quit':
+        return None, None, None, True
+    
+    step_start_time = time.time()
+
+    input_images_b64 = [pil_to_base64(current_image_pil)]
+
+    final_prompt = edit_prompt
+    if not direct:
+        print("Calling edit prompt polisher...")
+        final_prompt = await call_edit_prompt_polisher(edit_prompt, input_images_b64)
+        print(f"Final prompt:\n{final_prompt}")
+    else:
+        print("Bypassing edit prompt polisher!")
+
+    if not final_prompt:
+        print("Edit enhancement failed. Using initial prompt.")
+        final_prompt = edit_prompt
+    
+    return step_start_time, final_prompt, input_images_b64, edit_prompt, False
+
+
+def process_and_save_output(output_image_b64: str, no_cleanup: bool, step_count: int) -> Tuple[Optional[Image.Image], Optional[str]]:
+    """
+    Decodes, cleans (if not no_cleanup), and saves the output image.
+    Returns: (output_pil_image, output_path) or (None, None) on failure.
+    """
+    try:
+        output_image_pil = base64_to_pil(output_image_b64)
+        
+        cleaned_output_image_pil = output_image_pil
+        if not no_cleanup:
+            print("Cleaning image artifacts...")
+            cleaned_output_image_pil = clean_image_artifacts(output_image_pil)
+        else:
+            print("Skipping artifact cleanup (--no_cleanup).")
+
+        timestamp_str = datetime.datetime.now().strftime("%m-%d_%H-%M-%S")
+        output_filename = f"step_{step_count:03d}_{timestamp_str}.png"
+        output_path = os.path.join(interactive_config.get('output_dir'), output_filename)
+        
+        cleaned_output_image_pil.save(output_path)
+        print(f"Output image saved successfully to: {output_path}")
+        
+        return cleaned_output_image_pil, output_path
+        
+    except Exception as e:
+        print(f"Error saving image: {e}")
+        return None, None
+
+
+def log_and_print_step_summary(log_data: dict, status: str, step_count: int, step_start_time: float):
+    """
+    Logs the step data to the experiment file and prints the time summary.
+    """
+    log_data["status"] = status
+    experiment_file = interactive_config.get('experiment_file')
+    
+    # Ensure experiment directory exists
+    os.makedirs(os.path.dirname(experiment_file), exist_ok=True)
+    
+    log_experiment_step(experiment_file, log_data)
+    
+    # Get the step number that just finished
+    current_logged_step = step_count if status == 'fail' else step_count - 1
+
+    step_end_time = time.time()
+    duration = step_end_time - step_start_time
+    print(f"\nStep {current_logged_step} completed in {duration:.2f} seconds.")
+
+
+# --- Refactored Main Loop ---
+
+async def main_interactive_loop(initial_image_path: Optional[str] = None, direct: bool = False, no_cleanup: bool = True):
     """Runs the interactive image generation and editing loop."""
     print("\nWelcome to the Interactive Image Editor!")
     print("Type 'quit' at any prompt to exit.")
 
-    current_image_path = None
-    current_image_pil = None
-    step_count = 0 # Default start
-
-    # --- Pre-loop: Load initial image if provided ---
-    if initial_image_path:
-        try:
-            if not os.path.exists(initial_image_path):
-                raise FileNotFoundError(f"Image file not found at {initial_image_path}")
-            
-            current_image_pil = Image.open(initial_image_path).convert("RGB")
-            current_image_path = initial_image_path
-            
-            print(f"\nSuccessfully loaded initial image: {initial_image_path}")
-
-            # --- Parse step count from filename ---
-            filename = os.path.basename(initial_image_path)
-            # Try to match the format 'step_001_...'
-            match = re.match(r"step_(\d+)_.*", filename)
-            
-            if match:
-                last_step = int(match.group(1))
-                step_count = last_step + 1 # Start at the *next* step
-                print(f"Resuming from step {step_count}.")
-            else:
-                print(f"Could not parse step number from filename '{filename}'. Starting edits at step 1.")
-                step_count = 1 # Default behavior if image is loaded but name format is unknown
-                print("You can now start editing (starting at step 1).")
-
-        except Exception as e:
-            print(f"\n[Error] Could not load initial image: {e}")
-            print("Starting with a blank canvas instead.\n")
-            # On failure, step_count remains 0, and loop starts at T2I
+    # --- Pre-loop: Load initial state ---
+    current_image_pil, current_image_path, step_count = load_initial_state(initial_image_path)
 
     # --- Main Loop ---
     while True:
         user_quit = False
-
-        step_start_time = time.time()
         log_data = {
             "negative_prompt": server_config["image_gen_client"]["negative_prompt"],
             "true_cfg_scale": server_config["image_gen_client"]["true_cfg_scale"],
             "num_inference_steps": server_config["image_gen_client"]["num_inference_steps"],
             "IMGseed": server_config["image_gen_client"]["seed"],
-
             "VLseed": server_config["prompt_polisher_client"]["seed"],
             "top_p": server_config["prompt_polisher_client"]["top_p"],
             "temperature": server_config["prompt_polisher_client"]["temperature"],
@@ -108,96 +204,42 @@ async def main_interactive_loop(initial_image_path: Optional[str] = None, direct
         status = "fail"
 
         try:
-            # --- Get User Input ---
+            # --- 1. Get Prompt and Inputs ---
             if step_count == 0:
                 # Text-to-Image block
-                initial_prompt = input("Enter the initial text prompt to generate an image: ")
-                
-                if initial_prompt.lower() == 'quit':
-                    user_quit = True
-                    break
-
-                log_data["initial_prompt"] = initial_prompt
-
-                print("Creating dummy blank image for initial generation.")
-                current_image_pil = Image.new('RGB', dummy_img_size, color='white')
-                input_images_b64 = [pil_to_base64(current_image_pil)]
-
-                if not direct:
-                    print("Calling text prompt polisher...")
-                    final_prompt = await call_text_prompt_polisher(initial_prompt)
-                    print(f"Final prompt:\n{final_prompt}")
-                else:
-                    print("Bypassing text prompt polisher!")
-                    final_prompt = initial_prompt
-                
-                if not final_prompt:
-                    print("Text enhancement failed. Using initial prompt.")
-                    final_prompt = initial_prompt
-                log_data["final_prompt"] = final_prompt
-
+                step_start_time, final_prompt, input_images_b64, initial_prompt, user_quit = await handle_text_to_image_step(direct)
             else:
                 # Image-to-Image Edit block
-                print(f"\nCurrent image: {current_image_path} (editing for step {step_count})")
-                edit_prompt = input("Enter the edit instruction (or 'quit'): ")
-
-                if edit_prompt.lower() == 'quit':
-                    user_quit = True
-                    break
-                
-                log_data["initial_prompt"] = edit_prompt
-
                 if current_image_pil is None:
                     print("Error: No image to edit. Exiting.")
                     break
+                
+                print(f"\nCurrent image: {current_image_path} (editing for step {step_count})")
+                final_prompt, input_images_b64, initial_prompt, user_quit = await handle_text_and_image_to_image_step(direct, current_image_pil)
+            
+            if user_quit:
+                break
 
-                input_images_b64 = [pil_to_base64(current_image_pil)]
+            log_data["initial_prompt"] = initial_prompt
+            log_data["final_prompt"] = final_prompt
 
-                if not direct:
-                    print("Calling edit prompt polisher...")
-                    final_prompt = await call_edit_prompt_polisher(edit_prompt, input_images_b64)
-                else:
-                    print("Bypassing edit prompt polisher!")
-                    final_prompt = edit_prompt
-
-                if not final_prompt:
-                    print("Edit enhancement failed. Using initial prompt.")
-                    final_prompt = edit_prompt
-                log_data["final_prompt"] = final_prompt
-
-            # --- Generate/Edit Image ---
+            # --- 2. Generate Image ---
             print("Calling image generator...")
             output_image_b64 = await call_image_gen(final_prompt, input_images_b64)
 
+            # --- 3. Process and Save Output ---
             if output_image_b64:
+                new_image_pil, new_image_path = process_and_save_output(output_image_b64, no_cleanup, step_count)
 
-                # --- Decode and Save ---
-                try:
-                    output_image_pil = base64_to_pil(output_image_b64)
-                    
-                    if not raw:
-                        # Remove artifacts from the image
-                        cleaned_output_image_pil = clean_image_artifacts(output_image_pil)
-                    else:
-                        cleaned_output_image_pil = output_image_pil
-
-                    timestamp_str = datetime.datetime.now().strftime("%m-%d_%H-%M-%S")
-                    # The filename will now correctly use the incremented step_count
-                    output_filename = f"step_{step_count:03d}_{timestamp_str}.png"
-                    output_path = os.path.join(interactive_config.get('output_dir'), output_filename)
-                    cleaned_output_image_pil.save(output_path)
-
-                    print(f"Output image saved successfully to: {output_path}")
-
+                if new_image_pil:
                     # Update state for next iteration
-                    current_image_path = output_path
-                    current_image_pil = cleaned_output_image_pil
-                    log_data["output_file"] = output_path
+                    current_image_path = new_image_path
+                    current_image_pil = new_image_pil
+                    log_data["output_file"] = new_image_path
                     status = "success"
-                    step_count += 1 # Increment for the *next* loop
-
-                except Exception as e:
-                    print(f"Error saving image: {e}")
+                    step_count += 1
+                else:
+                    print("Error processing or saving image.")
             else:
                 print("Error: Image generation failed.")
 
@@ -206,23 +248,17 @@ async def main_interactive_loop(initial_image_path: Optional[str] = None, direct
             user_quit = True
             break
         except Exception as e:
-            print(f"An error occurred: {e}")
+            print(f"An unexpected error occurred: {e}")
 
         finally:
+            # --- 4. Log and Summarize ---
             if not user_quit:
-                log_data["status"] = status
-                experiment_file = interactive_config.get('experiment_file')
-                os.makedirs(os.path.dirname(experiment_file), exist_ok=True)
-                log_experiment_step(experiment_file, log_data)
-                # Correct logging of the step that just finished
-                current_logged_step = step_count if status == 'fail' else step_count - 1
-
-                step_end_time = time.time()
-                duration = step_end_time - step_start_time
-                print(f"\nStep {current_logged_step} completed in {duration:.2f} seconds.")
+                log_and_print_step_summary(log_data, status, step_count, step_start_time)
 
     print("\nGoodbye!")
 
+
+# --- Argument Parser and Main Execution ---
 
 def get_args():
     parser = argparse.ArgumentParser(
@@ -240,12 +276,12 @@ def get_args():
     parser.add_argument(
         "-d", "--direct",
         action='store_true',
-        help="Bypass the prompt polisher if called (ergo, if true)"
+        help="Bypass the prompt polisher if called (ergo, if true)."
     )
     parser.add_argument(
-        "-r", "--raw",
+        "--no-cleanup",
         action='store_true',
-        help="Bypass the artifact cleanup if called (ergo, if true)"
+        help="Bypass artifact cleanup and save the raw model output."
     )
     args = parser.parse_args()
     return args
@@ -271,6 +307,6 @@ if __name__ == "__main__":
         sys.exit(1) # Exit with an error code
     
     try:
-        asyncio.run(main_interactive_loop(initial_image_path=args.image, direct=args.direct, raw=args.raw))
+        asyncio.run(main_interactive_loop(initial_image_path=args.image, direct=args.direct, no_cleanup=args.no_cleanup))
     except Exception as e:
-        logger.critical(f"Interactive loop failed critically: {e}", exc_info=True)
+        print(f"An unexpected critical error occurred: {e}")

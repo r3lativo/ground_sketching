@@ -93,3 +93,30 @@
 2025-11-04 15:29:26,431 - src.image_gen_app - INFO - Received request - Prompt: 'A serene and elegant underwater scene centered aro...', Images: 1
 2025-11-04 15:29:46,974 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 20.54 seconds.
 2025-11-04 15:29:47,370 - uvicorn.access - INFO - 127.0.0.1:57678 - "POST /img_generate HTTP/1.1" 200
+2025-11-04 16:04:54,332 - src.image_gen_app - INFO - Received request - Prompt: 'A whimsical, cartoon-style illustration of a playf...', Images: 1
+2025-11-04 16:05:14,400 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 20.07 seconds.
+2025-11-04 16:05:14,788 - uvicorn.access - INFO - 127.0.0.1:44930 - "POST /img_generate HTTP/1.1" 200
+2025-11-04 16:54:13,362 - src.image_gen_app - INFO - Received request - Prompt: 'A serene, minimalist park scene depicted in a clea...', Images: 1
+2025-11-04 16:54:33,654 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 20.29 seconds.
+2025-11-04 16:54:33,881 - uvicorn.access - INFO - 127.0.0.1:56192 - "POST /img_generate HTTP/1.1" 200
+2025-11-04 17:21:06,041 - root - INFO - Logging configured.
+2025-11-04 17:22:18,036 - src.image_gen_app - INFO - Image Gen Config loaded and validated successfully:
+2025-11-04 17:22:18,037 - src.image_gen_app - INFO - {"model_id":"Qwen/Qwen-Image-Edit-2509","lora_path":"Qwen-Image-Lightning/Qwen-Image-Edit-2509/Qwen-Image-Edit-2509-Lightning-8steps-V1.0-fp32.safetensors"}
+2025-11-04 17:22:18,041 - __main__ - INFO - Server config validated: Host=0.0.0.0, Port=8000
+2025-11-04 17:22:18,041 - __main__ - INFO - Starting Uvicorn server for Image Generation Service on 0.0.0.0:8000...
+2025-11-04 17:22:18,237 - uvicorn.error - INFO - Started server process [2759804]
+2025-11-04 17:22:18,237 - uvicorn.error - INFO - Waiting for application startup.
+2025-11-04 17:22:18,239 - src.image_gen_app - INFO - Application startup: Loading model...
+2025-11-04 17:22:18,239 - src.image_gen_app - INFO - CUDA available. Using device: cuda with dtype: torch.bfloat16
+2025-11-04 17:22:19,616 - src.image_gen_app - INFO - Loading base pipeline: Qwen/Qwen-Image-Edit-2509...
+2025-11-04 17:22:21,531 - src.image_gen_app - INFO - Loading LoRA weights: Qwen-Image-Lightning/Qwen-Image-Edit-2509/Qwen-Image-Edit-2509-Lightning-8steps-V1.0-fp32.safetensors...
+2025-11-04 17:23:22,485 - src.image_gen_app - INFO - Moving pipeline to device: cuda...
+2025-11-04 17:26:14,783 - src.image_gen_app - INFO - Image generation pipeline loaded successfully.
+2025-11-04 17:26:14,792 - uvicorn.error - INFO - Application startup complete.
+2025-11-04 17:26:14,794 - uvicorn.error - INFO - Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+2025-11-04 17:28:30,166 - src.image_gen_app - INFO - Received request - Prompt: 'A serene park rendered in a clean, minimalist styl...', Images: 1
+2025-11-04 17:28:52,853 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 22.69 seconds.
+2025-11-04 17:28:52,900 - uvicorn.access - INFO - 127.0.0.1:39860 - "POST /img_generate HTTP/1.1" 200
+2025-11-04 17:31:18,899 - src.image_gen_app - INFO - Received request - Prompt: 'Make the bench smaller, preserving its aspect rati...', Images: 1
+2025-11-04 17:31:38,535 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 19.64 seconds.
+2025-11-04 17:31:38,649 - uvicorn.access - INFO - 127.0.0.1:58952 - "POST /img_generate HTTP/1.1" 200

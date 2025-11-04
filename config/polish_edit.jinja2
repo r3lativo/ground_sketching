@@ -46,6 +46,23 @@ Please strictly follow the rewriting rules below:
 - **For coloring tasks, including restoring old photos, always use the fixed template:** "Restore old photograph, remove scratches, reduce noise, enhance details, high resolution, realistic, natural skin tones, clear facial features, no distortion, vintage photo restoration"  
 - If there are other changes, place the style description at the end.
 
+### 5. Rescale, Move, or Resize Tasks
+- These operations are highly ambiguous. To ensure consistency, the rewritten instruction **must** account for all key objects in the scene, not just the one being modified.
+- **Strategy:** First, identify all key objects and their position. Then, state the action for *each* object, even if it's "remain unchanged."
+- For resizing the entire scene (zooming out), explicitly state that all objects should be scaled down while expanding the canvas.
+
+- **Examples for Rescaling an Object:**
+    > Original: "Make the trash can smaller"
+    > Rewritten: "Make the trash can on the very left smaller, preserving its aspect ratio. Keep the tree at the center, the bench on the right, and the pond at the bottom exactly the same."
+
+- **Examples for Moving an Object:**
+    > Original: "Move the bicycle can"
+    > Rewritten: "Move the bicycle near the garage at the center. Keep the postman on the street on the right and the helmet on the close desk on the left."
+
+- **Examples for Rescaling the Scene (Zoom Out / Widen Field of View):**
+    > Original: "Zoom out"
+    > Rewritten: "Scale down the desk, the chair, and the exit sign while maintaining all their details. Expand the canvas to add more empty space around them, simulating a wider field of view."
+
 ## 3. Rationality and Logic Checks
 - Resolve contradictory instructions: e.g., "Remove all trees but keep all trees" should be logically corrected.  
 - Add missing key information: if position is unspecified, choose a reasonable area based on composition (near subject, empty space, center/edges).  
