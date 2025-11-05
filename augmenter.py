@@ -178,7 +178,7 @@ async def main():
     parser.add_argument(
         "--render_output", 
         type=str, 
-        default="output/conversation_images",
+        default=None,
         help="Directory to save rendered images. Used if --render_prompts is set."
     )
     
@@ -189,6 +189,12 @@ async def main():
         new_filename = f"{input_path.stem}_aug{input_path.suffix}"
         args.output = str(input_path.with_name(new_filename))
         print(f"No --output provided. Defaulting to: {args.output}")
+
+    if args.render_output is None:
+        input_path = Path(args.file)
+        new_directory = f"output/{input_path.stem}_aug"
+        args.render_output = new_directory
+        print(f"No --render_output provided. Defaulting to: {args.render_output}")
 
     if not args.create_prompts and not args.render_prompts:
         print("Neither --create_prompts nor --render_prompts was set. Doing nothing.")

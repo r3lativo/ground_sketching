@@ -114,3 +114,14 @@ python test_pipeline.py
       * Call the image generation API with the (potentially enhanced) prompt.
       * Save the resulting image to the `output/` directory.
   * Check `logs/test_pipeline.log` for details of the run.
+
+
+There is also an interactive editor to create and edit images on the spot:
+```python
+python3 interactive_edit.py -i IMAGE_PATH_TO_START_FROM -d --no-cleanup # -d bypasses the polisher, --no-cleanup skips the artifact cleaner
+```
+
+Finally, there is an augmenter, that takes a
+```python
+python3 augmenter.py --file "data/mini.csv" --user "Debra" --create_prompts --render_prompts
+```

@@ -10,7 +10,7 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 import torch
 from PIL import Image
 
-from src.utils import setup_logging, load_config, pil_to_base64
+from src.utils import setup_logging, load_config, pil_to_base64, json_parser
 
 torch.backends.cudnn.deterministic = True
 torch.backends.cudnn.benchmark = False
@@ -104,9 +104,6 @@ async def call_image_gen(prompt: str, base64_images: Optional[List[str]], timeou
 
 async def call_text_prompt_polisher(
     initial_prompt: str,
-    #magic_prompt: str,
-    #max_tokens: int,
-    #temperature: float,
     timeout: int = 120
 ) -> Optional[str]:
     """
@@ -136,12 +133,9 @@ async def call_text_prompt_polisher(
 
             # Navigate the OpenAI API response structure
             if result.get("text") and len(result["text"]) > 0:
-                # message = result.get("text")
-                # polished_prompt = message.get("content")
                 polished_prompt = result.get("text")
                 if polished_prompt and isinstance(polished_prompt, str):
                     final_prompt = polished_prompt.strip().replace("\n", " ")
-                    # final_prompt = polished_prompt + magic_prompt
                     logger.info(f"Text Prompt enhancement successful. New prompt: '{final_prompt[:100]}...'")
                     return final_prompt
                 else:
@@ -208,24 +202,11 @@ async def call_edit_prompt_polisher(
 
             # Navigate the OpenAI API response structure
             if result.get("text") and len(result["text"]) > 0:
-                # message = result.get("text")
-                # enhanced_prompt_raw = message.get("content")
                 enhanced_prompt_raw = result.get("text")
                 
-                # --- Mimic JSON parsing attempt ---
                 if enhanced_prompt_raw and isinstance(enhanced_prompt_raw, str):
                     polished_text = None
-                    try:
-                        cleaned_result = enhanced_prompt_raw.strip().replace('```json','').replace('```','')
-                        result_json = json.loads(cleaned_result)
-                        if isinstance(result_json, dict) and 'Rewritten' in result_json:
-                            polished_text = result_json['Rewritten']
-                        else:
-                            logger.warning("Polisher response parsed as JSON but missing 'Rewritten' key. Using raw response.")
-                            polished_text = enhanced_prompt_raw
-                    except json.JSONDecodeError:
-                        logger.debug("Polisher response is not JSON, assuming direct rewritten prompt.")
-                        polished_text = enhanced_prompt_raw
+                    polished_text = json_parser(enhanced_prompt_raw, 'Rewritten')
 
                     if polished_text:
                         polished_text = polished_text.strip().replace("\n", " ")
@@ -237,7 +218,6 @@ async def call_edit_prompt_polisher(
                 else:
                     logger.warning("Prompt Polisher (Edit) returned empty content.")
                     return None
-                # --- End JSON parsing ---
             else:
                 logger.error(f"Prompt Polisher (Edit) API returned unexpected response format: {result}")
                 return None
@@ -355,18 +335,7 @@ async def call_contextual_edit_prompt_polisher(
                 
                 if enhanced_prompt_raw and isinstance(enhanced_prompt_raw, str):
                     polished_text = None
-                    try:
-                        # The edit template is designed to return JSON
-                        cleaned_result = enhanced_prompt_raw.strip().replace('```json','').replace('```','')
-                        result_json = json.loads(cleaned_result)
-                        if isinstance(result_json, dict) and 'Rewritten' in result_json:
-                            polished_text = result_json['Rewritten']
-                        else:
-                            logger.warning("Contextual (Edit) Polisher response parsed but missing 'Rewritten' key. Using raw.")
-                            polished_text = enhanced_prompt_raw
-                    except json.JSONDecodeError:
-                        logger.debug("Contextual (Edit) Polisher response was not JSON. Using raw text.")
-                        polished_text = enhanced_prompt_raw
+                    polished_text = json_parser(enhanced_prompt_raw, 'Rewritten')
 
                     if polished_text:
                         polished_text = polished_text.strip().replace("\n", " ")
@@ -391,34 +360,3 @@ async def call_contextual_edit_prompt_polisher(
     except Exception as e:
         logger.error(f"An unexpected error occurred during contextual (edit) call: {e}", exc_info=True)
         return None
-
-
-# --- Example Usage (Optional, for testing this file directly) ---
-async def _test_clients():
-    # Placeholder: Replace with actual base64 image data for testing
-    test_image_b64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=" # Example: 1x1 black pixel PNG
-
-    print("\n--- Testing Image Gen Client ---")
-    gen_result = await call_image_gen("make it blue", [test_image_b64])
-    if gen_result:
-        print(f"Image Gen returned base64 string starting with: {gen_result[:60]}...")
-    else:
-        print("Image Gen call failed.")
-
-    print("\n--- Testing Edit Prompt Polisher Client (via HTTPX) ---")
-    edit_enhance_result = await call_edit_prompt_polisher("add hat", [test_image_b64])
-    if edit_enhance_result: print(f"Edit Polisher returned: {edit_enhance_result}")
-    else: print("Edit Prompt Polisher call failed.")
-
-    print("\n--- Testing Text Prompt Polisher Client (via HTTPX) ---")
-    text_enhance_result = await call_text_prompt_polisher("a cat sitting")
-    if text_enhance_result: print(f"Text Polisher returned: {text_enhance_result}")
-    else: print("Text Prompt Polisher call failed.")
-
-if __name__ == "__main__":
-    import asyncio
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    print("Running API client tests...")
-    # Make sure servers are running before uncommenting:
-    # asyncio.run(_test_clients())
-    print("Testing setup complete (tests commented out). Remember to start servers first.")

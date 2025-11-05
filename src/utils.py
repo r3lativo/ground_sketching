@@ -11,6 +11,7 @@ import os
 from datetime import datetime
 from PIL import Image, ImageFilter
 import socket
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -220,3 +221,16 @@ def check_server(host: str, port: int, timeout: int = 3) -> bool:
         # Catches timeout, connection refused, etc.
         print(f" [FAILED] ({e})")
         return False
+
+def json_parser(input_text, key_term):
+    try:
+        cleaned_text = input_text.strip().replace('```json','').replace('```','')
+        result_json = json.loads(cleaned_text)
+        if isinstance(result_json, dict) and key_term in result_json:
+            return result_json[key_term]
+        else:
+            logger.warning(f"Text parsed as JSON but missing '{key_term}' key. Using raw text.")
+            return input_text
+    except json.JSONDecodeError:
+        logger.debug("Text is not JSON. Using raw text.")
+        return input_text

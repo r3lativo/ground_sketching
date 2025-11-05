@@ -391,3 +391,69 @@ AttributeError: 'NoneType' object has no attribute 'size'
 2025-11-05 16:23:13,529 - src.image_gen_app - INFO - Received request - Prompt: 'A clean, minimalist, iconic scene. A black outline...', Images: 1
 2025-11-05 16:23:33,587 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 20.06 seconds.
 2025-11-05 16:23:33,623 - uvicorn.access - INFO - 127.0.0.1:60570 - "POST /img_generate HTTP/1.1" 200
+2025-11-05 16:46:05,909 - src.image_gen_app - INFO - Received request - Prompt: 'A clean, minimalist, iconic scene. A black outline...', Images: 1
+2025-11-05 16:46:26,275 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 20.37 seconds.
+2025-11-05 16:46:26,312 - uvicorn.access - INFO - 127.0.0.1:57596 - "POST /img_generate HTTP/1.1" 200
+2025-11-05 16:46:26,506 - src.image_gen_app - INFO - Received request - Prompt: 'Add a black outline of a 'VENDING MACHINE' icon ne...', Images: 1
+2025-11-05 16:46:46,388 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 19.88 seconds.
+2025-11-05 16:46:46,455 - uvicorn.access - INFO - 127.0.0.1:34418 - "POST /img_generate HTTP/1.1" 200
+2025-11-05 16:46:46,643 - src.image_gen_app - INFO - Received request - Prompt: 'Add a black outline of a 'TOY SECTION' icon next t...', Images: 1
+2025-11-05 16:47:06,511 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 19.87 seconds.
+2025-11-05 16:47:06,588 - uvicorn.access - INFO - 127.0.0.1:40674 - "POST /img_generate HTTP/1.1" 200
+2025-11-05 16:47:06,779 - src.image_gen_app - INFO - Received request - Prompt: 'Make the 'VENDING MACHINE' icon more prominent by ...', Images: 1
+2025-11-05 16:47:26,641 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 19.86 seconds.
+2025-11-05 16:47:26,709 - uvicorn.access - INFO - 127.0.0.1:51220 - "POST /img_generate HTTP/1.1" 200
+2025-11-05 16:47:26,908 - src.image_gen_app - INFO - Received request - Prompt: 'Add a blue outline of a 'QUEUE BARRIER' icon with ...', Images: 1
+2025-11-05 16:47:46,832 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 19.92 seconds.
+2025-11-05 16:47:46,922 - uvicorn.access - INFO - 127.0.0.1:34998 - "POST /img_generate HTTP/1.1" 200
+2025-11-05 16:47:47,155 - src.image_gen_app - INFO - Received request - Prompt: 'Add a black outline of a 'CUSTOMER SERVICE DESK' i...', Images: 1
+2025-11-05 16:48:07,093 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 19.94 seconds.
+2025-11-05 16:48:07,187 - uvicorn.access - INFO - 127.0.0.1:51698 - "POST /img_generate HTTP/1.1" 200
+2025-11-05 16:48:07,457 - src.image_gen_app - INFO - Received request - Prompt: 'A clean, minimalist, iconic scene. A solid white b...', Images: 1
+2025-11-05 16:48:27,383 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 19.93 seconds.
+2025-11-05 16:48:27,429 - uvicorn.access - INFO - 127.0.0.1:59454 - "POST /img_generate HTTP/1.1" 200
+2025-11-05 16:48:27,621 - src.image_gen_app - INFO - Received request - Prompt: 'Keep the scene blank as the Target Utterance 'Got ...', Images: 1
+2025-11-05 16:48:47,511 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 19.89 seconds.
+2025-11-05 16:48:47,626 - uvicorn.access - INFO - 127.0.0.1:48448 - "POST /img_generate HTTP/1.1" 200
+2025-11-05 16:48:47,851 - src.image_gen_app - INFO - Received request - Prompt: 'Keep the scene blank as the Target Utterance 'Okay...', Images: 1
+2025-11-05 16:49:07,728 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 19.88 seconds.
+2025-11-05 16:49:07,819 - uvicorn.access - INFO - 127.0.0.1:59584 - "POST /img_generate HTTP/1.1" 200
+2025-11-05 16:49:08,040 - src.image_gen_app - INFO - Received request - Prompt: 'Add a blue outline of a 'DISABLED ACCESS RAMP' ico...', Images: 1
+2025-11-05 16:49:27,931 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 19.89 seconds.
+2025-11-05 16:49:28,011 - uvicorn.access - INFO - 127.0.0.1:40526 - "POST /img_generate HTTP/1.1" 200
+2025-11-05 17:14:58,803 - src.image_gen_app - INFO - Received request - Prompt: 'A clean, minimalist, iconic scene. In a multi-leve...', Images: 1
+2025-11-05 17:15:18,678 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 19.87 seconds.
+2025-11-05 17:15:18,743 - uvicorn.access - INFO - 127.0.0.1:34028 - "POST /img_generate HTTP/1.1" 200
+2025-11-05 17:15:19,002 - src.image_gen_app - INFO - Received request - Prompt: 'Add a vending machine (near the center, in black o...', Images: 1
+2025-11-05 17:15:38,868 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 19.87 seconds.
+2025-11-05 17:15:38,990 - uvicorn.access - INFO - 127.0.0.1:33354 - "POST /img_generate HTTP/1.1" 200
+2025-11-05 17:15:39,307 - src.image_gen_app - INFO - Received request - Prompt: 'Add a toy section (inside the vending machine, in ...', Images: 1
+2025-11-05 17:15:59,167 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 19.86 seconds.
+2025-11-05 17:15:59,291 - uvicorn.access - INFO - 127.0.0.1:49716 - "POST /img_generate HTTP/1.1" 200
+2025-11-05 17:15:59,594 - src.image_gen_app - INFO - Received request - Prompt: 'Make the vending machine (near the center) a promi...', Images: 1
+2025-11-05 17:16:19,448 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 19.85 seconds.
+2025-11-05 17:16:19,576 - uvicorn.access - INFO - 127.0.0.1:42230 - "POST /img_generate HTTP/1.1" 200
+2025-11-05 17:16:19,858 - src.image_gen_app - INFO - Received request - Prompt: 'Add a queue barrier (to the right of the vending m...', Images: 1
+2025-11-05 17:16:39,733 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 19.87 seconds.
+2025-11-05 17:16:39,857 - uvicorn.access - INFO - 127.0.0.1:44682 - "POST /img_generate HTTP/1.1" 200
+2025-11-05 17:16:40,133 - src.image_gen_app - INFO - Received request - Prompt: 'Ensure the customer service desk (in the center) i...', Images: 1
+2025-11-05 17:17:00,062 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 19.93 seconds.
+2025-11-05 17:17:00,135 - uvicorn.access - INFO - 127.0.0.1:54046 - "POST /img_generate HTTP/1.1" 200
+2025-11-05 17:17:00,403 - src.image_gen_app - INFO - Received request - Prompt: 'A clean, minimalist, iconic scene. In a blank spac...', Images: 1
+2025-11-05 17:17:20,260 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 19.86 seconds.
+2025-11-05 17:17:20,326 - uvicorn.access - INFO - 127.0.0.1:57366 - "POST /img_generate HTTP/1.1" 200
+2025-11-05 17:17:20,550 - src.image_gen_app - INFO - Received request - Prompt: 'Keep the existing scene unchanged....', Images: 1
+2025-11-05 17:17:40,410 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 19.86 seconds.
+2025-11-05 17:17:40,512 - uvicorn.access - INFO - 127.0.0.1:53776 - "POST /img_generate HTTP/1.1" 200
+2025-11-05 17:17:40,747 - src.image_gen_app - INFO - Received request - Prompt: 'Keep the existing scene unchanged....', Images: 1
+2025-11-05 17:18:00,613 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 19.87 seconds.
+2025-11-05 17:18:00,715 - uvicorn.access - INFO - 127.0.0.1:33992 - "POST /img_generate HTTP/1.1" 200
+2025-11-05 17:18:00,979 - src.image_gen_app - INFO - Received request - Prompt: 'Add a 'disabled access ramp' (at the bottom right ...', Images: 1
+2025-11-05 17:18:20,844 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 19.87 seconds.
+2025-11-05 17:18:20,929 - uvicorn.access - INFO - 127.0.0.1:52172 - "POST /img_generate HTTP/1.1" 200
+2025-11-05 17:38:37,653 - src.image_gen_app - INFO - Received request - Prompt: 'A clean, minimalist, iconic scene. In a multi-leve...', Images: 1
+2025-11-05 17:38:57,762 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 20.11 seconds.
+2025-11-05 17:38:57,825 - uvicorn.access - INFO - 127.0.0.1:58464 - "POST /img_generate HTTP/1.1" 200
+2025-11-05 17:38:58,066 - src.image_gen_app - INFO - Received request - Prompt: 'Add a vending machine (near the center, in black o...', Images: 1
+2025-11-05 17:39:17,948 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 19.88 seconds.
+2025-11-05 17:39:18,069 - uvicorn.access - INFO - 127.0.0.1:52412 - "POST /img_generate HTTP/1.1" 200
