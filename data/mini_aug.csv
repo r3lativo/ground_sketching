@@ -1,0 +1,21 @@
+chunk_id,position,character,text,prompt_to_render
+001,C3,Debra,"Hi Chris, I'm in the leisure and services floor of this multi-level department store.","A clean, minimalist, iconic scene. A black outline of a ""DEPARTMENT STORE"" sign with the words ""LEISURE AND SERVICES FLOOR"" written below it in quotation marks. To its right, a black outline of an ""ESCALATOR"" icon, indicating the access point to the floor. Solid white background, no shadows."
+001,E5,Chris,"Hey Debra. I'm on the apparel floor. The place is pretty spread out, huh?",
+001,C3,Debra,Definitely. I see a vending machine near the children's play zone here.,"Add a black outline of a 'VENDING MACHINE' icon near the 'ESCALATOR' icon, signifying its proximity to the children's play zone. Keep the 'DEPARTMENT STORE' sign and the 'ESCALATOR' icon unchanged."
+001,E5,Chris,"Uh-huh, there's a door just ahead of me. It's a bit hard to see at first.",
+001,C3,Debra,"Got it. The vending machine has a toy section, by the way.","Add a black outline of a 'TOY SECTION' icon next to the 'VENDING MACHINE' icon to indicate its presence. Keep the 'VENDING MACHINE' icon, 'DEPARTMENT STORE' sign, and 'ESCALATOR' icon unchanged."
+001,E5,Chris,Nice. I also noticed a security camera near the fitting rooms.,
+001,C3,Debra,"Okay, the vending machine is definitely a highlight here.","Make the 'VENDING MACHINE' icon more prominent by adding a slightly thicker black outline. Keep the 'TOY SECTION' icon next to it, the 'DEPARTMENT STORE' sign, and the 'ESCALATOR' icon unchanged."
+001,E5,Chris,"Hmm, there's a lighting fixture embedded in the drop ceiling above the main aisle.",
+001,C3,Debra,Right. I'm also near a queue barrier with a brass-post leading to the checkout lane.,"Add a blue outline of a 'QUEUE BARRIER' icon with a 'BRASS-POST' detail near the 'VENDING MACHINE' icon, indicating its proximity to the checkout lane. Keep the 'VENDING MACHINE' icon, 'TOY SECTION' icon, 'DEPARTMENT STORE' sign, and 'ESCALATOR' icon unchanged."
+001,E5,Chris,I see a seating bench by the escalators. I'm going to head towards a pram friendly route now.,
+001,C3,Debra,"That makes sense. The customer service desk here is u-shaped, enclosing a staff workstation.","Add a black outline of a 'CUSTOMER SERVICE DESK' icon in a U-shape enclosing a 'STAFF WORKSTATION' icon. Position it near the existing 'VENDING MACHINE' icon. Keep all other existing objects ('DEPARTMENT STORE' sign, 'ESCALATOR' icon, 'VENDING MACHINE' icon, 'TOY SECTION' icon, and 'QUEUE BARRIER' icon with 'BRASS-POST') unchanged."
+001,E5,Chris,"Alright, I'll check the pram route and let you know if we can meet up there.",
+002,F5,Chris,I just arrived at the home and tech floor.,
+002,C3,Debra,Uh-huh.,"A clean, minimalist, iconic scene. A solid white background. No objects are depicted, as the Target Utterance ""Uh-huh."" does not provide any explicit information about objects or actions. The scene remains blank, adhering to the requirements of minimalism and clarity."
+002,F5,Chris,There's an ATM with a small screen beside the security monitor here.,
+002,C3,Debra,Got it.,Keep the scene blank as the Target Utterance 'Got it.' does not introduce any new objects or changes. The scene remains unchanged.
+002,F5,Chris,"Next to it, there's a circular promotional stand around the central pillar.",
+002,C3,Debra,Okay.,Keep the scene blank as the Target Utterance 'Okay.' does not introduce any new objects or changes. The scene remains unchanged.
+002,F5,Chris,And there's a three-door storage cabinet between the two storage racks.,
+002,C3,Debra,I'm heading to the disabled access ramp now.,"Add a blue outline of a 'DISABLED ACCESS RAMP' icon in the center of the scene, indicating its unclear position. Keep the scene otherwise unchanged."

@@ -31,8 +31,6 @@ from src.utils import (
 # --- Configuration ---
 server_config = load_config(config_path='config/server_config.yaml')
 interactive_config = load_config(config_path='config/interactive_config.yaml')
-dummy_img_height = interactive_config.get('dummy_img_height')
-dummy_img_size = (dummy_img_height, dummy_img_height)
 
 # --- Setup ---
 os.makedirs(interactive_config.get('output_dir'), exist_ok=True)
@@ -76,17 +74,13 @@ def load_initial_state(initial_image_path: Optional[str]) -> Tuple[Optional[Imag
 async def handle_text_to_image_step(direct: bool) -> Tuple[Optional[str], Optional[list], Optional[str], bool]:
     """
     Handles the T2I step: gets prompt, creates dummy image, and polishes prompt.
-    Returns: (step_start_time, final_prompt, input_images_b64, initial_prompt, user_quit)
+    Returns: (step_start_time, final_prompt, initial_prompt, user_quit)
     """
     initial_prompt = input("Enter the initial text prompt to generate an image: ")
     if initial_prompt.lower() == 'quit':
-        return time.time(), None, None, None, True
+        return time.time(), None, None, True
     
     step_start_time = time.time()
-
-    print("Creating dummy blank image for initial generation.")
-    dummy_image_pil = Image.new('RGB', dummy_img_size, color='white')
-    input_images_b64 = [pil_to_base64(dummy_image_pil)]
 
     final_prompt = initial_prompt
     if not direct:
@@ -100,7 +94,7 @@ async def handle_text_to_image_step(direct: bool) -> Tuple[Optional[str], Option
         print("Text enhancement failed. Using initial prompt.")
         final_prompt = initial_prompt
 
-    return step_start_time, final_prompt, input_images_b64, initial_prompt, False
+    return step_start_time, final_prompt, initial_prompt, False
 
 
 async def handle_text_and_image_to_image_step(direct: bool, current_image_pil: Image.Image) -> Tuple[Optional[str], Optional[list], Optional[str], bool]:
@@ -205,10 +199,13 @@ async def main_interactive_loop(initial_image_path: Optional[str] = None, direct
         status = "fail"
 
         try:
+            # --- 0. Assume no image  ---
+            input_images_b64 = None
+            
             # --- 1. Get Prompt and Inputs ---
             if step_count == 0:
                 # Text-to-Image block
-                step_start_time, final_prompt, input_images_b64, initial_prompt, user_quit = await handle_text_to_image_step(direct)
+                step_start_time, final_prompt, initial_prompt, user_quit = await handle_text_to_image_step(direct)
             else:
                 # Image-to-Image Edit block
                 if current_image_pil is None:

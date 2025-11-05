@@ -2,7 +2,7 @@
 
 image_gen_service:
   host: "0.0.0.0"
-  port: 8000
+  port: 8002
   model_id: "Qwen/Qwen-Image-Edit-2509"
   lora_path: "Qwen-Image-Lightning/Qwen-Image-Edit-2509/Qwen-Image-Edit-2509-Lightning-8steps-V1.0-fp32.safetensors"
 
@@ -31,3 +31,5 @@ prompt_polisher_client:
   jinja_env: 'config'  # The fodler where jinja files are
   polish_template: 'polish.jinja2'
   edit_template: 'polish_edit.jinja2'
+  contextual_polish_template: 'contextual_polish.jinja2'
+  contextual_edit_template: 'contextual_polish_edit.jinja2'
