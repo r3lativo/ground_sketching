@@ -28,8 +28,19 @@ prompt_polisher_client:
   top_p: 0.9
   temperature: 0.7
   max_tokens: 5000
+
+  # These are loaded in src.api_clients.py
   jinja_env: 'templates'
-  polish_template: 'polish.jinja2'
-  edit_template: 'polish_edit.jinja2'
-  contextual_polish_template: 'contextual_polish.jinja2'
-  contextual_edit_template: 'contextual_polish_edit.jinja2'
+
+  # Original from https://github.com/QwenLM/Qwen-Image/blob/main/src/examples/tools/prompt_utils.py
+  polish_t: 'polish.jinja2'
+  edit_t: 'polish_edit.jinja2'
+
+  # NOT USED AT THE MOMENT
+  # Modified with style-as-semantics and move/resize commands
+  mod_polish_t: 'mod_polish.jinja2'
+  mod_polish_edit_t: 'mod_polish_edit.jinja2'
+
+  # For chunk + utterance to prompt for img generation
+  contextual_polish_t: 'contextual_polish.jinja2'
+  contextual_edit_t: 'contextual_polish_edit.jinja2'

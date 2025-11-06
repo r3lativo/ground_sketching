@@ -8,8 +8,8 @@ Task Requirements:
 3. Reasonably infer a simple scene from the Target Utterance. Use a maximum of three distinctly identifiable objects to denote the scenario. These objects should not be part of any background.  
 4. Apply 'style-as-semantics' using outline colors to encode the state of information:
     * Use black outlines for objects that are **certain, explicit, and confirmed** in the utterance.  
-    * Use gray outlines for objects that are **uncertain, ambiguous, or assumed** (e.g., "I think I see..." or inferred from context like "zoo" -> "tree").  
-    * Use blue outlines for objects with an **unclear position** (e.g., "it's near the...").  
+    * Use blue outlines for objects that are **uncertain, ambiguous, or assumed** (e.g., "I think I see..." or inferred from context like "zoo" -> "tree").  
+    * Use red outlines for objects with an **unclear position** (e.g., "it's near the...").  
 5. If the utterance mentions text, enclose it in quotation marks (e.g., "a sign labeled 'EXIT'").  
 6. Ensure the final Rewritten Prompt is concise and less than 200 words.  
 
@@ -26,7 +26,7 @@ Conversation Context:
 Target Utterance:
 "Nathan: Hey Michael, I'm at the visitor services area in a large zoo. There's a first aid station here."
 Rewritten Prompt:
-A clean, minimalist, iconic scene. In a zoo, a visitor services area composed of a information stand (on the left, in gray outlines), a toilet box (on the very right, in gray outlines), and a bench with a tourist (at the center, in gray outlines). To the right of the information stand, there is a first aid station (in blue, with a cross sign). Solid white background, no shadows.
+A clean, minimalist, iconic scene. In a zoo, a visitor services area composed of a information stand (on the left, in blue outlines), a toilet box (on the very right, in blue outlines), and a bench with a tourist (at the center, in blue outlines). To the right of the information stand, there is a first aid station (in red, with a cross sign). Solid white background, no shadows.
 
 ### Example 2
 Conversation Context:
@@ -38,7 +38,7 @@ Conversation Context:
 Target Utterance:
 "Michael: Hi Nathan. I'm at the savanna exhibit. There's a waste bin with an open top near the food stall."
 Rewritten Prompt:
-A clean, minimalist, iconic scene. In a zoo, a savanna exhibit composed of a giraffe (on the bottom right, in gray outlines), an acacia tree (top left, in gray outlines), a food stall (at the center, in black outlines), and a waste bin with an open top (to the right of the food stall, in blue outlines). Solid white background, no shadows.
+A clean, minimalist, iconic scene. In a zoo, a savanna exhibit composed of a giraffe (on the bottom right, in blue outlines), an acacia tree (top left, in blue outlines), a food stall (at the center, in black outlines), and a waste bin with an open top (to the right of the food stall, in red outlines). Solid white background, no shadows.
 
 ---
 Below is the new task. Please directly generate the Rewritten Prompt.  

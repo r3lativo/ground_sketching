@@ -202,7 +202,7 @@ def clean_image_artifacts(input_image, white_threshold=180, black_threshold=50):
 
 def check_server(host: str, port: int, timeout: int = 3) -> bool:
     """
-    Synchronously checks if a server is reachable at a given host and port.
+    Checks if a server is reachable at a given host and port.
     """
     check_host = "127.0.0.1" if host == "0.0.0.0" else host
     
@@ -234,3 +234,38 @@ def json_parser(input_text, key_term):
     except json.JSONDecodeError:
         logger.debug("Text is not JSON. Using raw text.")
         return input_text
+
+def add_padding_to_image(img_pil, scale_factor=0.8, fill_color="white"):
+    """
+    Scales down an image and adds padding to maintain the original size.
+    """
+    if not (0 < scale_factor <= 1.0):
+        raise ValueError("Scale factor must be between 0 and 1.")
+
+    try:
+        # 1. Take the sizes
+        original_width, original_height = img_pil.size
+
+        # 2. Calculate new dimensions
+        new_width = int(original_width * scale_factor)
+        new_height = int(original_height * scale_factor)
+
+        # 3. Resize the image
+        # Use Image.LANCZOS (or Image.ANTIALIAS) for high-quality downscaling
+        resized_image = original_image.resize((new_width, new_height), Image.LANCZOS)
+
+        # 4. & 5. Create and fill the new canvas
+        final_image = Image.new("RGB", (original_width, original_height), fill_color)
+
+        # 6. Calculate paste position
+        paste_x = (original_width - new_width) // 2
+        paste_y = (original_height - new_height) // 2
+
+        # 7. Paste the resized image
+        final_image.paste(resized_image, (paste_x, paste_y))
+
+        # Return the padded image
+        return final_image
+
+    except Exception as e:
+        print(f"An error occurred: {e}")

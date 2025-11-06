@@ -312,11 +312,12 @@ if __name__ == "__main__":
         server_config["image_gen_service"]["port"]
     )
     
-    # Check Prompt Polisher Server
-    polisher_ok = check_server(
-        server_config["prompt_polisher_service"]["host"],
-        server_config["prompt_polisher_service"]["port"]
-    )
+    # Check Prompt Polisher Server if it is needed
+    if not args.direct:
+        polisher_ok = check_server(
+            server_config["prompt_polisher_service"]["host"],
+            server_config["prompt_polisher_service"]["port"]
+        )
 
     if not (img_gen_ok and polisher_ok):
         print("\n[Error] One or more required services are down. Exiting.")

@@ -21,8 +21,8 @@ Please strictly follow the rewriting rules below:
 - If the Target Utterance replaces something, use "Replace 'Y' with 'X'".  
 - Apply 'style-as-semantics' for new objects:
     * black outlines for **certain** objects.  
-    * gray outlines for **assumed** objects.  
-    * blue outlines for objects with **unclear position**.  
+    * blue outlines for **assumed** objects.  
+    * red outlines for objects with **unclear position**.  
 - Crucially: Explicitly state which objects should "remain unchanged."  
 
 ### 2. Rescale, Move, or Resize Tasks
@@ -50,7 +50,7 @@ Target Utterance:
 "Nathan: Yeah, got it. The map board is directly on the brick wall here."  
 Previous Prompts:
 [
-"A clean, minimalist, iconic scene. In a zoo, a visitor services area composed of a information stand (on the left, in gray outlines), a toilet box (on the very right, in gray outlines), and a bench with a tourist (at the center, in gray outlines). To the right of the information stand, there is a first aid station (in blue, with a cross sign). Solid white background, no shadows."
+"A clean, minimalist, iconic scene. In a zoo, a visitor services area composed of a information stand (on the left, in blue outlines), a toilet box (on the very right, in blue outlines), and a bench with a tourist (at the center, in blue outlines). To the right of the information stand, there is a first aid station (in red, with a cross sign). Solid white background, no shadows."
 ]
 Rewritten:
 {
@@ -68,12 +68,12 @@ Target Utterance:
 "Nathan: I think there's a bin near the map."  
 Previous Prompts:
 [
-"A clean, minimalist, iconic scene. In a zoo, a visitor services area composed of a information stand (on the left, in gray outlines), a toilet box (on the very right, in gray outlines), and a bench with a tourist (at the center, in gray outlines). To the right of the information stand, there is a first aid station (in blue, with a cross sign). Solid white background, no shadows.",
+"A clean, minimalist, iconic scene. In a zoo, a visitor services area composed of a information stand (on the left, in blue outlines), a toilet box (on the very right, in blue outlines), and a bench with a tourist (at the center, in blue outlines). To the right of the information stand, there is a first aid station (in red outline, with a cross sign). Solid white background, no shadows.",
 "Add a brick wall (top right of the bench, black outlines) with a map board of the zoo. Keep the information stand, the toilet box, the bench and the first aid station unchanged."
 ]
 Rewritten:
 {
-    "Rewritten": "Add a bin (left of the map board, blue outlines). Keep the information stand, the toilet box, the bench, the first aid station, and the brick wall with a map unchanged."
+    "Rewritten": "Add a bin (left of the map board, red outlines). Keep the information stand, the toilet box, the bench, the first aid station, and the brick wall with a map unchanged."
 }
 
 ---

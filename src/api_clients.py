@@ -35,11 +35,11 @@ try:
         loader=FileSystemLoader(config['prompt_polisher_client']['jinja_env']),
         autoescape=select_autoescape(['html', 'xml'])
     )
-    polish_template = env.get_template(config['prompt_polisher_client']['polish_template'])
-    edit_template = env.get_template(config['prompt_polisher_client']['edit_template'])
+    polish_template = env.get_template(config['prompt_polisher_client']['polish_t'])
+    edit_template = env.get_template(config['prompt_polisher_client']['edit_t'])
 
-    contextual_polish_template = env.get_template(config['prompt_polisher_client']['contextual_polish_template'])
-    contextual_edit_template = env.get_template(config['prompt_polisher_client']['contextual_edit_template'])
+    contextual_polish_template = env.get_template(config['prompt_polisher_client']['contextual_polish_t'])
+    contextual_edit_template = env.get_template(config['prompt_polisher_client']['contextual_edit_t'])
     
     # Render templates
     polish_system_prompt = polish_template.render()
