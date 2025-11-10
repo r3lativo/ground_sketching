@@ -8,12 +8,51 @@ from pathlib import Path
 from PIL import Image
 import os
 
-from src.utils import pil_to_base64, base64_to_pil, clean_image_artifacts
+from src.utils import (
+    pil_to_base64,
+    base64_to_pil,
+    clean_image_artifacts,
+    check_server,
+    load_config
+)
 from src.api_clients import (
     call_contextual_prompt_polisher,
     call_contextual_edit_prompt_polisher,
     call_image_gen
 )
+
+def check_servers(args):
+
+    server_config = load_config(config_path='config/server_config.yaml')
+
+    # --- Check Prompt Polisher (Always required) ---
+    polisher_conf = server_config["prompt_polisher_service"]
+    polisher_ok = check_server(
+        polisher_conf["host"],
+        polisher_conf["port"]
+    )
+    
+    if not polisher_ok:
+        print(f"\n[Error] Prompt Polisher service at http://{polisher_conf['host']}:{polisher_conf['port']} is down.")
+        print("Exiting.")
+        sys.exit(1) # Exit immediately
+
+    # --- Check Image Gen (Conditionally required) ---
+    if args.render_output:
+        img_gen_conf = server_config["image_gen_service"]
+        img_gen_ok = check_server(
+            img_gen_conf["host"],
+            img_gen_conf["port"]
+        )
+
+        if not img_gen_ok:
+            print(f"\n[Error] Image Gen service at http://{img_gen_conf['host']}:{img_gen_conf['port']} is down.")
+            print("Exiting.")
+            sys.exit(1) # Exit immediately
+
+    # If we get here, all required services are up.
+    print("\nAll required services are running.")
+        
 
 async def create_prompts(df: pd.DataFrame, user_perspective: str) -> pd.DataFrame:
     """
@@ -183,6 +222,8 @@ async def main():
     )
     
     args = parser.parse_args()
+
+    check_servers(args)
 
     if args.output is None:
         input_path = Path(args.file)

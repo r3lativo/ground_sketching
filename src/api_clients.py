@@ -10,7 +10,7 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 import torch
 from PIL import Image
 
-from src.utils import setup_logging, load_config, pil_to_base64, json_parser
+from src.utils import setup_logging, load_config, pil_to_base64, json_parser, thinking_parser
 
 torch.backends.cudnn.deterministic = True
 torch.backends.cudnn.benchmark = False
@@ -132,17 +132,33 @@ async def call_text_prompt_polisher(
             result = response.json()
 
             # Navigate the OpenAI API response structure
-            if result.get("text") and len(result["text"]) > 0:
-                polished_prompt = result.get("text")
-                if polished_prompt and isinstance(polished_prompt, str):
-                    final_prompt = polished_prompt.strip().replace("\n", " ")
+            raw_text = result.get("text")
+            if raw_text and len(raw_text) > 0:
+                
+                # 1. Parse the raw text into thinking and answer
+                parsed_output = thinking_parser(raw_text)
+                thinking_part = parsed_output.get("thinking")
+                answer_part = parsed_output.get("answer")
+                
+                print(f"Thinking:\n{thinking_part}\nAnswer:{answer_part}")
+
+                # 2. Log the thinking part if it exists
+                if thinking_part:
+                    logger.info(f"Prompt Polisher (Text) thought: {thinking_part[:150]}...")
+
+                # 3. Check if the answer part is valid
+                if answer_part and isinstance(answer_part, str):
+                    
+                    # 4. Define the final_prompt based on the cleaned answer
+                    final_prompt = answer_part
+                    
                     logger.info(f"Text Prompt enhancement successful. New prompt: '{final_prompt[:100]}...'")
                     return final_prompt
                 else:
-                    logger.warning("Prompt Polisher (Text) returned empty content.")
+                    logger.warning("Prompt Polisher (Text) returned empty content after parsing.")
                     return None
             else:
-                logger.error(f"Prompt Polisher (Text) API returned unexpected response format: {result}")
+                logger.error(f"Prompt Polisher (Text) API returned empty or invalid text field: {result}")
                 return None
 
     except httpx.HTTPStatusError as e:
@@ -201,25 +217,34 @@ async def call_edit_prompt_polisher(
             result = response.json()
 
             # Navigate the OpenAI API response structure
-            if result.get("text") and len(result["text"]) > 0:
-                enhanced_prompt_raw = result.get("text")
+            raw_text = result.get("text")
+            if raw_text and len(raw_text) > 0:
                 
-                if enhanced_prompt_raw and isinstance(enhanced_prompt_raw, str):
-                    polished_text = None
-                    polished_text = json_parser(enhanced_prompt_raw, 'Rewritten')
+                # 1. Parse the raw text into thinking and answer
+                parsed_output = thinking_parser(raw_text)
+                thinking_part = parsed_output.get("thinking")
+                answer_part = parsed_output.get("answer")
 
-                    if polished_text:
-                        polished_text = polished_text.strip().replace("\n", " ")
-                        logger.info(f"Edit Prompt enhancement successful. New prompt: '{polished_text[:100]}...'")
-                        return polished_text
-                    else:
-                        logger.warning("Prompt Polisher (Edit) returned an empty or invalid response after processing.")
-                        return None
+                print(f"Thinking:\n{thinking_part}\nAnswer:{answer_part}")
+
+                # 2. Log the thinking part if it exists
+                if thinking_part:
+                    logger.info(f"Prompt Polisher (Edit) thought: {thinking_part[:150]}...")
+
+                # 3. Check if the answer part is valid
+                if answer_part and isinstance(answer_part, str):
+                    
+                    # 4. Try to parse json from the final answer
+                    final_prompt = json_parser(answer_part, 'Rewritten')
+                    
+                    logger.info(f"Edit Prompt enhancement successful. New prompt: '{final_prompt[:100]}...'")
+                    
+                    return final_prompt
                 else:
-                    logger.warning("Prompt Polisher (Edit) returned empty content.")
+                    logger.warning("Prompt Polisher (Edit) returned empty content after parsing.")
                     return None
             else:
-                logger.error(f"Prompt Polisher (Edit) API returned unexpected response format: {result}")
+                logger.error(f"Prompt Polisher (Edit) API returned empty or invalid text field: {result}")
                 return None
 
     except httpx.HTTPStatusError as e:

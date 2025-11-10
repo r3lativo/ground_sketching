@@ -11,7 +11,6 @@ The code herein sets up the necessary services, including an image generation mo
 ## Project Structure
 
 ```
-
 root/
 ├── config/             # YAML and Jinja2 configuration files
 │   ├── server_config.yaml
@@ -24,14 +23,14 @@ root/
 ├── src/                # Source code
 │   ├── api_clients.py  # Clients to call model APIs
 │   ├── image_gen_app.py # FastAPI app for image generation
-│   ├── utils.py        # Helper functions (logging, encoding)
+│   └── utils.py        # Helper functions (logging, encoding)
 ├── interaticte_edit.py # Interactive edit experiment
-├── new_serve_vllm.py   # Script to launch the VL model with vLLM
+├── vllm_gateway.py     # FastAPI gateway for the VL model
 ├── serve_diff.py       # Script to launch the diffusion model
+├── start.sh            # Launch script for VLM + Gateway
 ├── test_pipeline.py    # Example script to test the full pipeline
 ├── requirements.txt    # Python dependencies
 └── README.md           # This file
-
 ```
 
 ## Setup ⚙️
@@ -48,9 +47,14 @@ module load pytorch-gpu/py3/2.8.0
 
 ### Dependencies
 
-Install the required Python packages. It's highly recommended to use a virtual environment.
+Install the required system and Python packages. It's highly recommended to use a virtual environment.
 
 ```bash
+# Install yq (for parsing config.yaml in the start.sh script)
+# pip install yq
+# Or see other methods: https://github.com/mikefarah/yq
+
+# Install Python packages
 pip install huggingface_hub[cli]  # to handle downloaded models via cli (with `hf cache delete` a menu will open)
 pip install git+https://github.com/huggingface/diffusers  # To use the newer version of qwen image edit (anyway, 0.36+)
 pip install flashinfer-python  # to speed up inference
@@ -75,7 +79,7 @@ hf download Qwen/Qwen2.5-VL-7B-Instruct
 
 ## Configuration 🔧
 
-  * `config/server_config.yaml`: Defines model IDs/paths, hostnames, and ports for the image generation and prompt enhancer servers. Adjust GPU memory utilization for vLLM here if needed.
+  * `config/server_config.yaml`: Defines model IDs/paths, hostnames, and ports for all services. Adjust GPU memory utilization for vLLM here. This file is read by `start.sh`, `vllm_gateway.py`, and `serve_diff.py`.
   * `config/polish.jinja2`: Contains the system prompt used for *text-only* prompt beautification (if used).
   * `config/polish_edit.jinja2`: Contains the system prompt used for instructing the VL model on how to rewrite *image editing* prompts.
 
@@ -83,21 +87,27 @@ hf download Qwen/Qwen2.5-VL-7B-Instruct
 
 ### 1\. Start the Model Servers
 
-Run the models in two different terminals.
+The system is composed of two main services that must be run in separate terminals.
 
 ```bash
-# Terminal 1
-VLLM_ENABLE_V1_MULTIPROCESSING=0 CUDA_VISIBLE_DEVICES=0 python3 new_serve_vllm.py
+# Terminal 1: Start the VLM Backend & FastAPI Gateway
+# This script reads the config, launches the vLLM OpenAI server
+# in the background, waits for it to be healthy, and then
+# launches the vllm_gateway.py in the foreground.
+./start.sh
 ```
 
 ```bash
-# Terminal 2
+# Terminal 2: Start the Image Generation Server
+# This script has not changed.
 CUDA_VISIBLE_DEVICES=1 python3 serve_diff.py
 ```
 
-  * Wait for both servers to initialize completely. vLLM model loading can take several minutes on the first run.
-  * Check the console output and logs in the `logs/` directory and vLLM output for status and errors.
-  * Servers will typically run on `http://localhost:8000` (image gen) and `http://localhost:8001` (prompt enhancer), based on `server_config.yaml`.
+  * Wait for both scripts to show they are running. `start.sh` will print "vLLM server is ready\!" before launching the gateway.
+  * Check the console output and logs in the `logs/` directory for status and errors.
+  * Based on `server_config.yaml`, the services will be available at:
+      * **Image Gen Server:** `http://localhost:8000` (or as defined in your config)
+      * **Prompt Polisher Gateway:** `http://localhost:8001` (This is the one your clients should talk to)
 
 ### 2\. Run a Test / Experiment
 
@@ -110,18 +120,19 @@ python test_pipeline.py
 
   * This script will:
       * Load sample images and a prompt.
-      * Call the prompt enhancer API.
+      * Call the prompt polisher gateway API.
       * Call the image generation API with the (potentially enhanced) prompt.
       * Save the resulting image to the `output/` directory.
   * Check `logs/test_pipeline.log` for details of the run.
 
-
 There is also an interactive editor to create and edit images on the spot:
+
 ```python
 python3 interactive_edit.py -i IMAGE_PATH_TO_START_FROM -d --no-cleanup # -d bypasses the polisher, --no-cleanup skips the artifact cleaner
 ```
 
-Finally, there is an augmenter, that takes a
+Finally, there is an augmenter, that takes a conversation and `--creates_prompts` to "render" to images via the diffusion model. The images can be generated calling `--render_prompts`.
+
 ```python
 python3 augmenter.py --file "data/mini.csv" --user "Debra" --create_prompts --render_prompts
 ```

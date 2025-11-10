@@ -12,3 +12,4 @@ peft
 PyYAML
 vllm
 Jinja2
+yq

@@ -15,6 +15,7 @@ image_gen_client:
 prompt_polisher_service:
   host: "0.0.0.0"
   port: 8001
+  # model_id: "/linkhome/rech/genxzs01/upa38qy/.cache/huggingface/hub/models--Qwen--Qwen3-VL-32B-Thinking/snapshots/7edd10ffd1196091948fb245ff63e406ccb2d4d1"
   model_id: "/lustre/fsmisc/dataset/HuggingFace_Models/Qwen/Qwen2.5-VL-32B-Instruct"
   seed: 0
   gpu_memory_utilization: 0.9
@@ -22,6 +23,11 @@ prompt_polisher_service:
   dtype: "bfloat16"
   trust_remote_code: true
   max_model_len: 15000
+
+  vllm_host: "127.0.0.1"
+  vllm_port: 8008
+  vllm_seed: 0
+  vllm_trust_remote_code: true
 
 prompt_polisher_client:
   seed: 0

@@ -86,7 +86,6 @@ async def handle_text_to_image_step(direct: bool) -> Tuple[Optional[str], Option
     if not direct:
         print("Calling text prompt polisher...")
         final_prompt = await call_text_prompt_polisher(initial_prompt)
-        print(f"Final prompt:\n{final_prompt}")
     else:
         print("Bypassing text prompt polisher!")
     
@@ -114,7 +113,6 @@ async def handle_text_and_image_to_image_step(direct: bool, current_image_pil: I
     if not direct:
         print("Calling edit prompt polisher...")
         final_prompt = await call_edit_prompt_polisher(edit_prompt, input_images_b64)
-        print(f"Final prompt:\n{final_prompt}")
     else:
         print("Bypassing edit prompt polisher!")
 

@@ -569,3 +569,96 @@ AttributeError: 'NoneType' object has no attribute 'size'
 2025-11-06 16:16:56,530 - src.image_gen_app - INFO - Received request - Prompt: 'Remove the existing bench. Add a smaller bench to ...', Images: 1
 2025-11-06 16:17:16,592 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 20.06 seconds.
 2025-11-06 16:17:16,739 - uvicorn.access - INFO - 127.0.0.1:52836 - "POST /img_generate HTTP/1.1" 200
+2025-11-10 11:15:22,230 - root - INFO - Logging configured.
+2025-11-10 11:16:45,256 - src.image_gen_app - INFO - Image Gen Config loaded and validated successfully:
+2025-11-10 11:16:45,257 - src.image_gen_app - INFO - {"model_id":"Qwen/Qwen-Image-Edit-2509","lora_path":"Qwen-Image-Lightning/Qwen-Image-Edit-2509/Qwen-Image-Edit-2509-Lightning-8steps-V1.0-fp32.safetensors"}
+2025-11-10 11:16:45,261 - __main__ - INFO - Server config validated: Host=0.0.0.0, Port=8002
+2025-11-10 11:16:45,261 - __main__ - INFO - Starting Uvicorn server for Image Generation Service on 0.0.0.0:8002...
+2025-11-10 11:16:45,335 - uvicorn.error - INFO - Started server process [1169977]
+2025-11-10 11:16:45,335 - uvicorn.error - INFO - Waiting for application startup.
+2025-11-10 11:16:45,335 - src.image_gen_app - INFO - Application startup: Loading model...
+2025-11-10 11:16:45,335 - src.image_gen_app - INFO - CUDA available. Using device: cuda with dtype: torch.bfloat16
+2025-11-10 11:16:46,578 - src.image_gen_app - INFO - Loading base pipeline: Qwen/Qwen-Image-Edit-2509...
+2025-11-10 11:16:48,843 - src.image_gen_app - INFO - Loading LoRA weights: Qwen-Image-Lightning/Qwen-Image-Edit-2509/Qwen-Image-Edit-2509-Lightning-8steps-V1.0-fp32.safetensors...
+2025-11-10 11:17:38,520 - src.image_gen_app - INFO - Moving pipeline to device: cuda...
+2025-11-10 11:21:06,450 - src.image_gen_app - INFO - Image generation pipeline loaded successfully.
+2025-11-10 11:21:06,453 - uvicorn.error - INFO - Application startup complete.
+2025-11-10 11:21:06,469 - uvicorn.error - INFO - Uvicorn running on http://0.0.0.0:8002 (Press CTRL+C to quit)
+2025-11-10 11:26:36,020 - src.image_gen_app - INFO - Received request - Prompt: 'We are given a user input that describes a scene i...', Images: 1
+2025-11-10 11:27:01,384 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 25.36 seconds.
+2025-11-10 11:27:01,688 - uvicorn.access - INFO - 127.0.0.1:33010 - "POST /img_generate HTTP/1.1" 200
+2025-11-10 11:31:11,190 - src.image_gen_app - INFO - Received request - Prompt: 'We are given an image that is a black and white li...', Images: 1
+2025-11-10 11:31:32,336 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 21.15 seconds.
+2025-11-10 11:31:32,452 - uvicorn.access - INFO - 127.0.0.1:53848 - "POST /img_generate HTTP/1.1" 200
+2025-11-10 11:34:23,872 - src.image_gen_app - INFO - Received request - Prompt: 'Okay, the user gave me a super simple prompt: "a d...', Images: 1
+2025-11-10 11:34:44,358 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 20.49 seconds.
+2025-11-10 11:34:44,753 - uvicorn.access - INFO - 127.0.0.1:41928 - "POST /img_generate HTTP/1.1" 200
+2025-11-10 12:06:14,967 - src.image_gen_app - INFO - Received request - Prompt: 'a dog...', Images: 1
+2025-11-10 12:06:34,881 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 19.91 seconds.
+2025-11-10 12:06:35,209 - uvicorn.access - INFO - 127.0.0.1:53070 - "POST /img_generate HTTP/1.1" 200
+2025-11-10 12:07:10,791 - src.image_gen_app - INFO - Received request - Prompt: 'Realistic photography style: A fluffy ginger tabby...', Images: 1
+2025-11-10 12:07:30,695 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 19.90 seconds.
+2025-11-10 12:07:31,063 - uvicorn.access - INFO - 127.0.0.1:43678 - "POST /img_generate HTTP/1.1" 200
+2025-11-10 12:10:29,731 - src.image_gen_app - INFO - Received request - Prompt: 'make the eyes red...', Images: 1
+2025-11-10 12:10:49,888 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 20.16 seconds.
+2025-11-10 12:10:50,240 - uvicorn.access - INFO - 127.0.0.1:35846 - "POST /img_generate HTTP/1.1" 200
+2025-11-10 12:12:38,881 - __main__ - INFO - Ctrl+C received, initiating shutdown...
+2025-11-10 12:12:38,882 - __main__ - INFO - Waiting for servers to shut down...
+2025-11-10 12:12:38,882 - __main__ - INFO - Uvicorn runs in a separate process; manual stop (Ctrl+C) might be needed if it doesn't exit.
+2025-11-10 12:12:38,882 - __main__ - INFO - Server launcher finished.
+2025-11-10 13:16:35,424 - root - INFO - Logging configured.
+2025-11-10 13:18:01,565 - src.image_gen_app - INFO - Image Gen Config loaded and validated successfully:
+2025-11-10 13:18:01,568 - src.image_gen_app - INFO - {"model_id":"Qwen/Qwen-Image-Edit-2509","lora_path":"Qwen-Image-Lightning/Qwen-Image-Edit-2509/Qwen-Image-Edit-2509-Lightning-8steps-V1.0-fp32.safetensors"}
+2025-11-10 13:18:01,575 - __main__ - INFO - Server config validated: Host=0.0.0.0, Port=8002
+2025-11-10 13:18:01,576 - __main__ - INFO - Starting Uvicorn server for Image Generation Service on 0.0.0.0:8002...
+2025-11-10 13:18:01,740 - uvicorn.error - INFO - Started server process [996771]
+2025-11-10 13:18:01,741 - uvicorn.error - INFO - Waiting for application startup.
+2025-11-10 13:18:01,742 - src.image_gen_app - INFO - Application startup: Loading model...
+2025-11-10 13:18:01,742 - src.image_gen_app - INFO - CUDA available. Using device: cuda with dtype: torch.bfloat16
+2025-11-10 13:18:03,089 - src.image_gen_app - INFO - Loading base pipeline: Qwen/Qwen-Image-Edit-2509...
+2025-11-10 13:18:04,730 - src.image_gen_app - INFO - Loading LoRA weights: Qwen-Image-Lightning/Qwen-Image-Edit-2509/Qwen-Image-Edit-2509-Lightning-8steps-V1.0-fp32.safetensors...
+2025-11-10 13:19:00,324 - src.image_gen_app - INFO - Moving pipeline to device: cuda...
+2025-11-10 13:21:40,391 - src.image_gen_app - INFO - Image generation pipeline loaded successfully.
+2025-11-10 13:21:40,483 - uvicorn.error - INFO - Application startup complete.
+2025-11-10 13:21:40,499 - uvicorn.error - INFO - Uvicorn running on http://0.0.0.0:8002 (Press CTRL+C to quit)
+2025-11-10 13:25:57,991 - src.image_gen_app - INFO - Received request - Prompt: 'Minimalist flat design vector icon of a house. A s...', Images: 1
+2025-11-10 13:26:21,733 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 23.74 seconds.
+2025-11-10 13:26:21,779 - uvicorn.access - INFO - 127.0.0.1:47208 - "POST /img_generate HTTP/1.1" 200
+2025-11-10 13:29:44,338 - src.image_gen_app - INFO - Received request - Prompt: 'Minimalist house icon: a single continuous thin bl...', Images: 1
+2025-11-10 13:30:04,224 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 19.89 seconds.
+2025-11-10 13:30:04,276 - uvicorn.access - INFO - 127.0.0.1:53448 - "POST /img_generate HTTP/1.1" 200
+2025-11-10 13:32:54,190 - src.image_gen_app - INFO - Received request - Prompt: 'Add a rectangular window centered above the door t...', Images: 1
+2025-11-10 13:33:14,136 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 19.95 seconds.
+2025-11-10 13:33:14,253 - uvicorn.access - INFO - 127.0.0.1:55310 - "POST /img_generate HTTP/1.1" 200
+2025-11-10 13:46:26,499 - src.image_gen_app - INFO - Received request - Prompt: 'Modify the chimney on the house. Color only the ch...', Images: 1
+2025-11-10 13:46:46,633 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 20.13 seconds.
+2025-11-10 13:46:46,725 - uvicorn.access - INFO - 127.0.0.1:54498 - "POST /img_generate HTTP/1.1" 200
+2025-11-10 13:56:37,592 - __main__ - INFO - Ctrl+C received, initiating shutdown...
+2025-11-10 13:56:37,613 - __main__ - INFO - Waiting for servers to shut down...
+2025-11-10 13:56:37,613 - __main__ - INFO - Uvicorn runs in a separate process; manual stop (Ctrl+C) might be needed if it doesn't exit.
+2025-11-10 13:56:37,613 - __main__ - INFO - Server launcher finished.
+2025-11-10 17:40:56,012 - root - INFO - Logging configured.
+2025-11-10 17:42:02,913 - src.image_gen_app - INFO - Image Gen Config loaded and validated successfully:
+2025-11-10 17:42:02,913 - src.image_gen_app - INFO - {"model_id":"Qwen/Qwen-Image-Edit-2509","lora_path":"Qwen-Image-Lightning/Qwen-Image-Edit-2509/Qwen-Image-Edit-2509-Lightning-8steps-V1.0-fp32.safetensors"}
+2025-11-10 17:42:02,918 - __main__ - INFO - Server config validated: Host=0.0.0.0, Port=8002
+2025-11-10 17:42:02,918 - __main__ - INFO - Starting Uvicorn server for Image Generation Service on 0.0.0.0:8002...
+2025-11-10 17:42:02,974 - uvicorn.error - INFO - Started server process [1180670]
+2025-11-10 17:42:02,974 - uvicorn.error - INFO - Waiting for application startup.
+2025-11-10 17:42:02,974 - src.image_gen_app - INFO - Application startup: Loading model...
+2025-11-10 17:42:02,975 - src.image_gen_app - INFO - CUDA available. Using device: cuda with dtype: torch.bfloat16
+2025-11-10 17:42:04,247 - src.image_gen_app - INFO - Loading base pipeline: Qwen/Qwen-Image-Edit-2509...
+2025-11-10 17:42:05,709 - src.image_gen_app - INFO - Loading LoRA weights: Qwen-Image-Lightning/Qwen-Image-Edit-2509/Qwen-Image-Edit-2509-Lightning-8steps-V1.0-fp32.safetensors...
+2025-11-10 17:42:50,866 - src.image_gen_app - INFO - Moving pipeline to device: cuda...
+2025-11-10 17:45:37,474 - src.image_gen_app - INFO - Image generation pipeline loaded successfully.
+2025-11-10 17:45:37,509 - uvicorn.error - INFO - Application startup complete.
+2025-11-10 17:45:37,534 - uvicorn.error - INFO - Uvicorn running on http://0.0.0.0:8002 (Press CTRL+C to quit)
+2025-11-10 17:46:51,634 - src.image_gen_app - INFO - Received request - Prompt: 'A serene and surreal scene featuring a beautifully...', Images: 1
+2025-11-10 17:47:15,748 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 24.11 seconds.
+2025-11-10 17:47:16,145 - uvicorn.access - INFO - 127.0.0.1:57412 - "POST /img_generate HTTP/1.1" 200
+2025-11-10 17:48:15,136 - src.image_gen_app - INFO - Received request - Prompt: 'Replace the gray vase in the back with a green one...', Images: 1
+2025-11-10 17:48:35,065 - src.image_gen_app - INFO - Pipeline inference successful. Time taken: 19.93 seconds.
+2025-11-10 17:48:35,354 - uvicorn.access - INFO - 127.0.0.1:55736 - "POST /img_generate HTTP/1.1" 200
+2025-11-10 17:52:45,985 - __main__ - INFO - Ctrl+C received, initiating shutdown...
+2025-11-10 17:52:45,985 - __main__ - INFO - Waiting for servers to shut down...
+2025-11-10 17:52:45,985 - __main__ - INFO - Uvicorn runs in a separate process; manual stop (Ctrl+C) might be needed if it doesn't exit.
+2025-11-10 17:52:45,986 - __main__ - INFO - Server launcher finished.

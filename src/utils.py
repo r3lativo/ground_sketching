@@ -8,6 +8,7 @@ import yaml
 import pdb
 import csv
 import os
+import re
 from datetime import datetime
 from PIL import Image, ImageFilter
 import socket
@@ -234,6 +235,29 @@ def json_parser(input_text, key_term):
     except json.JSONDecodeError:
         logger.debug("Text is not JSON. Using raw text.")
         return input_text
+
+def thinking_parser(text: str, delimiter: str = "</think>") -> dict:
+    """
+    Separates text into thinking and answer parts using </think> as the delimiter.
+
+    Args:
+        text: The input string containing thinking and/or an answer.
+
+    Returns:
+        A dictionary {thinking, answer}.
+    """
+    parts = text.split(delimiter, 1)  # Split only at the first occurrence
+    output = {}
+
+    if len(parts) == 2:
+        output["thinking"] = parts[0].strip().replace("\n", " ")
+        output["answer"] = parts[1].strip().replace("\n", " ")
+    else:
+        # Delimiter not found, assume the entire text is the answer
+        output["thinking"] = ""
+        output["answer"] = parts[0].strip().replace("\n", " ")
+
+    return output
 
 def add_padding_to_image(img_pil, scale_factor=0.8, fill_color="white"):
     """
