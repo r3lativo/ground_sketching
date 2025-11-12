@@ -37,3 +37,11 @@
 2025-11-10 17:46:51,475 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
 2025-11-10 17:48:15,121 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
 2025-11-10 17:52:40,053 - __main__ - INFO - Gateway shutting down. HTTPX client closed.
+2025-11-12 14:26:51,557 - root - INFO - Logging configured.
+2025-11-12 14:26:51,595 - __main__ - INFO - Gateway configuration loaded and validated successfully.
+2025-11-12 14:26:51,595 - __main__ - INFO - Gateway will forward requests to: http://127.0.0.1:8008/v1/chat/completions
+2025-11-12 14:26:51,595 - __main__ - INFO - Gateway does not load LLM. This is correct.
+2025-11-12 14:26:51,595 - __main__ - INFO - Starting FastAPI gateway on http://0.0.0.0:8001
+2025-11-12 14:26:51,832 - __main__ - INFO - Gateway started. HTTPX client created.
+2025-11-12 15:28:18,944 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-12 15:28:44,586 - __main__ - INFO - Gateway shutting down. HTTPX client closed.

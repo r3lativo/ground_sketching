@@ -1,13 +1,18 @@
 #!/bin/bash
+# Start the prompt_polisher model and the vllm gateway
 set -e # Exit immediately if any command fails
+
+echo "--- 0. Load the necessary environmnental modules ---"
+module purge                        # Clear all inherited modules to start from a clean slate
+module load arch/a100               # Load the HPC's specific module for A100 GPUs (drivers, CUDA, etc.)
+module load pytorch-gpu/py3/2.8.0   # Load the PyTorch environment module
 
 CONFIG_FILE="config/server_config.yaml"
 CONFIG_SECTION="prompt_polisher_service"
 
 echo "--- 1. Reading configuration from $CONFIG_FILE ---"
-
-# Read vLLM server arguments
-# `-r` takes the raw values for the string, else we get a double quote "'...'"
+# Use 'yq' to parse the YAML config file and set shell variables
+# `-r` ensures raw, unquoted strings are returned
 MODEL_ID=$(yq -r ".$CONFIG_SECTION.model_id" $CONFIG_FILE)
 TP_SIZE=$(yq ".$CONFIG_SECTION.tensor_parallel_size" $CONFIG_FILE)
 GPU_MEM=$(yq ".$CONFIG_SECTION.gpu_memory_utilization" $CONFIG_FILE)
@@ -18,34 +23,10 @@ TRUST_CODE=$(yq ".$CONFIG_SECTION.vllm_trust_remote_code" $CONFIG_FILE)
 VLLM_HOST=$(yq -r ".$CONFIG_SECTION.vllm_host" $CONFIG_FILE)
 VLLM_PORT=$(yq ".$CONFIG_SECTION.vllm_port" $CONFIG_FILE)
 
-
-# --- 1b. Environment Scrub for torch.distributed
-echo "--- 1b. Scrubbing HPC environment variables... ---"
-# Unset all variables that could confuse the new process group
-unset MASTER_ADDR
-unset MASTER_PORT
-unset RANK
-unset WORLD_SIZE
-unset LOCAL_RANK
-unset SLURM_PROCID
-unset SLURM_NPROCS
-unset SLURM_NNODES
-unset SLURM_NODELIST
-unset SLURM_STEP_NODELIST
-
-echo "--- 1c. Creating new private process group... ---"
-# Set vLLM-specific multiproc method
-# export VLLM_WORKER_MULTIPROC_METHOD=spawn
-
-# Find a free port for the new master process to coordinate
-export MASTER_ADDR=127.0.0.1
-export MASTER_PORT=$(python -c 'import socket; s=socket.socket(); s.bind(("", 0)); print(s.getsockname()[1]); s.close()')
-
-# CRITICAL: Tell torch.distributed EXACTLY how many workers to expect
-export WORLD_SIZE=$TP_SIZE
-export CUDA_VISIBLE_DEVICES=0
-
-echo "New vLLM group: MASTER_ADDR=$MASTER_ADDR MASTER_PORT=$MASTER_PORT WORLD_SIZE=$WORLD_SIZE"
+# Automatically build a comma-separated list of GPU indices based on TP_SIZE.
+# e.g., if TP_SIZE=2, this creates "0,1"
+export CUDA_VISIBLE_DEVICES=$(seq -s ',' 0 $((TP_SIZE - 1)))
+echo "--- 1b. Automatically setting CUDA_VISIBLE_DEVICES=$CUDA_VISIBLE_DEVICES ---"
 
 
 # Function to clean up the background process on exit
@@ -65,9 +46,8 @@ trap cleanup EXIT
 echo "--- 2. Starting vLLM OpenAI server in the background ---"
 echo "Model: $MODEL_ID, TP: $TP_SIZE, Host: $VLLM_HOST, Port: $VLLM_PORT"
 
-# The environment variables we just set will be used by this process
-python -m vllm.entrypoints.openai.api_server \
-    --model "$MODEL_ID" \
+vllm serve \
+    "$MODEL_ID" \
     --tensor-parallel-size $TP_SIZE \
     --gpu-memory-utilization $GPU_MEM \
     --dtype $DTYPE \
@@ -75,7 +55,8 @@ python -m vllm.entrypoints.openai.api_server \
     --seed $SEED \
     --trust-remote-code \
     --host "$VLLM_HOST" \
-    --port $VLLM_PORT &
+    --port $VLLM_PORT \
+    --log-config-file "logs/vllm_serve.log" & # The '&' runs this command in the background
 
 VLLM_PID=$!
 echo "vLLM server started with PID $VLLM_PID."
@@ -83,22 +64,27 @@ echo "vLLM server started with PID $VLLM_PID."
 # Wait for the vLLM server's health check endpoint to be ready
 HEALTH_URL="http://$VLLM_HOST:$VLLM_PORT/health"
 echo "Waiting for vLLM server at $HEALTH_URL ..."
+
+# Loop until the /health endpoint returns a successful (200) HTTP status
 while ! curl -s --fail "$HEALTH_URL" > /dev/null; do
+    # Inside the loop, check if the vLLM server process died prematurely
     if ! kill -0 $VLLM_PID 2>/dev/null; then
         echo ""
-        echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-        echo "ERROR: vLLM server (PID $VLLM_PID) died before starting."
-        echo "This indicates a fatal error. Please check logs."
-        echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-        exit 1 # Exit the script
+        echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+        echo "! ERROR: vLLM server (PID $VLLM_PID) died before starting. !"
+        echo "! This indicates a fatal error. Please check logs.         !"
+        echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+        exit 1 # Exit the script with an error
     fi
 done
 
 echo " vLLM server is ready!"
 echo "--- 3. Starting FastAPI gateway in the foreground ---"
+# Read the gateway's *own* host and port from the config
 APP_HOST=$(yq -r ".$CONFIG_SECTION.host" $CONFIG_FILE)
 APP_PORT=$(yq ".$CONFIG_SECTION.port" $CONFIG_FILE)
-echo "Your custom app will be available at http://$APP_HOST:$APP_PORT"
+echo "The gateway to vllm will be available at http://$APP_HOST:$APP_PORT"
 
-# Run your app in the foreground
+# Run the FastAPI gateway Python script in the foreground
+# This keeps this bash script alive and allows the 'trap' to function
 python3 vllm_gateway.py
