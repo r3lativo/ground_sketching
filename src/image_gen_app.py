@@ -21,14 +21,15 @@ from diffusers import (
 from diffusers.models import QwenImageTransformer2DModel
 import threading
 
-# Assuming utils.py and image_gen.py are accessible via src path
-from src.utils import pil_to_base64, base64_to_pil, load_config
+from .utils import pil_to_base64, base64_to_pil, load_config
 
 # --- Logging ---
 logger = logging.getLogger(__name__)
 
 # --- Configuration Model ---
 class ImageGenConfig(BaseModel):
+    host: str
+    port: int
     model_id: str
     lora_path: Optional[str] = None
 
@@ -83,10 +84,6 @@ except Exception as e:
 def load_model():
     """Loads the diffusion pipeline and sets global DEVICE and DTYPE."""
     global pipeline, DEVICE, DTYPE
-
-    if config is None:
-        logger.error("FATAL: Config not loaded. Cannot load model.")
-        return
 
     # Determine device and dtype
     if torch.cuda.is_available():
@@ -242,3 +239,31 @@ async def health_check():
     is_ready = pipeline is not None
     status_code = 200 if is_ready else 503
     return {"status": "ready" if is_ready else "loading_error", "pipeline_loaded": is_ready}, status_code
+
+# --- Main execution: Start the server ---
+if __name__ == "__main__":
+    # We need uvicorn to run the app
+    import uvicorn
+
+    # Set up logging for the launcher
+    from .utils import setup_logging
+    setup_logging(log_file='logs/image_gen_server.log')
+
+    # The 'config' object was already loaded and validated at the
+    # top of the file when this script was first imported.
+    # We can just use it directly.
+    if config:
+        logger.info(f"Starting Image Generation server on http://{config.host}:{config.port}")
+
+        # This call blocks and runs the server, replacing the need
+        # for the threading logic in the old serve_diff.py
+        uvicorn.run(
+            app,
+            host=config.host,
+            port=config.port,
+            log_config=None # Use the root logger we already set up
+        )
+    else:
+        # This should not happen if the file is run directly
+        logger.critical("Configuration object 'config' was not loaded. Cannot start server.")
+        sys.exit("Failed to load config.")

@@ -8,13 +8,12 @@ from PIL import Image
 import io
 import argparse
 import re
-from typing import Optional, Tuple
+from typing import Optional, Tuple, List
 import sys
 import datetime
 
 from src.api_clients import (
-    call_text_prompt_polisher,
-    call_edit_prompt_polisher,
+    call_prompt_polisher,
     call_image_gen
 )
 from src.utils import (
@@ -34,6 +33,49 @@ interactive_config = load_config(config_path='config/interactive_config.yaml')
 
 # --- Setup ---
 os.makedirs(interactive_config.get('output_dir'), exist_ok=True)
+
+# --- Helper Functions ---
+def _get_user_input(prompt_message: str) -> Tuple[Optional[str], bool]:
+    """Gets text input from the user and checks for 'quit' command."""
+    # Adds a newline for better spacing in the terminal
+    user_input = input(f"\n{prompt_message} (or 'quit'): ")
+    if user_input.lower() == 'quit':
+        return None, True
+    return user_input, False
+
+async def _get_polished_prompt(
+    initial_prompt: str,
+    images_b64: Optional[List[str]] = None,
+    direct: bool = False
+) -> str:
+    """
+    Handles the logic of either bypassing or calling the prompt polisher
+    and includes fallback to the initial prompt.
+    """
+    # This function now clearly explains what it's doing.
+    if direct:
+        print("Bypassing prompt polisher (--direct).")
+        return initial_prompt
+
+    print("Calling prompt polisher...")
+    try:
+        # Use the consolidated function. It handles None for images correctly.
+        polished_prompt = await call_prompt_polisher(
+            utterance=initial_prompt,
+            images=images_b64
+        )
+        
+        if polished_prompt:
+            print(f"Polisher successful. Using new prompt.")
+            return polished_prompt
+        else:
+            # Clearer error message
+            print("Polishing failed or returned empty. Using initial prompt.")
+            return initial_prompt
+            
+    except Exception as e:
+        print(f"An error occurred during polishing: {e}. Using initial prompt.")
+        return initial_prompt
 
 def load_initial_state(initial_image_path: Optional[str]) -> Tuple[Optional[Image.Image], Optional[str], int]:
     """
@@ -71,56 +113,51 @@ def load_initial_state(initial_image_path: Optional[str]) -> Tuple[Optional[Imag
         return None, None, 0
 
 
-async def handle_text_to_image_step(direct: bool) -> Tuple[Optional[str], Optional[list], Optional[str], bool]:
+async def handle_text_to_image_step(direct: bool) -> Tuple[Optional[str], Optional[str], Optional[float], bool]:
     """
-    Handles the T2I step: gets prompt, creates dummy image, and polishes prompt.
-    Returns: (step_start_time, final_prompt, initial_prompt, user_quit)
+    Handles the T2I step: gets prompt and polishes it.
+    Returns: (final_prompt, initial_prompt, step_start_time, user_quit)
     """
-    initial_prompt = input("Enter the initial text prompt to generate an image: ")
-    if initial_prompt.lower() == 'quit':
-        return time.time(), None, None, True
+    initial_prompt, user_quit = _get_user_input("Enter the initial text prompt to generate an image")
+    if user_quit:
+        return None, None, None, True
     
+    # Start timer *after* user input, to time the API calls
     step_start_time = time.time()
-
-    final_prompt = initial_prompt
-    if not direct:
-        print("Calling text prompt polisher...")
-        final_prompt = await call_text_prompt_polisher(initial_prompt)
-    else:
-        print("Bypassing text prompt polisher!")
     
-    if not final_prompt:
-        print("Text enhancement failed. Using initial prompt.")
-        final_prompt = initial_prompt
+    final_prompt = await _get_polished_prompt(
+        initial_prompt=initial_prompt,
+        direct=direct
+    )
+    
+    return final_prompt, initial_prompt, step_start_time, False
 
-    return step_start_time, final_prompt, initial_prompt, False
 
-
-async def handle_text_and_image_to_image_step(direct: bool, current_image_pil: Image.Image) -> Tuple[Optional[str], Optional[list], Optional[str], bool]:
+async def handle_text_and_image_to_image_step(
+    direct: bool, 
+    current_image_pil: Image.Image
+) -> Tuple[Optional[str], Optional[List[str]], Optional[str], Optional[float], bool]:
     """
     Handles the TI2I step: gets prompt, uses current image, and polishes prompt.
-    Returns: (step_start_time, final_prompt, input_images_b64, initial_prompt, user_quit)
+    Returns: (final_prompt, input_images_b64, initial_prompt, step_start_time, user_quit)
     """
-    edit_prompt = input("Enter the edit instruction (or 'quit'): ")
-    if edit_prompt.lower() == 'quit':
-        return time.time(), None, None, None, True
-    
-    step_start_time = time.time()
+    edit_prompt, user_quit = _get_user_input("Enter the edit instruction")
+    if user_quit:
+        return None, None, None, None, True
 
+    # Start timer *after* user input
+    step_start_time = time.time()
+    
+    # The API client expects raw b64, not the data URI
     input_images_b64 = [pil_to_base64(current_image_pil)]
 
-    final_prompt = edit_prompt
-    if not direct:
-        print("Calling edit prompt polisher...")
-        final_prompt = await call_edit_prompt_polisher(edit_prompt, input_images_b64)
-    else:
-        print("Bypassing edit prompt polisher!")
-
-    if not final_prompt:
-        print("Edit enhancement failed. Using initial prompt.")
-        final_prompt = edit_prompt
+    final_prompt = await _get_polished_prompt(
+        initial_prompt=edit_prompt,
+        images_b64=input_images_b64,
+        direct=direct
+    )
     
-    return step_start_time, final_prompt, input_images_b64, edit_prompt, False
+    return final_prompt, input_images_b64, edit_prompt, step_start_time, False
 
 
 def process_and_save_output(output_image_b64: str, no_cleanup: bool, step_count: int) -> Tuple[Optional[Image.Image], Optional[str]]:
@@ -190,9 +227,9 @@ async def main_interactive_loop(initial_image_path: Optional[str] = None, direct
             "true_cfg_scale": server_config["image_gen_client"]["true_cfg_scale"],
             "num_inference_steps": server_config["image_gen_client"]["num_inference_steps"],
             "IMGseed": server_config["image_gen_client"]["seed"],
-            "VLseed": server_config["prompt_polisher_client"]["seed"],
-            "top_p": server_config["prompt_polisher_client"]["top_p"],
-            "temperature": server_config["prompt_polisher_client"]["temperature"],
+            "VLseed": server_config["vlm_client"]["seed"],
+            "top_p": server_config["vlm_client"]["top_p"],
+            "temperature": server_config["vlm_client"]["temperature"],
         }
         status = "fail"
 
@@ -203,7 +240,8 @@ async def main_interactive_loop(initial_image_path: Optional[str] = None, direct
             # --- 1. Get Prompt and Inputs ---
             if step_count == 0:
                 # Text-to-Image block
-                step_start_time, final_prompt, initial_prompt, user_quit = await handle_text_to_image_step(direct)
+                # Note the new variable order from the refactored function
+                final_prompt, initial_prompt, step_start_time, user_quit = await handle_text_to_image_step(direct)
             else:
                 # Image-to-Image Edit block
                 if current_image_pil is None:
@@ -211,11 +249,16 @@ async def main_interactive_loop(initial_image_path: Optional[str] = None, direct
                     break
                 
                 print(f"\nCurrent image: {current_image_path} (editing for step {step_count})")
-                step_start_time, final_prompt, input_images_b64, initial_prompt, user_quit = await handle_text_and_image_to_image_step(direct, current_image_pil)
+                # Note the new variable order from the refactored function
+                final_prompt, input_images_b64, initial_prompt, step_start_time, user_quit = await handle_text_and_image_to_image_step(direct, current_image_pil)
             
             if user_quit:
                 break
-
+            
+            # This check is now needed since step_start_time is set *after* the quit check
+            if not step_start_time:
+                break # Should not happen, but good safety
+                
             log_data["initial_prompt"] = initial_prompt
             log_data["final_prompt"] = final_prompt
 
@@ -303,24 +346,35 @@ def get_args():
 
 if __name__ == "__main__":
     args = get_args()
+    failed_services = []
 
-    # Check Image Gen Server
-    img_gen_ok = check_server(
-        server_config["image_gen_service"]["host"],
-        server_config["image_gen_service"]["port"]
-    )
-    
-    # Check Prompt Polisher Server if it is needed
-    if not args.direct:
-        polisher_ok = check_server(
-            server_config["prompt_polisher_service"]["host"],
-            server_config["prompt_polisher_service"]["port"]
+    # --- Check Image Gen Server (Always required) ---
+    img_gen_conf = server_config["image_gen_service"]
+    if not check_server(img_gen_conf["host"], img_gen_conf["port"]):
+        failed_services.append(
+            f"Image Gen service at http://{img_gen_conf['host']}:{img_gen_conf['port']}"
         )
 
-    if not (img_gen_ok and polisher_ok):
-        print("\n[Error] One or more required services are down. Exiting.")
-        sys.exit(1) # Exit with an error code
+    # --- Check Prompt Polisher (Only if not --direct) ---
+    if not args.direct:
+        polisher_conf = server_config["vlm_service"]
+        if not check_server(polisher_conf["gateway"]["host"], polisher_conf["gateway"]["port"]):
+            failed_services.append(
+                f"Prompt Polisher service at http://{polisher_conf["gateway"]['host']}:{polisher_conf["gateway"]['port']}"
+            )
+
+    # --- Report results ---
+    if failed_services:
+        print("\n[Error] One or more required services are down:")
+        for service_msg in failed_services:
+            print(f"- {service_msg}")
+        
+        print("Exiting.")
+        sys.exit(1)
     
+    print("\nAll required services are running.")
+
+    # --- Run Main Loop ---
     try:
         asyncio.run(main_interactive_loop(initial_image_path=args.image, direct=args.direct, no_cleanup=args.no_cleanup))
     except Exception as e:

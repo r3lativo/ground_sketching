@@ -1,3 +1,4 @@
+# augmenter.py
 import pandas as pd
 import argparse
 import asyncio
@@ -7,6 +8,7 @@ import json
 from pathlib import Path
 from PIL import Image
 import os
+import sys
 
 from src.utils import (
     pil_to_base64,
@@ -16,47 +18,49 @@ from src.utils import (
     load_config
 )
 from src.api_clients import (
-    call_contextual_prompt_polisher,
-    call_contextual_edit_prompt_polisher,
+    call_prompt_polisher,
     call_image_gen
 )
 
 def check_servers(args):
-
+    """
+    Checks if all required backend services are running before starting.
+    Provides specific error messages for failed services.
+    """
     server_config = load_config(config_path='config/server_config.yaml')
+    failed_services = []
 
     # --- Check Prompt Polisher (Always required) ---
-    polisher_conf = server_config["prompt_polisher_service"]
-    polisher_ok = check_server(
-        polisher_conf["host"],
-        polisher_conf["port"]
-    )
-    
-    if not polisher_ok:
-        print(f"\n[Error] Prompt Polisher service at http://{polisher_conf['host']}:{polisher_conf['port']} is down.")
-        print("Exiting.")
-        sys.exit(1) # Exit immediately
-
-    # --- Check Image Gen (Conditionally required) ---
-    if args.render_output:
-        img_gen_conf = server_config["image_gen_service"]
-        img_gen_ok = check_server(
-            img_gen_conf["host"],
-            img_gen_conf["port"]
+    polisher_conf = server_config["vlm_service"]
+    if not check_server(polisher_conf["gateway"]["host"], polisher_conf["gateway"]["port"]):
+        failed_services.append(
+            f"Prompt Polisher service at http://{polisher_conf["gateway"]['host']}:{polisher_conf["gateway"]['port']}"
         )
 
-        if not img_gen_ok:
-            print(f"\n[Error] Image Gen service at http://{img_gen_conf['host']}:{img_gen_conf['port']} is down.")
-            print("Exiting.")
-            sys.exit(1) # Exit immediately
+    # --- Check Image Gen (Conditionally required) ---
+    if args.render_prompts:  # Check if we intend to render
+        img_gen_conf = server_config["image_gen_service"]
+        if not check_server(img_gen_conf["host"], img_gen_conf["port"]):
+            failed_services.append(
+                f"Image Gen service at http://{img_gen_conf['host']}:{img_gen_conf['port']}"
+            )
 
+    # --- Report results ---
+    if failed_services:
+        print("\n[Error] One or more required services are down:")
+        for service_msg in failed_services:
+            print(f"- {service_msg}")
+        
+        print("Exiting.")
+        sys.exit(1)
+    
     # If we get here, all required services are up.
     print("\nAll required services are running.")
         
 
 async def create_prompts(df: pd.DataFrame, user_perspective: str) -> pd.DataFrame:
     """
-    Generates 'prompt_to_render' using the new contextual logic,
+    Generates 'prompt_to_render' using the new consolidated polisher,
     passing a history of previous prompts instead of images.
     """
     print(f"Creating contextual prompts for user: {user_perspective}...")
@@ -80,28 +84,22 @@ async def create_prompts(df: pd.DataFrame, user_perspective: str) -> pd.DataFram
         
         for index, row in user_utterances.iterrows():
             utterance_text = row['text']
-            polished_prompt = None
+            
+            # Log which type of polishing we're doing
+            if not previous_prompts_history:
+                print(f"  > Index {index} (Create): Polishing first utterance...")
+            else:
+                print(f"  > Index {index} (Edit): Polishing edit utterance...")
 
             try:
-                if not previous_prompts_history:
-                    # --- This is the FIRST utterance in the chunk ---
-                    # call_contextual_prompt_polisher(context, utterance)
-                    print(f"  > Index {index} (Create): Polishing first utterance...")
-                    polished_prompt = await call_contextual_prompt_polisher(
-                        context=context_list,
-                        utterance=utterance_text
-                    )
-                    print(f"  > {polished_prompt}")
-                else:
-                    # --- This is a SUBSEQUENT utterance in the chunk ---
-                    # call_contextual_edit_prompt_polisher(context, utterance, previous prompts)
-                    print(f"  > Index {index} (Edit): Polishing edit utterance...")
-                    polished_prompt = await call_contextual_edit_prompt_polisher(
-                        context=context_list,
-                        utterance=utterance_text,
-                        previous_prompts=previous_prompts_history
-                    )
-                    print(f"  > {polished_prompt}")
+                polished_prompt = await call_prompt_polisher(
+                    utterance=utterance_text,
+                    context=context_list,
+                    previous_prompts=previous_prompts_history
+                )
+
+                print(f"  > {polished_prompt}")
+                
                 # --- Save the result ---
                 if polished_prompt:
                     df.at[index, 'prompt_to_render'] = polished_prompt
@@ -140,16 +138,19 @@ async def render_prompts(
     current_image_b64 = None
     current_chunk_id = None
     
-    sorted_df = df.sort_values(by=['chunk_id'], kind='stable')
+    # Ensure processing in correct order
+    sorted_df = df.sort_values(by=['chunk_id', 'index'], kind='stable')
     
     for index, row in sorted_df.iterrows():
         chunk_id = row['chunk_id']
         
+        # Reset the image context for each new chunk
         if chunk_id != current_chunk_id:
             current_image_b64 = None 
             current_chunk_id = chunk_id
             print(f"--- Processing Chunk {current_chunk_id} (Render) ---")
 
+        # Only render for the target user and if a prompt exists
         if (row['character'] == user_perspective) and pd.notna(row['prompt_to_render']):
             prompt = row['prompt_to_render']
             
@@ -157,10 +158,11 @@ async def render_prompts(
             save_path = os.path.join(output_path, img_filename)
             
             try:
-                if current_image_b64:
-                    new_image_b64 = await call_image_gen(prompt, [current_image_b64])
-                else:
-                    new_image_b64 = await call_image_gen(prompt, None)
+                # Pass the previous image (or None) to the image gen service
+                new_image_b64 = await call_image_gen(
+                    prompt, 
+                    [current_image_b64] if current_image_b64 else None
+                )
 
                 if new_image_b64:
                     # convert to pil and clean
@@ -173,10 +175,10 @@ async def render_prompts(
                     current_image_b64 = pil_to_base64(cleaned_image_pil)
                 else:
                     print(f"Warning: Render function returned None for index {index}")
-                    # Keep old image as context
+                    # Keep old image as context if render fails
             except Exception as e:
                 print(f"Error rendering prompt at index {index}: {e}")
-                pass
+                pass # Keep old image and continue
 
     print("Image rendering complete.")
     return df
@@ -223,6 +225,7 @@ async def main():
     
     args = parser.parse_args()
 
+    # Call the improved server check
     check_servers(args)
 
     if args.output is None:
@@ -231,7 +234,7 @@ async def main():
         args.output = str(input_path.with_name(new_filename))
         print(f"No --output provided. Defaulting to: {args.output}")
 
-    if args.render_output is None:
+    if args.render_output is None and args.render_prompts:
         input_path = Path(args.file)
         new_directory = f"output/{input_path.stem}_aug"
         args.render_output = new_directory
@@ -258,6 +261,7 @@ async def main():
 
     if args.render_prompts:
         if not args.create_prompts:
+            # If only rendering, load the file that supposedly has prompts
             try:
                 df = pd.read_csv(args.output)
                 print(f"Loaded {args.output} for rendering.")

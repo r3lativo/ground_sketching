@@ -8,20 +8,21 @@ module load arch/a100               # Load the HPC's specific module for A100 GP
 module load pytorch-gpu/py3/2.8.0   # Load the PyTorch environment module
 
 CONFIG_FILE="config/server_config.yaml"
-CONFIG_SECTION="prompt_polisher_service"
+CONFIG_GATEWAY="vlm_service.gateway"
+CONFIG_BACKEND="vlm_service.backend"
 
 echo "--- 1. Reading configuration from $CONFIG_FILE ---"
 # Use 'yq' to parse the YAML config file and set shell variables
 # `-r` ensures raw, unquoted strings are returned
-MODEL_ID=$(yq -r ".$CONFIG_SECTION.model_id" $CONFIG_FILE)
-TP_SIZE=$(yq ".$CONFIG_SECTION.tensor_parallel_size" $CONFIG_FILE)
-GPU_MEM=$(yq ".$CONFIG_SECTION.gpu_memory_utilization" $CONFIG_FILE)
-DTYPE=$(yq -r ".$CONFIG_SECTION.dtype" $CONFIG_FILE)
-MAX_LEN=$(yq ".$CONFIG_SECTION.max_model_len" $CONFIG_FILE)
-SEED=$(yq ".$CONFIG_SECTION.vllm_seed" $CONFIG_FILE)
-TRUST_CODE=$(yq ".$CONFIG_SECTION.vllm_trust_remote_code" $CONFIG_FILE)
-VLLM_HOST=$(yq -r ".$CONFIG_SECTION.vllm_host" $CONFIG_FILE)
-VLLM_PORT=$(yq ".$CONFIG_SECTION.vllm_port" $CONFIG_FILE)
+MODEL_ID=$(yq -r ".$CONFIG_BACKEND.model_id" $CONFIG_FILE)
+TP_SIZE=$(yq ".$CONFIG_BACKEND.tensor_parallel_size" $CONFIG_FILE)
+GPU_MEM=$(yq ".$CONFIG_BACKEND.gpu_memory_utilization" $CONFIG_FILE)
+DTYPE=$(yq -r ".$CONFIG_BACKEND.dtype" $CONFIG_FILE)
+MAX_LEN=$(yq ".$CONFIG_BACKEND.max_model_len" $CONFIG_FILE)
+SEED=$(yq ".$CONFIG_BACKEND.vllm_seed" $CONFIG_FILE)
+TRUST_CODE=$(yq ".$CONFIG_BACKEND.vllm_trust_remote_code" $CONFIG_FILE)
+VLLM_HOST=$(yq -r ".$CONFIG_BACKEND.vllm_host" $CONFIG_FILE)
+VLLM_PORT=$(yq ".$CONFIG_BACKEND.vllm_port" $CONFIG_FILE)
 
 # Automatically build a comma-separated list of GPU indices based on TP_SIZE.
 # e.g., if TP_SIZE=2, this creates "0,1"
@@ -56,7 +57,7 @@ vllm serve \
     --trust-remote-code \
     --host "$VLLM_HOST" \
     --port $VLLM_PORT \
-    --log-config-file "logs/vllm_serve.log" & # The '&' runs this command in the background
+    2>&1 | tee -a "logs/vllm_serve.log" & # Appends to the log file
 
 VLLM_PID=$!
 echo "vLLM server started with PID $VLLM_PID."
@@ -81,10 +82,11 @@ done
 echo " vLLM server is ready!"
 echo "--- 3. Starting FastAPI gateway in the foreground ---"
 # Read the gateway's *own* host and port from the config
-APP_HOST=$(yq -r ".$CONFIG_SECTION.host" $CONFIG_FILE)
-APP_PORT=$(yq ".$CONFIG_SECTION.port" $CONFIG_FILE)
+APP_HOST=$(yq -r ".$CONFIG_GATEWAY.host" $CONFIG_FILE)
+APP_PORT=$(yq ".$CONFIG_GATEWAY.port" $CONFIG_FILE)
 echo "The gateway to vllm will be available at http://$APP_HOST:$APP_PORT"
 
 # Run the FastAPI gateway Python script in the foreground
 # This keeps this bash script alive and allows the 'trap' to function
-python3 vllm_gateway.py
+# Run it as a src module with -m
+python3 -m src.vllm_gateway

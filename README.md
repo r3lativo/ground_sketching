@@ -11,37 +11,37 @@ The code herein sets up the necessary services, including an image generation mo
 ## Project Structure
 
 ```
-root/
-├── config/             # YAML and Jinja2 configuration files
-│   ├── server_config.yaml
-│   ├── interactive_config.yaml
-│   ├── polish.jinja2
-│   └── polish_edit.jinja2
-├── data/               # Input data (images, prompts)
-├── logs/               # Log files for servers and experiments
-├── output/             # Generated images and results
-├── src/                # Source code
-│   ├── api_clients.py  # Clients to call model APIs
-│   ├── image_gen_app.py # FastAPI app for image generation
-│   └── utils.py        # Helper functions (logging, encoding)
-├── interaticte_edit.py # Interactive edit experiment
-├── vllm_gateway.py     # FastAPI gateway for the VL model
-├── serve_diff.py       # Script to launch the diffusion model
-├── start.sh            # Launch script for VLM + Gateway
-├── test_pipeline.py    # Example script to test the full pipeline
-├── requirements.txt    # Python dependencies
-└── README.md           # This file
+.
+├── config/                 # YAML configuration files
+├── data/                   # Input data (images, prompts, CSVs)
+├── logs/                   # Log files for servers and experiments
+├── output/                 # Generated images and results
+├── scripts/                # Bash scripts to launch the services
+├── src/                    # Source code package
+│   ├── api_clients.py      # Python clients to call the model server APIs
+│   ├── image_gen_app.py    # FastAPI app for the image generation service
+│   ├── __init__.py         # Makes 'src' a Python package
+│   ├── utils.py            # Helper functions (logging, encoding, etc.)
+│   └── vllm_gateway.py     # FastAPI gateway for the VLM service
+├── templates/              # Jinja2 templates for system prompts
+├── augmenter.py            # Script to augment CSVs with prompts and render images
+├── interactive_edit.py     # Interactive CLI tool for editing images
+├── README.md               # This file
+├── requirements.txt        # Python dependencies
+├── simple_interact.py      # (A simple interaction script)
+└── test_pipeline.py        # Example script to test the full pipeline
 ```
 
 ## Setup ⚙️
 
 ### Environment
 
-This project assumes access to an environment with necessary GPU drivers and CUDA installed.
-The development was done using a specific pre-built module, but you can adapt it to your system.
+This project assumes access to an environment with necessary GPU drivers and CUDA installed. The launch scripts are configured to load specific HPC modules.
 
 ```bash
-# Example environment setup (adapt if necessary, look at the requirements.txt)
+# The launch scripts in scripts/ will attempt to run:
+module purge
+module load arch/a100
 module load pytorch-gpu/py3/2.8.0
 ```
 
@@ -79,31 +79,33 @@ hf download Qwen/Qwen2.5-VL-7B-Instruct
 
 ## Configuration 🔧
 
-  * `config/server_config.yaml`: Defines model IDs/paths, hostnames, and ports for all services. Adjust GPU memory utilization for vLLM here. This file is read by `start.sh`, `vllm_gateway.py`, and `serve_diff.py`.
-  * `config/polish.jinja2`: Contains the system prompt used for *text-only* prompt beautification (if used).
-  * `config/polish_edit.jinja2`: Contains the system prompt used for instructing the VL model on how to rewrite *image editing* prompts.
+  * `config/server_config.yaml`: Defines model IDs/paths, hostnames, and ports for all services. Adjust GPU memory utilization for vLLM here. This file is read by both `start_...sh` scripts.
+  * `templates/`: This directory contains all Jinja2 templates used to build the system prompts for the VLM.
 
 ## Usage 🚀
 
 ### 1\. Start the Model Servers
 
-The system is composed of two main services that must be run in separate terminals.
+The system is composed of two main services that must be run in separate terminals, as they require separate GPU resources.
 
 ```bash
 # Terminal 1: Start the VLM Backend & FastAPI Gateway
-# This script reads the config, launches the vLLM OpenAI server
-# in the background, waits for it to be healthy, and then
-# launches the vllm_gateway.py in the foreground.
-./start.sh
+# This script reads the config, sets CUDA_VISIBLE_DEVICES
+# based on tensor_parallel_size (e.g., "0,1"), and launches
+# the vLLM server and its FastAPI gateway.
+./scripts/start_vlm_service.sh
 ```
 
 ```bash
 # Terminal 2: Start the Image Generation Server
-# This script has not changed.
-CUDA_VISIBLE_DEVICES=1 python3 serve_diff.py
+# This script starts the diffusion model service.
+#
+# IMPORTANT: Edit this script to set CUDA_VISIBLE_DEVICES
+# to a GPU *not* used by the VLM (e.g., "2").
+./scripts/start_image_gen_service.sh
 ```
 
-  * Wait for both scripts to show they are running. `start.sh` will print "vLLM server is ready\!" before launching the gateway.
+  * Wait for both scripts to show they are running. `start_vlm_service.sh` will print "vLLM server is ready\!" before launching the gateway.
   * Check the console output and logs in the `logs/` directory for status and errors.
   * Based on `server_config.yaml`, the services will be available at:
       * **Image Gen Server:** `http://localhost:8000` (or as defined in your config)

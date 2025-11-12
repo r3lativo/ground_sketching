@@ -45,3 +45,80 @@
 2025-11-12 14:26:51,832 - __main__ - INFO - Gateway started. HTTPX client created.
 2025-11-12 15:28:18,944 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
 2025-11-12 15:28:44,586 - __main__ - INFO - Gateway shutting down. HTTPX client closed.
+2025-11-12 17:21:08,203 - root - INFO - Logging configured.
+2025-11-12 17:21:08,209 - __main__ - INFO - Gateway configuration loaded and validated successfully.
+2025-11-12 17:21:08,209 - __main__ - INFO - Gateway will forward requests to: http://127.0.0.1:8008/v1/chat/completions
+2025-11-12 17:21:08,210 - __main__ - INFO - Starting FastAPI gateway on http://0.0.0.0:8001
+2025-11-12 17:21:08,671 - __main__ - INFO - Gateway started. HTTPX client created.
+2025-11-12 17:32:17,821 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-12 17:46:29,663 - __main__ - INFO - Gateway shutting down. HTTPX client closed.
+2025-11-12 18:05:58,883 - root - INFO - Logging configured.
+2025-11-12 18:05:58,887 - __main__ - INFO - Gateway configuration loaded and validated successfully.
+2025-11-12 18:05:58,887 - __main__ - INFO - Gateway will forward requests to: http://127.0.0.1:8008/v1/chat/completions
+2025-11-12 18:05:58,887 - __main__ - INFO - Starting FastAPI gateway on http://0.0.0.0:8001
+2025-11-12 18:05:59,061 - __main__ - INFO - Gateway started. HTTPX client created.
+2025-11-12 18:08:52,866 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 400 Bad Request"
+2025-11-12 18:08:52,867 - __main__ - ERROR - vLLM backend error: {"error":{"message":"'max_tokens' or 'max_completion_tokens' is too large: 15000. This model's maximum context length is 15000 tokens and your request has 669 input tokens (15000 > 15000 - 669). None","type":"BadRequestError","param":null,"code":400}}
+2025-11-12 18:10:44,041 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 400 Bad Request"
+2025-11-12 18:10:44,041 - __main__ - ERROR - vLLM backend error: {"error":{"message":"'max_tokens' or 'max_completion_tokens' is too large: 15000. This model's maximum context length is 15000 tokens and your request has 669 input tokens (15000 > 15000 - 669). None","type":"BadRequestError","param":null,"code":400}}
+2025-11-12 18:14:59,289 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 400 Bad Request"
+2025-11-12 18:14:59,289 - __main__ - ERROR - vLLM backend error: {"error":{"message":"'max_tokens' or 'max_completion_tokens' is too large: 15000. This model's maximum context length is 15000 tokens and your request has 936 input tokens (15000 > 15000 - 936). None","type":"BadRequestError","param":null,"code":400}}
+2025-11-12 18:15:07,724 - __main__ - INFO - Gateway shutting down. HTTPX client closed.
+2025-11-12 18:26:04,775 - root - INFO - Logging configured.
+2025-11-12 18:26:04,779 - __main__ - INFO - Gateway configuration loaded and validated successfully.
+2025-11-12 18:26:04,779 - __main__ - INFO - Gateway will forward requests to: http://127.0.0.1:8008/v1/chat/completions
+2025-11-12 18:26:04,779 - __main__ - INFO - Starting FastAPI gateway on http://0.0.0.0:8001
+2025-11-12 18:26:04,988 - __main__ - INFO - Gateway started. HTTPX client created.
+2025-11-12 18:27:01,413 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-12 18:28:08,762 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-12 18:29:31,705 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-12 18:31:38,386 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-12 18:37:24,632 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-12 18:52:56,400 - root - INFO - Logging configured.
+2025-11-12 18:52:56,405 - __main__ - CRITICAL - --- CONFIGURATION ERROR ---
+2025-11-12 18:52:56,405 - __main__ - CRITICAL - FATAL: Missing or invalid keys in 'prompt_polisher_service' section of config/server_config.yaml:
+2025-11-12 18:52:56,405 - __main__ - CRITICAL - 
+1 validation error for VLLMConfig
+model_id
+  Field required [type=missing, input_value={'host': '0.0.0.0', 'port...rust_remote_code': True}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+2025-11-12 19:31:12,116 - root - INFO - Logging configured.
+2025-11-12 19:31:12,117 - __main__ - INFO - Starting FastAPI gateway on http://0.0.0.0:8001
+2025-11-12 19:31:12,174 - uvicorn.error - INFO - Started server process [2307719]
+2025-11-12 19:31:12,174 - uvicorn.error - INFO - Waiting for application startup.
+2025-11-12 19:31:12,324 - __main__ - INFO - Gateway started. HTTPX client created.
+2025-11-12 19:31:12,324 - uvicorn.error - INFO - Application startup complete.
+2025-11-12 19:31:12,328 - uvicorn.error - INFO - Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
+2025-11-12 19:32:20,743 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-12 19:32:20,744 - uvicorn.access - INFO - 127.0.0.1:42826 - "POST /edit HTTP/1.1" 200
+2025-11-12 19:35:39,922 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-12 19:35:39,923 - uvicorn.access - INFO - 127.0.0.1:54006 - "POST /edit HTTP/1.1" 200
+2025-11-12 19:38:29,610 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-12 19:38:29,610 - uvicorn.access - INFO - 127.0.0.1:45914 - "POST /generate HTTP/1.1" 200
+2025-11-12 19:39:56,446 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-12 19:39:56,446 - uvicorn.access - INFO - 127.0.0.1:59544 - "POST /generate HTTP/1.1" 200
+2025-11-12 19:42:38,329 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-12 19:42:38,329 - uvicorn.access - INFO - 127.0.0.1:36258 - "POST /generate HTTP/1.1" 200
+2025-11-12 19:42:40,003 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-12 19:42:40,004 - uvicorn.access - INFO - 127.0.0.1:35748 - "POST /generate HTTP/1.1" 200
+2025-11-12 19:42:41,904 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-12 19:42:41,904 - uvicorn.access - INFO - 127.0.0.1:35750 - "POST /generate HTTP/1.1" 200
+2025-11-12 19:42:44,416 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-12 19:42:44,416 - uvicorn.access - INFO - 127.0.0.1:35754 - "POST /generate HTTP/1.1" 200
+2025-11-12 19:42:47,409 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-12 19:42:47,410 - uvicorn.access - INFO - 127.0.0.1:35762 - "POST /generate HTTP/1.1" 200
+2025-11-12 19:42:50,741 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-12 19:42:50,742 - uvicorn.access - INFO - 127.0.0.1:35778 - "POST /generate HTTP/1.1" 200
+2025-11-12 19:42:52,067 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-12 19:42:52,068 - uvicorn.access - INFO - 127.0.0.1:38884 - "POST /generate HTTP/1.1" 200
+2025-11-12 19:42:53,264 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-12 19:42:53,264 - uvicorn.access - INFO - 127.0.0.1:38892 - "POST /generate HTTP/1.1" 200
+2025-11-12 19:42:54,458 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-12 19:42:54,459 - uvicorn.access - INFO - 127.0.0.1:38906 - "POST /generate HTTP/1.1" 200
+2025-11-12 19:42:55,999 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-12 19:42:55,999 - uvicorn.access - INFO - 127.0.0.1:38920 - "POST /generate HTTP/1.1" 200
+2025-11-12 19:43:31,103 - uvicorn.error - INFO - Shutting down
+2025-11-12 19:43:31,203 - uvicorn.error - INFO - Waiting for application shutdown.
+2025-11-12 19:43:31,204 - __main__ - INFO - Gateway shutting down. HTTPX client closed.
+2025-11-12 19:43:31,204 - uvicorn.error - INFO - Application shutdown complete.
+2025-11-12 19:43:31,204 - uvicorn.error - INFO - Finished server process [2307719]

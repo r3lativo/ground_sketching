@@ -1,0 +1,82 @@
+2025-11-12 18:03:07,095 - root - INFO - Logging configured.
+2025-11-12 18:03:07,096 - __main__ - INFO - Starting Image Generation server on http://0.0.0.0:8002
+2025-11-12 18:03:07,153 - uvicorn.error - INFO - Started server process [1218370]
+2025-11-12 18:03:07,154 - uvicorn.error - INFO - Waiting for application startup.
+2025-11-12 18:03:07,154 - __main__ - INFO - Application startup: Loading model...
+2025-11-12 18:03:07,154 - __main__ - INFO - CUDA available. Using device: cuda with dtype: torch.bfloat16
+2025-11-12 18:03:08,557 - __main__ - INFO - Loading base pipeline: Qwen/Qwen-Image-Edit-2509...
+2025-11-12 18:03:10,306 - __main__ - INFO - Loading LoRA weights: Qwen-Image-Lightning/Qwen-Image-Edit-2509/Qwen-Image-Edit-2509-Lightning-8steps-V1.0-fp32.safetensors...
+2025-11-12 18:04:27,022 - __main__ - INFO - Moving pipeline to device: cuda...
+2025-11-12 18:07:31,500 - __main__ - INFO - Image generation pipeline loaded successfully.
+2025-11-12 18:07:31,507 - uvicorn.error - INFO - Application startup complete.
+2025-11-12 18:07:31,508 - uvicorn.error - INFO - Uvicorn running on http://0.0.0.0:8002 (Press CTRL+C to quit)
+2025-11-12 18:08:52,958 - __main__ - INFO - Received request - Prompt: 'a dog on a skateboard :)...', Images: 1
+2025-11-12 18:09:15,229 - __main__ - INFO - Pipeline inference successful. Time taken: 22.27 seconds.
+2025-11-12 18:09:15,343 - uvicorn.access - INFO - 127.0.0.1:42712 - "POST /img_generate HTTP/1.1" 200
+2025-11-12 18:10:44,101 - __main__ - INFO - Received request - Prompt: 'a dog on a skateboard :)...', Images: 1
+2025-11-12 18:11:03,838 - __main__ - INFO - Pipeline inference successful. Time taken: 19.74 seconds.
+2025-11-12 18:11:03,950 - uvicorn.access - INFO - 127.0.0.1:40390 - "POST /img_generate HTTP/1.1" 200
+2025-11-12 18:14:59,303 - __main__ - INFO - Received request - Prompt: 'make the wheels red...', Images: 1
+2025-11-12 18:15:19,009 - __main__ - INFO - Pipeline inference successful. Time taken: 19.71 seconds.
+2025-11-12 18:15:19,173 - uvicorn.access - INFO - 127.0.0.1:58938 - "POST /img_generate HTTP/1.1" 200
+2025-11-12 18:27:01,477 - __main__ - INFO - Received request - Prompt: 'A charming, playful scene featuring an adorable, m...', Images: 1
+2025-11-12 18:27:21,731 - __main__ - INFO - Pipeline inference successful. Time taken: 20.25 seconds.
+2025-11-12 18:27:21,924 - uvicorn.access - INFO - 127.0.0.1:56638 - "POST /img_generate HTTP/1.1" 200
+2025-11-12 18:28:08,776 - __main__ - INFO - Received request - Prompt: 'Modify the dog's posture to show it performing a k...', Images: 1
+2025-11-12 18:28:28,535 - __main__ - INFO - Pipeline inference successful. Time taken: 19.76 seconds.
+2025-11-12 18:28:28,822 - uvicorn.access - INFO - 127.0.0.1:36356 - "POST /img_generate HTTP/1.1" 200
+2025-11-12 18:29:31,726 - __main__ - INFO - Received request - Prompt: 'Place the man from Image 1 lying comfortably on th...', Images: 3
+2025-11-12 18:30:18,903 - __main__ - INFO - Pipeline inference successful. Time taken: 47.18 seconds.
+2025-11-12 18:30:19,226 - uvicorn.access - INFO - 127.0.0.1:50046 - "POST /img_generate HTTP/1.1" 200
+2025-11-12 18:31:38,406 - __main__ - INFO - Received request - Prompt: 'Place the man from Image 1 lying comfortably on th...', Images: 3
+2025-11-12 18:32:25,470 - __main__ - INFO - Pipeline inference successful. Time taken: 47.06 seconds.
+2025-11-12 18:32:25,791 - uvicorn.access - INFO - 127.0.0.1:59020 - "POST /img_generate HTTP/1.1" 200
+2025-11-12 18:37:24,652 - __main__ - INFO - Received request - Prompt: 'Place the man from Image 1 lying comfortably on th...', Images: 3
+2025-11-12 18:38:11,683 - __main__ - INFO - Pipeline inference successful. Time taken: 47.03 seconds.
+2025-11-12 18:38:12,006 - uvicorn.access - INFO - 127.0.0.1:57532 - "POST /img_generate HTTP/1.1" 200
+2025-11-12 18:49:48,659 - root - INFO - Logging configured.
+2025-11-12 18:49:48,660 - __main__ - INFO - Starting Image Generation server on http://0.0.0.0:8002
+2025-11-12 18:49:48,795 - uvicorn.error - INFO - Started server process [2247599]
+2025-11-12 18:49:48,795 - uvicorn.error - INFO - Waiting for application startup.
+2025-11-12 18:49:48,796 - __main__ - INFO - Application startup: Loading model...
+2025-11-12 18:49:48,796 - __main__ - INFO - CUDA available. Using device: cuda with dtype: torch.bfloat16
+2025-11-12 18:49:50,051 - __main__ - INFO - Loading base pipeline: Qwen/Qwen-Image-Edit-2509...
+2025-11-12 18:49:52,571 - __main__ - INFO - Loading LoRA weights: Qwen-Image-Lightning/Qwen-Image-Edit-2509/Qwen-Image-Edit-2509-Lightning-8steps-V1.0-fp32.safetensors...
+2025-11-12 18:50:05,622 - __main__ - INFO - Moving pipeline to device: cuda...
+2025-11-12 18:52:49,000 - __main__ - INFO - Image generation pipeline loaded successfully.
+2025-11-12 18:52:49,011 - uvicorn.error - INFO - Application startup complete.
+2025-11-12 18:52:49,012 - uvicorn.error - INFO - Uvicorn running on http://0.0.0.0:8002 (Press CTRL+C to quit)
+2025-11-12 19:14:55,210 - uvicorn.error - INFO - Shutting down
+2025-11-12 19:14:55,311 - uvicorn.error - INFO - Waiting for application shutdown.
+2025-11-12 19:14:55,311 - __main__ - INFO - Application shutdown.
+2025-11-12 19:14:55,865 - uvicorn.error - INFO - Application shutdown complete.
+2025-11-12 19:14:55,865 - uvicorn.error - INFO - Finished server process [2247599]
+2025-11-12 19:19:44,285 - root - INFO - Logging configured.
+2025-11-12 19:19:44,286 - __main__ - INFO - Starting Image Generation server on http://0.0.0.0:8002
+2025-11-12 19:19:44,334 - uvicorn.error - INFO - Started server process [2271265]
+2025-11-12 19:19:44,335 - uvicorn.error - INFO - Waiting for application startup.
+2025-11-12 19:19:44,335 - __main__ - INFO - Application startup: Loading model...
+2025-11-12 19:19:44,335 - __main__ - INFO - CUDA available. Using device: cuda with dtype: torch.bfloat16
+2025-11-12 19:19:45,362 - __main__ - INFO - Loading base pipeline: Qwen/Qwen-Image-Edit-2509...
+2025-11-12 19:19:46,946 - __main__ - INFO - Loading LoRA weights: Qwen-Image-Lightning/Qwen-Image-Edit-2509/Qwen-Image-Edit-2509-Lightning-8steps-V1.0-fp32.safetensors...
+2025-11-12 19:20:28,794 - __main__ - INFO - Moving pipeline to device: cuda...
+2025-11-12 19:23:13,734 - __main__ - INFO - Image generation pipeline loaded successfully.
+2025-11-12 19:23:13,736 - uvicorn.error - INFO - Application startup complete.
+2025-11-12 19:23:13,765 - uvicorn.error - INFO - Uvicorn running on http://0.0.0.0:8002 (Press CTRL+C to quit)
+2025-11-12 19:32:20,908 - __main__ - INFO - Received request - Prompt: 'Place the man from Image 1 lying comfortably on th...', Images: 3
+2025-11-12 19:34:21,247 - __main__ - INFO - Pipeline inference successful. Time taken: 120.34 seconds.
+2025-11-12 19:34:21,564 - uvicorn.access - INFO - 127.0.0.1:59922 - "POST /img_generate HTTP/1.1" 200
+2025-11-12 19:35:39,942 - __main__ - INFO - Received request - Prompt: 'Place the man from Image 1 lying comfortably on th...', Images: 3
+2025-11-12 19:37:37,285 - __main__ - INFO - Pipeline inference successful. Time taken: 117.34 seconds.
+2025-11-12 19:37:37,601 - uvicorn.access - INFO - 127.0.0.1:57026 - "POST /img_generate HTTP/1.1" 200
+2025-11-12 19:38:29,655 - __main__ - INFO - Received request - Prompt: 'A whimsical, surreal illustration of an anthropomo...', Images: 1
+2025-11-12 19:39:19,782 - __main__ - INFO - Pipeline inference successful. Time taken: 50.13 seconds.
+2025-11-12 19:39:20,068 - uvicorn.access - INFO - 127.0.0.1:46210 - "POST /img_generate HTTP/1.1" 200
+2025-11-12 19:39:56,491 - __main__ - INFO - Received request - Prompt: 'A whimsical, surreal tropical scene centered aroun...', Images: 1
+2025-11-12 19:40:16,669 - __main__ - INFO - Pipeline inference successful. Time taken: 20.18 seconds.
+2025-11-12 19:40:17,074 - uvicorn.access - INFO - 127.0.0.1:55310 - "POST /img_generate HTTP/1.1" 200
+2025-11-12 19:43:29,819 - uvicorn.error - INFO - Shutting down
+2025-11-12 19:43:29,919 - uvicorn.error - INFO - Waiting for application shutdown.
+2025-11-12 19:43:29,920 - __main__ - INFO - Application shutdown.
+2025-11-12 19:43:30,056 - uvicorn.error - INFO - Application shutdown complete.
+2025-11-12 19:43:30,057 - uvicorn.error - INFO - Finished server process [2271265]
