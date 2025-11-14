@@ -136,5 +136,5 @@ python3 interactive_edit.py -i IMAGE_PATH_TO_START_FROM -d --no-cleanup # -d byp
 Finally, there is an augmenter, that takes a conversation and `--creates_prompts` to "render" to images via the diffusion model. The images can be generated calling `--render_prompts`.
 
 ```python
-python3 augmenter.py --file "data/mini.csv" --user "Debra" --create_prompts --render_prompts
+python3 augmenter.py --file "data/mini.csv" --user "Debra" --create_aug --gen_images_from_aug
 ```

@@ -57,6 +57,7 @@ vllm serve \
     --trust-remote-code \
     --host "$VLLM_HOST" \
     --port $VLLM_PORT \
+    --limit_mm_per_prompt  '{"images": 1, "videos": 0, "audios": 0}'\
     2>&1 | tee -a "logs/vllm_serve.log" & # Appends to the log file
 
 VLLM_PID=$!

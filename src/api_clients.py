@@ -16,6 +16,7 @@ torch.backends.cudnn.deterministic = True
 torch.backends.cudnn.benchmark = False
 
 logger = logging.getLogger(__name__)
+setup_logging(log_file='logs/api_clients.log', log_to_console=False)
 
 # --- Configuration Loading ---
 try:
@@ -77,7 +78,7 @@ async def call_image_gen(prompt: str, base64_images: Optional[List[str]], timeou
         dummy_image_pil = Image.new('RGB', (1024,1024), color='white')
         payload["images"] = [pil_to_base64(dummy_image_pil)]
     
-    logger.info(f"Sending request to Image Gen API: {endpoint} with prompt '{prompt[:50]}...'")
+    logger.info(f"Sending request to Image Gen API: {endpoint} with prompt '{prompt.replace('\n', ' ')}'")
     try:
         async with httpx.AsyncClient() as client_http:
             response = await client_http.post(endpoint, json=payload, timeout=timeout)
@@ -98,6 +99,54 @@ async def call_image_gen(prompt: str, base64_images: Optional[List[str]], timeou
     except Exception as e:
         logger.error(f"An unexpected error occurred during image generation call: {e}", exc_info=True)
         return None
+
+
+# --- Universal Post-Processing Function ---
+
+def _post_process_polisher_response(
+    raw_text: str,
+    json_key: Optional[str] = None
+) -> Optional[str]:
+    """
+    Consolidated post-processing for all polisher responses.
+    1. Always separates 'thinking' from 'answer'.
+    2. Logs the 'thinking' part.
+    3. If a 'json_key' is given, attempts to parse the 'answer' as JSON.
+    4. Returns the final, clean answer.
+    """
+    if not raw_text:
+        return None
+
+    # 1. Always run thinking_parser first
+    parsed_output = thinking_parser(raw_text)
+    thinking_part = parsed_output.get("thinking")
+    answer_part = parsed_output.get("answer")
+
+    # Print the thinking/answer to the console
+    print(f"\nThinking:\n{thinking_part}")
+    print(f"\nAnswer:\n{answer_part}")
+
+    # 2. Log the thinking part (with newlines replaced for clean logging)
+    if thinking_part:
+        logger.info(f"Polisher thought: {thinking_part.replace('\n', ' ')}")
+    
+    # 3. Check if we have an answer to process
+    if not answer_part:
+        logger.warning("Polisher returned no answer after parsing </think>.")
+        return None
+
+    # 4. Attempt to parse JSON *if* a key was provided
+    if json_key:
+        final_prompt = json_parser(answer_part, json_key)
+        # json_parser returns the original text on failure, so we check
+        # if it's *still* JSON (which means failure)
+        if final_prompt.strip().startswith('{'):
+            logger.warning(f"JSON key '{json_key}' not found. Returning raw answer.")
+            return answer_part.strip()
+        return final_prompt
+    
+    # 5. If no JSON key, just return the clean answer
+    return answer_part.strip()
 
 
 # --- Consolidated Prompt Polisher Client ---
@@ -123,18 +172,18 @@ async def call_prompt_polisher(
     
     messages = []
     endpoint_path = "/generate"  # Default to text-only endpoint
-    post_process_fn = lambda raw_text: raw_text.strip() # Default post-processing
+    json_key_to_parse = None # Default to expecting plain text
     
     # --- 1. Determine API Configuration based on inputs ---
 
     if images:
-        # --- Case 1: Multimodal Edit (Needs /edit endpoint) ---
-        logger.info(f"Polisher Case: Multimodal Edit (Utterance: '{utterance[:50]}...')")
+        # --- Case 1: Multimodal Edit (uses /edit endpoint) ---
+        logger.info(f"Polisher Case: Multimodal Edit (Utterance: '{utterance.replace('\n', ' ')}')")
         endpoint_path = "/edit"
+        json_key_to_parse = "Rewritten" # Expects JSON
         
         content: List[Dict[str, Any]] = []
         for img_b64 in images:
-            # Add the data:image header required by the gateway
             content.append({"type": "image", "image": f"data:image/jpeg;base64,{img_b64}"})
         content.append({"type": "text", "text": utterance})
         
@@ -142,58 +191,38 @@ async def call_prompt_polisher(
             {"role": "system", "content": edit_system_prompt},
             {"role": "user", "content": content}
         ]
-        
-        # Define the post-processing function for this case
-        def post_process_fn(raw_text):
-            parsed = thinking_parser(raw_text)
-            logger.info(f"Polisher (Edit) thought: {parsed.get('thinking', 'N/A')[:150]}...")
-            print(f"Thinking:\n{parsed.get('thinking')}\nAnswer:{parsed.get('answer')}")
-            answer = parsed.get("answer")
-            if answer:
-                return json_parser(answer, 'Rewritten') # Expects JSON
-            return None
 
     elif context and previous_prompts is not None:
         # --- Case 2: Contextual Edit (Text-only, uses /generate) ---
-        logger.info(f"Polisher Case: Contextual Edit (Utterance: '{utterance[:50]}...')")
+        logger.info(f"Polisher Case: Contextual Edit (Utterance: '{utterance.replace('\n', ' ')}')")
+        json_key_to_parse = "Rewritten" # Expects JSON
+        
         content_str = f"Conversation Context:\n{context}\nTarget Utterance:\n{utterance}\nPrevious Prompts:\n{previous_prompts}\nRewritten:\n"
         messages = [
             {"role": "system", "content": contextual_edit_system_prompt},
             {"role": "user", "content": content_str}
         ]
-        
-        def post_process_fn(raw_text):
-            parsed = json_parser(raw_text, 'Rewritten') # Expects JSON
-            if parsed:
-                return parsed.strip().replace("\n", " ")
-            return None
 
     elif context:
         # --- Case 3: Contextual Create (Text-only, uses /generate) ---
-        logger.info(f"Polisher Case: Contextual Create (Utterance: '{utterance[:50]}...')")
+        logger.info(f"Polisher Case: Contextual Create (Utterance: '{utterance.replace('\n', ' ')}')")
+        # No JSON key, expects plain text
+        
         content_str = f"Conversation Context:\n{context}\nTarget Utterance:\n{utterance}\nRewritten Prompt:\n"
         messages = [
             {"role": "system", "content": contextual_polish_system_prompt},
             {"role": "user", "content": content_str}
         ]
-        
-        def post_process_fn(raw_text):
-            return raw_text.strip().replace("\n", " ") # Expects plain text
 
     else:
         # --- Case 4: Simple Text-Only Polish (uses /generate) ---
-        logger.info(f"Polisher Case: Simple Text-Only (Utterance: '{utterance[:50]}...')")
+        logger.info(f"Polisher Case: Simple Text-Only (Utterance: '{utterance.replace('\n', ' ')}')")
+        # No JSON key, expects plain text
+        
         messages = [
             {"role": "system", "content": polish_system_prompt},
             {"role": "user", "content": utterance}
         ]
-        
-        def post_process_fn(raw_text):
-            parsed = thinking_parser(raw_text)
-            logger.info(f"Polisher (Text) thought: {parsed.get('thinking', 'N/A')[:150]}...")
-            print(f"Thinking:\n{parsed.get('thinking')}\nAnswer:{parsed.get('answer')}")
-            return parsed.get("answer") # Expects plain text
-
 
     # --- 2. Build the Final Payload ---
     endpoint = f"{polisher_api_base_url}{endpoint_path}"
@@ -220,13 +249,14 @@ async def call_prompt_polisher(
                 return None
             
             # --- 4. Post-process the response ---
-            final_prompt = post_process_fn(raw_text)
+            final_prompt = _post_process_polisher_response(raw_text, json_key_to_parse)
             
             if final_prompt:
-                logger.info(f"Polisher successful. New prompt: '{final_prompt[:100]}...'")
+                # Log the final, clean prompt
+                logger.info(f"Polisher successful. New prompt: '{final_prompt.replace('\n', ' ')}'")
                 return final_prompt
             else:
-                logger.warning(f"Polisher at {endpoint} returned empty content after parsing raw text: '{raw_text[:100]}...'")
+                logger.warning(f"Polisher at {endpoint} returned empty content after parsing raw text: '{raw_text.replace('\n', ' ')}'")
                 return None
 
     except httpx.HTTPStatusError as e:

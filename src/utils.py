@@ -24,21 +24,35 @@ LOG_HEADER = [
 ]
 
 
-def setup_logging(log_file='logs/app.log', level=logging.INFO):
-    """Sets up basic logging to file and console."""
-    # Ensure logs directory exists
-    import os
-    os.makedirs(os.path.dirname(log_file), exist_ok=True)
+def setup_logging(log_file='logs/app.log', level=logging.INFO, log_to_console=True):
+    """
+    Sets up basic logging to a file and optionally to the console.
+    """
+    # Ensure the directory for the log file exists
+    log_dir = os.path.dirname(log_file)
+    if log_dir and not os.path.exists(log_dir):
+        os.makedirs(log_dir)
 
+    # Define the logging format
+    log_format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    
+    # Create a list of handlers
+    handlers = [logging.FileHandler(log_file)]
+
+    if log_to_console:
+        handlers.append(logging.StreamHandler(sys.stdout))
+
+    # Remove all existing handlers from the root logger.
+    # Without this, you might get duplicate log messages.
+    for handler in logging.root.handlers[:]:
+        logging.root.removeHandler(handler)
+
+    # Configure the root logger
     logging.basicConfig(
         level=level,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        handlers=[
-            logging.FileHandler(log_file),
-            logging.StreamHandler()
-        ]
+        format=log_format,
+        handlers=handlers
     )
-    logging.info("Logging configured.")
 
 def pil_to_base64(pil_image: Image.Image, format="PNG") -> str:
     """Converts a PIL Image to a Base64 encoded string."""

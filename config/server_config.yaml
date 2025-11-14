@@ -21,14 +21,14 @@ vlm_service:
   
   # Settings for the vLLM server (scripts/start_vlm_service.sh)
   backend: 
-    model_id: "/lustre/fsmisc/dataset/HuggingFace_Models/Qwen/Qwen2.5-VL-32B-Instruct"
-    #model_id: "/linkhome/rech/genxzs01/upa38qy/.cache/huggingface/hub/models--Qwen--Qwen3-VL-32B-Thinking/snapshots/7edd10ffd1196091948fb245ff63e406ccb2d4d1"
+    # model_id: "/lustre/fsmisc/dataset/HuggingFace_Models/Qwen/Qwen2.5-VL-32B-Instruct"
+    model_id: "/linkhome/rech/genxzs01/upa38qy/.cache/huggingface/hub/models--Qwen--Qwen3-VL-32B-Thinking/snapshots/7edd10ffd1196091948fb245ff63e406ccb2d4d1"
     vllm_host: "127.0.0.1"
     vllm_port: 8008
-    tensor_parallel_size: 1
+    tensor_parallel_size: 2
     gpu_memory_utilization: 0.9
     dtype: "bfloat16"
-    max_model_len: 15000  # TOTAL limit (input+output)
+    max_model_len: 30000  # TOTAL limit (input+output)
     trust_remote_code: true
     vllm_seed: 0
 
@@ -36,7 +36,7 @@ vlm_client:
   seed: 0
   top_p: 0.95
   temperature: 0.8
-  max_tokens: 5000  # OUTPUT limit
+  max_tokens: 15000  # OUTPUT limit
   
   jinja:
     env: 'templates'

@@ -38,7 +38,7 @@ def check_servers(args):
         )
 
     # --- Check Image Gen (Conditionally required) ---
-    if args.render_prompts:  # Check if we intend to render
+    if args.gen_images_from_aug:  # Check if we intend to render
         img_gen_conf = server_config["image_gen_service"]
         if not check_server(img_gen_conf["host"], img_gen_conf["port"]):
             failed_services.append(
@@ -58,14 +58,14 @@ def check_servers(args):
     print("\nAll required services are running.")
         
 
-async def create_prompts(df: pd.DataFrame, user_perspective: str) -> pd.DataFrame:
+async def create_aug(df: pd.DataFrame, user_perspective: str) -> pd.DataFrame:
     """
-    Generates 'prompt_to_render' using the new consolidated polisher,
+    Generates 'img_gen_prompt',
     passing a history of previous prompts instead of images.
     """
     print(f"Creating contextual prompts for user: {user_perspective}...")
 
-    df['prompt_to_render'] = pd.NA
+    df['img_gen_prompt'] = pd.NA
     grouped = df.groupby('chunk_id')
 
     for chunk_id, chunk_df in grouped:
@@ -95,16 +95,17 @@ async def create_prompts(df: pd.DataFrame, user_perspective: str) -> pd.DataFram
                 polished_prompt = await call_prompt_polisher(
                     utterance=utterance_text,
                     context=context_list,
-                    previous_prompts=previous_prompts_history
+                    previous_prompts=previous_prompts_history if previous_prompts_history else None
                 )
 
                 print(f"  > {polished_prompt}")
                 
                 # --- Save the result ---
                 if polished_prompt:
-                    df.at[index, 'prompt_to_render'] = polished_prompt
-                    # Add this *new* prompt to the history for the *next* iteration
-                    previous_prompts_history.append(polished_prompt)
+                    df.at[index, 'img_gen_prompt'] = polished_prompt
+                    # Add this *new* prompt to the history for the *next* iteration if it is NOT `NO_CHANGE`
+                    if polished_prompt != "NO_CHANGE":
+                            previous_prompts_history.append(polished_prompt)
                 else:
                     print(f"Warning: Polishing failed for index {index}. Skipping.")
             
@@ -117,19 +118,18 @@ async def create_prompts(df: pd.DataFrame, user_perspective: str) -> pd.DataFram
     return df
 
 
-async def render_prompts(
+async def gen_images_from_aug(
     df: pd.DataFrame, 
     user_perspective: str, 
-    render_output_dir: str
+    images_output_path_dir: str
 ) -> pd.DataFrame:
     """
-    (Unchanged)
     Generates images by iterating through prompts sequentially,
     passing the output of one step as the input to the next.
     """
     print(f"Rendering prompts for user: {user_perspective}...")
     
-    output_path = Path(render_output_dir)
+    output_path = Path(images_output_path_dir)
     output_path.mkdir(parents=True, exist_ok=True)
     print(f"Saving images to: {output_path.resolve()}")
 
@@ -151,12 +151,20 @@ async def render_prompts(
             print(f"--- Processing Chunk {current_chunk_id} (Render) ---")
 
         # Only render for the target user and if a prompt exists
-        if (row['character'] == user_perspective) and pd.notna(row['prompt_to_render']):
-            prompt = row['prompt_to_render']
+        if (row['character'] == user_perspective) and pd.notna(row['img_gen_prompt']):
+            prompt = row['img_gen_prompt']
             
             img_filename = f"chunk_{chunk_id}_index_{index}.png"
             save_path = os.path.join(output_path, img_filename)
             
+            # Check whether to skip rendering if `NO_CHANGE`
+            if prompt == "NO_CHANGE":
+                print(f"Image for index:{index} has NO_CHANGE. Re-using previous image.")
+                if current_image_b64:
+                    base64_to_pil(current_image_b64).save(save_path)
+                    df.at[index, 'img_path'] = str(save_path)
+                continue # Skip rendering
+
             try:
                 # Pass the previous image (or None) to the image gen service
                 new_image_b64 = await call_image_gen(
@@ -195,32 +203,32 @@ async def main():
         help="Path to the input conversation.csv file."
     )
     parser.add_argument(
-        "--output", 
-        type=str, 
-        default=None, 
-        help="Path to save the output conversation_aug.csv file. Defaults to [input_file]_aug.csv if not provided."
-    )
-    parser.add_argument(
         "--user", 
         type=str, 
         required=True, 
         help="The 'character' (user) perspective to render (e.g., 'Nathan')."
     )
     parser.add_argument(
-        "--create_prompts", 
+        "--create_aug", 
         action='store_true', 
-        help="Flag to generate the 'prompt_to_render' column."
+        help="Flag to generate the 'img_gen_prompt' column."
     )
     parser.add_argument(
-        "--render_prompts", 
-        action='store_true', 
-        help="Flag to render images from the 'prompt_to_render' column."
-    )
-    parser.add_argument(
-        "--render_output", 
+        "--aug_output_path", 
         type=str, 
-        default=None,
-        help="Directory to save rendered images. Used if --render_prompts is set."
+        default="output/",  # Changed default
+        help="Path to save the output conversation_aug.csv file. Defaults to output/[input_file_stem]_aug.csv if not provided."
+    )
+    parser.add_argument(
+        "--gen_images_from_aug", 
+        action='store_true', 
+        help="Flag to render images from the 'img_gen_prompt' column."
+    )
+    parser.add_argument(
+        "--images_output_path", 
+        type=str, 
+        default="output/",  # Changed default
+        help="Directory to save rendered images. Defaults to output/[input_file_stem]_aug/ if not provided."
     )
     
     args = parser.parse_args()
@@ -228,20 +236,24 @@ async def main():
     # Call the improved server check
     check_servers(args)
 
-    if args.output is None:
+    # Set the default output path for augmented version if it is not provided
+    # Check if the path is still the default directory value
+    if args.aug_output_path == "output/":
         input_path = Path(args.file)
         new_filename = f"{input_path.stem}_aug{input_path.suffix}"
-        args.output = str(input_path.with_name(new_filename))
-        print(f"No --output provided. Defaulting to: {args.output}")
+        args.aug_output_path = Path("output") / new_filename
+        print(f"No --aug_output_path provided. Defaulting to: {args.aug_output_path}")
 
-    if args.render_output is None and args.render_prompts:
+    # If generating images but no output path for those, set it
+    # Check if the path is still the default directory value
+    if args.gen_images_from_aug and args.images_output_path == "output/":
         input_path = Path(args.file)
-        new_directory = f"output/{input_path.stem}_aug"
-        args.render_output = new_directory
-        print(f"No --render_output provided. Defaulting to: {args.render_output}")
+        new_directory = f"{input_path.stem}_aug"
+        args.images_output_path = Path("output") / new_directory
+        print(f"No --images_output_path provided. Defaulting to: {args.images_output_path}")
 
-    if not args.create_prompts and not args.render_prompts:
-        print("Neither --create_prompts nor --render_prompts was set. Doing nothing.")
+    if not args.create_aug and not args.gen_images_from_aug:
+        print("Neither --create_aug nor --gen_images_from_aug was set. Doing nothing.")
         return
 
     try:
@@ -254,27 +266,35 @@ async def main():
         print(f"Error loading CSV: {e}")
         return
 
-    if args.create_prompts:
-        df = await create_prompts(df, args.user)
-        df.to_csv(args.output, index=False)
-        print(f"Saved augmented CSV with prompts to {args.output}")
+    if args.create_aug:
+        df = await create_aug(df=df, user_perspective=args.user)
+        df.to_csv(args.aug_output_path, index=False)
+        print(f"Saved augmented CSV with prompts to {args.aug_output_path}")
 
-    if args.render_prompts:
-        if not args.create_prompts:
+    if args.gen_images_from_aug:
+        if not args.create_aug:
             # If only rendering, load the file that supposedly has prompts
             try:
-                df = pd.read_csv(args.output)
-                print(f"Loaded {args.output} for rendering.")
-                if 'prompt_to_render' not in df.columns:
-                    print(f"Error: {args.output} does not have 'prompt_to_render' column.")
+                # Use the path that was potentially set by the default logic
+                aug_file_to_load = args.aug_output_path
+                
+                if args.aug_output_path == "output/":
+                     input_path = Path(args.file)
+                     new_filename = f"{input_path.stem}_aug{input_path.suffix}"
+                     aug_file_to_load = Path("output") / new_filename
+                
+                df = pd.read_csv(aug_file_to_load)
+                print(f"Loaded {aug_file_to_load} for rendering.")
+                if 'img_gen_prompt' not in df.columns:
+                    print(f"Error: {aug_file_to_load} does not have 'img_gen_prompt' column.")
                     return
             except FileNotFoundError:
-                print(f"Error: {args.output} not found. Run with --create_prompts first.")
+                print(f"Error: {aug_file_to_load} not found. Run with --create_aug first.")
                 return
 
-        df = await render_prompts(df, args.user, args.render_output)
-        df.to_csv(args.output, index=False)
-        print(f"Saved final CSV with image paths to {args.output}")
+        df = await gen_images_from_aug(df=df, user_perspective=args.user, images_output_path_dir=args.images_output_path)
+        df.to_csv(args.aug_output_path, index=False)
+        print(f"Saved final CSV with image paths to {args.aug_output_path}")
 
 if __name__ == "__main__":
     try:

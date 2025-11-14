@@ -17,9 +17,9 @@ OUTPUT_DIR = 'output'
 # https://nunchaku.tech/docs/nunchaku/usage/qwen-image-edit.html#qwen-image-edit-2509
 # Make sure these images exist or replace paths
 INPUT_IMAGE_PATHS = [
-    "data/man.png",
-    "data/puppy.png",
-    "data/sofa.png",
+    "data/pipeline_test/man.png",
+    "data/pipeline_test/puppy.png",
+    "data/pipeline_test/sofa.png",
 ]
 INITIAL_PROMPT = "Let the man in image 1 lie on the sofa in image 3, and let the puppy in image 2 lie on the floor to sleep."
 OUTPUT_FILENAME = f"test_output_{int(time.time())}.png"
