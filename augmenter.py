@@ -103,9 +103,12 @@ async def create_aug(df: pd.DataFrame, user_perspective: str) -> pd.DataFrame:
                 # --- Save the result ---
                 if polished_prompt:
                     df.at[index, 'img_gen_prompt'] = polished_prompt
-                    # Add this *new* prompt to the history for the *next* iteration if it is NOT `NO_CHANGE`
-                    if polished_prompt != "NO_CHANGE":
-                            previous_prompts_history.append(polished_prompt)
+                    # If the output is `[NO_CHANGE]`, skip
+                    if polished_prompt == "[NO_CHANGE]":
+                        continue
+                    # Add this *new* prompt to the history for the *next* iteration
+                    else:
+                        previous_prompts_history.append(polished_prompt)
                 else:
                     print(f"Warning: Polishing failed for index {index}. Skipping.")
             

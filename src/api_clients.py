@@ -39,14 +39,14 @@ try:
     )
     polish_template = env.get_template(config['vlm_client']['jinja']['polish_t'])
     edit_template = env.get_template(config['vlm_client']['jinja']['edit_t'])
-    contextual_polish_template = env.get_template(config['vlm_client']['jinja']['contextual_polish_t'])
-    contextual_edit_template = env.get_template(config['vlm_client']['jinja']['contextual_edit_t'])
+    initial_start_template = env.get_template(config['vlm_client']['jinja']['initial_start_t'])
+    initial_edit_template = env.get_template(config['vlm_client']['jinja']['initial_edit_t'])
     
     # Render templates
     polish_system_prompt = polish_template.render()
     edit_system_prompt = edit_template.render()
-    contextual_polish_system_prompt = contextual_polish_template.render()
-    contextual_edit_system_prompt = contextual_edit_template.render()
+    initial_start_system_prompt = initial_start_template.render()
+    inital_edit_system_prompt = initial_edit_template.render()
     logger.info("System prompts loaded from Jinja2 templates.")
 
 except FileNotFoundError:
@@ -193,24 +193,24 @@ async def call_prompt_polisher(
         ]
 
     elif context and previous_prompts is not None:
-        # --- Case 2: Contextual Edit (Text-only, uses /generate) ---
+        # --- Case 2: Initial Edit (Text-only, uses /generate) ---
         logger.info(f"Polisher Case: Contextual Edit (Utterance: '{utterance.replace('\n', ' ')}')")
         json_key_to_parse = "Rewritten" # Expects JSON
         
         content_str = f"Conversation Context:\n{context}\nTarget Utterance:\n{utterance}\nPrevious Prompts:\n{previous_prompts}\nRewritten:\n"
         messages = [
-            {"role": "system", "content": contextual_edit_system_prompt},
+            {"role": "system", "content": inital_edit_system_prompt},
             {"role": "user", "content": content_str}
         ]
 
     elif context:
-        # --- Case 3: Contextual Create (Text-only, uses /generate) ---
+        # --- Case 3: Initial Start (Text-only, uses /generate) ---
         logger.info(f"Polisher Case: Contextual Create (Utterance: '{utterance.replace('\n', ' ')}')")
         # No JSON key, expects plain text
         
         content_str = f"Conversation Context:\n{context}\nTarget Utterance:\n{utterance}\nRewritten Prompt:\n"
         messages = [
-            {"role": "system", "content": contextual_polish_system_prompt},
+            {"role": "system", "content": initial_start_system_prompt},
             {"role": "user", "content": content_str}
         ]
 

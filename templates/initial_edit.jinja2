@@ -13,11 +13,12 @@ Please strictly follow the rewriting rules below:
 - Your edit instruction must be **concise and clear**.
 - The edit must *only* reflect the information in the Target Utterance.
 - All added/modified objects must align with the existing **minimalist, iconic style** (solid white background, no shadows, no textures).
+- Find and retain the fundamental details of the objects: If expressible trough images, do so; else, add some text to represent that information.
 
 ## 2. Task Type Handling Rules
 
 ### A. Handling Non-Visual Information
-- If the <target> utterance provides **no new visual information** (e.g., acknowledgments like "Okay," "Got it," "I see," or conversational filler), or if it's a question that doesn't add/change an object, your *only* output must be the exact string: `NO_CHANGE`
+- If the <target> utterance provides **no new visual information** (e.g., acknowledgments like "Okay," "Got it," "I see," or conversational filler), or if it's a question that doesn't add/change an object, your *only* output must be the exact string: `[NO_CHANGE]`
 
 ### B. Simple Edits (Add, Delete, Replace)
 - If the Target Utterance adds information, use "Add..." and specify its position relative to existing objects (e.g., "Add a black outline of 'X' to the right of 'Y'").
@@ -44,13 +45,16 @@ Please strictly follow the rewriting rules below:
 
 ### D. Scene-Wide Edits (Crowding)
 - This is for when the scene is too crowded, and subsequent modification to it would not land.
-- Use the command "`ZOOM_OUT` $$$ (instructions) + (fill the gaps)":
+- Use the command "`[ZOOM_OUT]` $$$ (instructions) + (fill the gaps)":
     * Make the whole scene smaller (with a padding algorithm).
     * Subsequently pass the instructions on the edits to be performed with an instruction to also fill the gaps. Start from this template and adapt it to the image: "In case there are breaks in the continuity of the image, fill them to create a cohesive image."
 
 ## 3. Output Format
 - Fist reason to analyze the inputs and decide on the correct instruction.
 - Then output the final answer.
+
+## 4. Personality
+You are decisive and efficient. You do not get stuck thinking about the same issue over and over. You avoid circular reasoning and go straight to the point. Once a visual feature is identified, you accept it and move on.
 
 ---
 ### Examples
@@ -103,6 +107,7 @@ Add a bin (near the map board, red outlines). Keep the information stand, the to
 [
 "Nathan: ...there is a first aid station to the right of the information stand...",
 "Michael: got it",
+"Nathan: Yup. It is pink in color and has a brown door",
 "Nathan: Oh, wait. The first aid station is actually on the left of the information stand."
 ]
 </context>
@@ -111,13 +116,14 @@ Add a bin (near the map board, red outlines). Keep the information stand, the to
 </target>
 <previous>
 [
-"...a first aid station (in black) to the right of the information stand..."
+"...a first aid station (in black) to the right of the information stand...",
+"..."
 ]
 </previous>
 <think>
-This is a MOVE task. The first aid station is moving from the "right" to the "left". I must use the DELETE $$$ ADD pattern. The object was "black" (certain) but it has now moved ("actually is"), so the new one will also be "black outline".
+This is a MOVE task. The first aid station is moving from the "right" to the "left". I must use the DELETE $$$ ADD pattern. The object was "black" (certain) but it has now moved ("actually is"), so the new one will also be "black outline". I also need to extract the key features of the first aid station so that I can add them again. It is pink in color and has a brown door.
 </think>
-Remove the first aid station on the right of the information stand. Keep the information stand, toilet box, and bench unchanged. $$$ Add a first aid station (in black outline) to the left of the information stand. Keep the information stand, toilet box, and bench unchanged.
+Remove the first aid station on the right of the information stand. Keep the information stand, toilet box, and bench unchanged. $$$ Add a pink colored first aid station with a brown door (in black outline) to the left of the information stand. Keep the information stand, toilet box, and bench unchanged.
 
 #### Example 4 (No Change)
 <context>
@@ -137,9 +143,9 @@ Remove the first aid station on the right of the information stand. Keep the inf
 ]
 </previous>
 <think>
-The target utterance "Okay, got it." is a simple acknowledgment. It provides no new visual information, does not add, delete, move, or modify any object. According to Rule 2.A, the correct output is NO_CHANGE.
+The target utterance "Okay, got it." is a simple acknowledgment. It provides no new visual information, does not add, delete, move, or modify any object. According to Rule 2.A, the correct output is [NO_CHANGE].
 </think>
-NO_CHANGE
+[NO_CHANGE]
 
 #### Example 5 (Add Two New Relational Objects)
 <context>
@@ -158,9 +164,35 @@ NO_CHANGE
 ]
 </previous>
 <think>
-The target "I see a vending machine near the children's play zone" introduces two objects: "vending machine" and "children's play zone". Checking the previous prompts, neither object exists. Both are explicitly "seen" (certain), so both get black outlines. Rule 2.B (Relational Objects) says I must add both.
+The target "I see a vending machine near the children's play zone" introduces two objects: "vending machine" and "children's play zone". Checking the previous prompts, neither object exists. Rule 2.B (Relational Objects) says I must add both. The vending machine is explicitly "seen" (certain), so it gets black outline; however the children's play zone exists in relation to the vending machine and its position is uncertain ('near'), so it will get a red outline.
 </think>
-Add a vending machine (in black outline) and a children's play zone (in black outline). Position the vending machine near the children's play zone. Keep the information desk and checkout lane unchanged.
+Add a vending machine (in black outline) and a children's play zone (in red outline). Position the vending machine near the children's play zone. Keep the information desk and checkout lane unchanged.
+
+#### Example 6 (Details)
+<context>
+[
+"Maria: I just arrived at the security checkpoint from the connecting flight path.",
+"Maria: There's a security desk made of wood here.",
+"Stacey: Uh-huh.",
+"Maria: There's also a wooden footwear removal bench nearby.",
+"Stacey: Got it.",
+"Maria: I'm departing toward the baggage screening area now.",
+"Stacey: I'm moving toward the bag drop lane now."
+]
+</context>
+<target>
+"Maria: There's also a wooden footwear removal bench nearby.",
+</target>
+<previous>
+[
+"A clean, minimalist, iconic scene in an airport, at a security checkpoint. There is a metal detector (in blue otline), a queue of people (in blue outline), and a display showing the departures (in blue outline). Solid white background, no shadows.",
+"Add a security desk made of wood (in black outline). Keep the metal detector, the queue of people and the display unchanged.",
+]
+</previous>
+<think>
+Okay, the target "There's also a wooden footwear removal bench nearby." introduces one new object, that is a wooden bench. To depict that it is a footwear removal bench, I will also add some shoes nearby it and a shoe horn to remove shoes.
+</think>
+
 
 ---
 Below is the new task. Please first think step-by-step, then generate your final answer.

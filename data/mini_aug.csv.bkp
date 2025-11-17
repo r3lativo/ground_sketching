@@ -1,0 +1,21 @@
+chunk_id,position,character,text,img_gen_prompt
+001,C3,Debra,"Hi Chris, I'm in the leisure and services floor of this multi-level department store.",NO_CHANGE
+001,E5,Chris,"Hey Debra. I'm on the apparel floor. The place is pretty spread out, huh?",
+001,C3,Debra,Definitely. I see a vending machine near the children's play zone here.,Add a vending machine (in black outline).
+001,E5,Chris,"Uh-huh, there's a door just ahead of me. It's a bit hard to see at first.",
+001,C3,Debra,"Got it. The vending machine has a toy section, by the way.",Add a toy section (in black outline) to the vending machine. Keep the vending machine unchanged.
+001,E5,Chris,Nice. I also noticed a security camera near the fitting rooms.,
+001,C3,Debra,"Okay, the vending machine is definitely a highlight here.",NO_CHANGE
+001,E5,Chris,"Hmm, there's a lighting fixture embedded in the drop ceiling above the main aisle.",
+001,C3,Debra,Right. I'm also near a queue barrier with a brass-post leading to the checkout lane.,Add a queue barrier with a brass-post (in red outline) near the vending machine. Keep the vending machine and the toy section unchanged.
+001,E5,Chris,I see a seating bench by the escalators. I'm going to head towards a pram friendly route now.,
+001,C3,Debra,"That makes sense. The customer service desk here is u-shaped, enclosing a staff workstation.","The Target Utterance describes a new object: a customer service desk that is u-shaped and encloses a staff workstation. This object is certain (explicitly stated as present) but has an unclear position (no relative location to existing objects is provided), so it must be drawn with red outlines. The existing objects (vending machine, toy section, and queue barrier) remain unchanged per the requirement to explicitly list unchanged elements. The style-as-semantics rules are applied: red for unclear position, and the desk's description is incorporated concisely.  Add a u-shaped customer service desk (in red outlines). Keep the vending machine, the toy section, and the queue barrier unchanged."
+001,E5,Chris,"Alright, I'll check the pram route and let you know if we can meet up there.",
+002,F5,Chris,I just arrived at the home and tech floor.,
+002,C3,Debra,Uh-huh.,NO_CHANGE
+002,F5,Chris,There's an ATM with a small screen beside the security monitor here.,
+002,C3,Debra,Got it.,NO_CHANGE
+002,F5,Chris,"Next to it, there's a circular promotional stand around the central pillar.",
+002,C3,Debra,Okay.,NO_CHANGE
+002,F5,Chris,And there's a three-door storage cabinet between the two storage racks.,
+002,C3,Debra,I'm heading to the disabled access ramp now.,NO_CHANGE

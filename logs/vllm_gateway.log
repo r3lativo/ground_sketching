@@ -122,3 +122,138 @@ model_id
 2025-11-12 19:43:31,204 - __main__ - INFO - Gateway shutting down. HTTPX client closed.
 2025-11-12 19:43:31,204 - uvicorn.error - INFO - Application shutdown complete.
 2025-11-12 19:43:31,204 - uvicorn.error - INFO - Finished server process [2307719]
+2025-11-13 11:19:11,660 - root - INFO - Logging configured.
+2025-11-13 11:19:11,678 - __main__ - INFO - Starting FastAPI gateway on http://0.0.0.0:8001
+2025-11-13 11:19:11,788 - uvicorn.error - INFO - Started server process [849494]
+2025-11-13 11:19:11,788 - uvicorn.error - INFO - Waiting for application startup.
+2025-11-13 11:19:11,941 - __main__ - INFO - Gateway started. HTTPX client created.
+2025-11-13 11:19:11,941 - uvicorn.error - INFO - Application startup complete.
+2025-11-13 11:19:11,945 - uvicorn.error - INFO - Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
+2025-11-13 11:20:01,414 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-13 11:20:01,415 - uvicorn.access - INFO - 127.0.0.1:49718 - "POST /generate HTTP/1.1" 200
+2025-11-13 11:20:34,050 - uvicorn.error - INFO - Shutting down
+2025-11-13 11:20:34,150 - uvicorn.error - INFO - Waiting for application shutdown.
+2025-11-13 11:20:34,150 - __main__ - INFO - Gateway shutting down. HTTPX client closed.
+2025-11-13 11:20:34,150 - uvicorn.error - INFO - Application shutdown complete.
+2025-11-13 11:20:34,151 - uvicorn.error - INFO - Finished server process [849494]
+2025-11-13 11:25:21,093 - root - INFO - Logging configured.
+2025-11-13 11:25:21,094 - __main__ - INFO - Starting FastAPI gateway on http://0.0.0.0:8001
+2025-11-13 11:25:21,145 - uvicorn.error - INFO - Started server process [872096]
+2025-11-13 11:25:21,145 - uvicorn.error - INFO - Waiting for application startup.
+2025-11-13 11:25:21,243 - __main__ - INFO - Gateway started. HTTPX client created.
+2025-11-13 11:25:21,243 - uvicorn.error - INFO - Application startup complete.
+2025-11-13 11:25:21,246 - uvicorn.error - INFO - Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
+2025-11-13 11:25:54,510 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-13 11:25:54,511 - uvicorn.access - INFO - 127.0.0.1:49718 - "POST /generate HTTP/1.1" 200
+2025-11-13 11:27:25,039 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-13 11:27:25,040 - uvicorn.access - INFO - 127.0.0.1:54176 - "POST /generate HTTP/1.1" 200
+2025-11-13 11:30:42,397 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-13 11:30:42,398 - uvicorn.access - INFO - 127.0.0.1:56838 - "POST /generate HTTP/1.1" 200
+2025-11-13 11:32:29,715 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-13 11:32:29,716 - uvicorn.access - INFO - 127.0.0.1:36908 - "POST /generate HTTP/1.1" 200
+2025-11-13 11:32:29,838 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 400 Bad Request"
+2025-11-13 11:32:29,839 - __main__ - ERROR - vLLM backend error: {"error":{"message":"'max_tokens' or 'max_completion_tokens' is too large: 15000. This model's maximum context length is 30000 tokens and your request has 15783 input tokens (15000 > 30000 - 15783). None","type":"BadRequestError","param":null,"code":400}}
+2025-11-13 11:32:29,839 - uvicorn.access - INFO - 127.0.0.1:50880 - "POST /generate HTTP/1.1" 400
+2025-11-13 11:32:29,897 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 400 Bad Request"
+2025-11-13 11:32:29,898 - __main__ - ERROR - vLLM backend error: {"error":{"message":"'max_tokens' or 'max_completion_tokens' is too large: 15000. This model's maximum context length is 30000 tokens and your request has 15791 input tokens (15000 > 30000 - 15791). None","type":"BadRequestError","param":null,"code":400}}
+2025-11-13 11:32:29,898 - uvicorn.access - INFO - 127.0.0.1:50896 - "POST /generate HTTP/1.1" 400
+2025-11-13 11:32:29,956 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 400 Bad Request"
+2025-11-13 11:32:29,956 - __main__ - ERROR - vLLM backend error: {"error":{"message":"'max_tokens' or 'max_completion_tokens' is too large: 15000. This model's maximum context length is 30000 tokens and your request has 15790 input tokens (15000 > 30000 - 15790). None","type":"BadRequestError","param":null,"code":400}}
+2025-11-13 11:32:29,956 - uvicorn.access - INFO - 127.0.0.1:50902 - "POST /generate HTTP/1.1" 400
+2025-11-13 11:32:38,890 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-13 11:32:38,890 - uvicorn.access - INFO - 127.0.0.1:50756 - "POST /generate HTTP/1.1" 200
+2025-11-13 11:32:48,075 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-13 11:32:48,075 - uvicorn.access - INFO - 127.0.0.1:50770 - "POST /generate HTTP/1.1" 200
+2025-11-13 11:32:57,506 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-13 11:32:57,506 - uvicorn.access - INFO - 127.0.0.1:36442 - "POST /generate HTTP/1.1" 200
+2025-11-13 11:33:11,397 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-13 11:33:11,398 - uvicorn.access - INFO - 127.0.0.1:50026 - "POST /generate HTTP/1.1" 200
+2025-11-13 11:42:53,957 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-13 11:42:53,958 - uvicorn.access - INFO - 127.0.0.1:58260 - "POST /generate HTTP/1.1" 200
+2025-11-13 11:45:46,345 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-13 11:45:46,346 - uvicorn.access - INFO - 127.0.0.1:56412 - "POST /generate HTTP/1.1" 200
+2025-11-13 11:46:16,385 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-13 11:46:16,385 - uvicorn.access - INFO - 127.0.0.1:38296 - "POST /generate HTTP/1.1" 200
+2025-11-13 11:46:30,328 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-13 11:46:30,328 - uvicorn.access - INFO - 127.0.0.1:60400 - "POST /generate HTTP/1.1" 200
+2025-11-13 11:48:39,447 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-13 11:48:39,448 - uvicorn.access - INFO - 127.0.0.1:55776 - "POST /generate HTTP/1.1" 200
+2025-11-13 11:51:13,832 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-13 11:51:13,832 - uvicorn.access - INFO - 127.0.0.1:36948 - "POST /generate HTTP/1.1" 200
+2025-11-13 11:51:25,001 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-13 11:51:25,002 - uvicorn.access - INFO - 127.0.0.1:51726 - "POST /generate HTTP/1.1" 200
+2025-11-13 11:51:35,150 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-13 11:51:35,150 - uvicorn.access - INFO - 127.0.0.1:51746 - "POST /generate HTTP/1.1" 200
+2025-11-13 11:51:42,959 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-13 11:51:42,960 - uvicorn.access - INFO - 127.0.0.1:49754 - "POST /generate HTTP/1.1" 200
+2025-11-13 11:52:18,537 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-13 11:52:18,537 - uvicorn.access - INFO - 127.0.0.1:58668 - "POST /generate HTTP/1.1" 200
+2025-11-14 11:08:19,384 - root - INFO - Logging configured.
+2025-11-14 11:08:19,413 - __main__ - INFO - Starting FastAPI gateway on http://0.0.0.0:8001
+2025-11-14 11:08:19,469 - uvicorn.error - INFO - Started server process [2159043]
+2025-11-14 11:08:19,469 - uvicorn.error - INFO - Waiting for application startup.
+2025-11-14 11:08:19,652 - __main__ - INFO - Gateway started. HTTPX client created.
+2025-11-14 11:08:19,652 - uvicorn.error - INFO - Application startup complete.
+2025-11-14 11:08:19,656 - uvicorn.error - INFO - Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
+2025-11-14 11:10:15,108 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-14 11:10:15,109 - uvicorn.access - INFO - 127.0.0.1:49718 - "POST /generate HTTP/1.1" 200
+2025-11-14 11:10:52,993 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-14 11:10:52,994 - uvicorn.access - INFO - 127.0.0.1:58072 - "POST /generate HTTP/1.1" 200
+2025-11-14 11:11:20,820 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-14 11:11:20,821 - uvicorn.access - INFO - 127.0.0.1:51584 - "POST /generate HTTP/1.1" 200
+2025-11-14 11:11:39,908 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-14 11:11:39,909 - uvicorn.access - INFO - 127.0.0.1:49716 - "POST /generate HTTP/1.1" 200
+2025-11-14 11:13:16,774 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-14 11:13:16,775 - uvicorn.access - INFO - 127.0.0.1:57396 - "POST /generate HTTP/1.1" 200
+2025-11-14 11:15:44,142 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-14 11:15:44,143 - uvicorn.access - INFO - 127.0.0.1:48400 - "POST /generate HTTP/1.1" 200
+2025-11-14 11:16:49,474 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-14 11:16:49,475 - uvicorn.access - INFO - 127.0.0.1:59148 - "POST /generate HTTP/1.1" 200
+2025-11-14 11:16:56,674 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-14 11:16:56,675 - uvicorn.access - INFO - 127.0.0.1:58842 - "POST /generate HTTP/1.1" 200
+2025-11-14 11:17:06,315 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-14 11:17:06,316 - uvicorn.access - INFO - 127.0.0.1:58858 - "POST /generate HTTP/1.1" 200
+2025-11-14 11:17:20,618 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-14 11:17:20,618 - uvicorn.access - INFO - 127.0.0.1:58844 - "POST /generate HTTP/1.1" 200
+2025-11-14 11:43:58,722 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-14 11:43:58,722 - uvicorn.access - INFO - 127.0.0.1:38932 - "POST /generate HTTP/1.1" 200
+2025-11-14 11:44:37,351 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-14 11:44:37,351 - uvicorn.access - INFO - 127.0.0.1:32940 - "POST /generate HTTP/1.1" 200
+2025-11-14 11:45:43,702 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-14 11:45:43,703 - uvicorn.access - INFO - 127.0.0.1:41334 - "POST /generate HTTP/1.1" 200
+2025-11-14 11:47:15,848 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-14 11:47:15,849 - uvicorn.access - INFO - 127.0.0.1:40806 - "POST /generate HTTP/1.1" 200
+2025-11-14 11:47:53,550 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-14 11:47:53,550 - uvicorn.access - INFO - 127.0.0.1:44106 - "POST /generate HTTP/1.1" 200
+2025-11-14 11:49:10,901 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-14 11:49:10,902 - uvicorn.access - INFO - 127.0.0.1:52060 - "POST /generate HTTP/1.1" 200
+2025-11-14 12:01:33,816 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-14 12:01:33,817 - uvicorn.access - INFO - 127.0.0.1:45506 - "POST /generate HTTP/1.1" 200
+2025-11-14 12:08:06,711 - uvicorn.error - INFO - Shutting down
+2025-11-14 12:08:06,812 - uvicorn.error - INFO - Waiting for application shutdown.
+2025-11-14 12:08:06,812 - __main__ - INFO - Gateway shutting down. HTTPX client closed.
+2025-11-14 12:08:06,812 - uvicorn.error - INFO - Application shutdown complete.
+2025-11-14 12:08:06,812 - uvicorn.error - INFO - Finished server process [2159043]
+2025-11-17 11:03:35,395 - __main__ - INFO - Starting FastAPI gateway on http://0.0.0.0:8001
+2025-11-17 11:03:35,514 - uvicorn.error - INFO - Started server process [2196885]
+2025-11-17 11:03:35,514 - uvicorn.error - INFO - Waiting for application startup.
+2025-11-17 11:03:35,781 - __main__ - INFO - Gateway started. HTTPX client created.
+2025-11-17 11:03:35,781 - uvicorn.error - INFO - Application startup complete.
+2025-11-17 11:03:35,785 - uvicorn.error - INFO - Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
+2025-11-17 11:07:24,498 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-17 11:07:24,499 - uvicorn.access - INFO - 127.0.0.1:36228 - "POST /generate HTTP/1.1" 200
+2025-11-17 11:08:18,195 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-17 11:08:18,195 - uvicorn.access - INFO - 127.0.0.1:33552 - "POST /generate HTTP/1.1" 200
+2025-11-17 11:08:45,095 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-17 11:08:45,096 - uvicorn.access - INFO - 127.0.0.1:41078 - "POST /generate HTTP/1.1" 200
+2025-11-17 11:09:39,614 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-17 11:09:39,615 - uvicorn.access - INFO - 127.0.0.1:48018 - "POST /generate HTTP/1.1" 200
+2025-11-17 11:09:57,241 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-17 11:09:57,241 - uvicorn.access - INFO - 127.0.0.1:36022 - "POST /generate HTTP/1.1" 200
+2025-11-17 11:10:45,664 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-17 11:10:45,665 - uvicorn.access - INFO - 127.0.0.1:39754 - "POST /generate HTTP/1.1" 200
+2025-11-17 11:56:21,470 - uvicorn.error - INFO - Shutting down
+2025-11-17 11:56:21,570 - uvicorn.error - INFO - Waiting for application shutdown.
+2025-11-17 11:56:21,570 - __main__ - INFO - Gateway shutting down. HTTPX client closed.
+2025-11-17 11:56:21,571 - uvicorn.error - INFO - Application shutdown complete.
+2025-11-17 11:56:21,571 - uvicorn.error - INFO - Finished server process [2196885]

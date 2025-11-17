@@ -51,5 +51,5 @@ vlm_client:
     mod_polish_edit_t: 'mod_polish_edit.jinja2'
 
     # For chunk + utterance to prompt for img generation
-    contextual_polish_t: 'contextual_polish.jinja2'
-    contextual_edit_t: 'contextual_polish_edit.jinja2'
+    initial_start_t: 'initial_start.jinja2'
+    initial_edit_t: 'initial_edit.jinja2'

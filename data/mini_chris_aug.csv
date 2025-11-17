@@ -1,0 +1,13 @@
+chunk_id,position,character,text,img_gen_prompt
+007,F3,Chris,I just arrived at the home and tech floor from the service desk queue.,"A clean, minimalist, iconic scene. In a home and tech floor, a ""store sign"" (in blue outline), a ""display table"" (in blue outline), and a ""waiting chair"" (in blue outline). Solid white background, no shadows."
+007,B1,Debra,Uh-huh.,
+007,F3,Chris,There's a display table with a tapered leg between two armchairs here.,Remove the display table (in blue outline). Keep the store sign and waiting chair unchanged. $$$ Add two armchairs (in black outline) and add a display table with a tapered leg (in black outline) between them. Keep the store sign and waiting chair unchanged.
+007,B1,Debra,Got it.,
+007,F3,Chris,A two-pocket magazine rack is on the waiting area table nearby.,"Add a two-pocket magazine rack (in black outline) on the display table between the armchairs. Keep the store sign, waiting chair, two armchairs, and display table unchanged."
+007,B1,Debra,Okay.,
+007,F3,Chris,And there's a water cooler beside the checkout counter.,"Add a checkout counter (in black outline) and a water cooler (in black outline). Position the water cooler beside the checkout counter. Keep the store sign, waiting chair, two armchairs, display table, and two-pocket magazine rack unchanged."
+007,B1,Debra,I see. The vending machine here has an electronics section adjacent to the tech support desk.,
+007,F3,Chris,"Hmm, the magazine rack you mentioned reminds me of the four-pocket one near the coffee station earlier.",NO_CHANGE
+007,B1,Debra,"Right, that one also had an ATM nearby.",
+007,F3,Chris,Exactly. This version is smaller but shares the same curved design.,"Remove the two-pocket magazine rack on the display table between the armchairs. Keep the store sign, waiting chair, two armchairs, display table, checkout counter, and water cooler unchanged. $$$ Add a *smaller* two-pocket magazine rack (in black outline) on the display table between the armchairs. Keep the store sign, waiting chair, two armchairs, display table, checkout counter, and water cooler unchanged."
+007,B1,Debra,I'm heading to the elevator to the top floor now.,
