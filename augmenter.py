@@ -58,7 +58,7 @@ def check_servers(args):
 async def create_aug(df: pd.DataFrame, user_perspective: str, csv_output_path: str) -> pd.DataFrame:
     """
     Stage 1: Text Context -> Initial Image Prompt
-    Saves to CSV after every row.
+    Skips rows where 'initial_prompt' is already populated.
     """
     print(f"--- Stage 1: Creating contextual prompts for user: {user_perspective} ---")
 
@@ -81,6 +81,16 @@ async def create_aug(df: pd.DataFrame, user_perspective: str, csv_output_path: s
         context_list = chunk_df.sort_index()['text'].tolist()
         
         for index, row in user_utterances.iterrows():
+            # --- SKIP LOGIC ---
+            current_val = df.at[index, 'initial_prompt']
+            if pd.notna(current_val) and str(current_val).strip() != "":
+                print(f"  > [{index}] Prompt already exists. Skipping.")
+                # We must still add it to history so future prompts in this chunk have context!
+                if current_val != "[NO_CHANGE]":
+                     previous_prompts_history.append(current_val)
+                continue
+            # ------------------
+
             utterance_text = row['text']
             
             try:
@@ -103,7 +113,6 @@ async def create_aug(df: pd.DataFrame, user_perspective: str, csv_output_path: s
                     print(f"  > [{index}] Failed to generate prompt.")
                 
                 # --- INCREMENTAL SAVE ---
-                # Save after every attempt so we don't lose progress
                 df.to_csv(csv_output_path, index=False)
 
             except Exception as e:
@@ -120,7 +129,7 @@ async def gen_images_from_aug(
 ) -> pd.DataFrame:
     """
     Stage 2: (Initial Prompt + Previous Image) -> Final Prompt -> Image
-    Saves to CSV after every row.
+    Skips rows where 'img_path' is already populated.
     """
     print(f"--- Stage 2: Visual Refinement & Rendering for user: {user_perspective} ---")
     
@@ -136,7 +145,7 @@ async def gen_images_from_aug(
     current_image_b64 = None
     current_chunk_id = None
     
-    # Sort to ensure chronological order
+    # Sort by chunk_id, maintaining original index order (Stable Sort)
     sorted_df = df.sort_values(by=['chunk_id'], kind='stable')
     
     for index, row in sorted_df.iterrows():
@@ -151,6 +160,24 @@ async def gen_images_from_aug(
         # Process only specific user rows that have a Stage 1 prompt
         if (row['character'] == user_perspective) and pd.notna(row['initial_prompt']):
             
+            # --- SKIP LOGIC ---
+            # If we already have an image path, load it into context and skip generation
+            if pd.notna(row['img_path']) and str(row['img_path']).strip() != "":
+                existing_path = row['img_path']
+                if os.path.exists(existing_path):
+                    print(f"  > [{index}] Image exists at {existing_path}. Loading context & Skipping.")
+                    try:
+                        # Load image from disk to update context for *next* frame
+                        with Image.open(existing_path) as img:
+                            current_image_b64 = pil_to_base64(img)
+                    except Exception as e:
+                        print(f"    Error loading existing image: {e}. Context lost.")
+                        current_image_b64 = None
+                    continue
+                else:
+                    print(f"  > [{index}] path found in CSV but file missing. Re-generating.")
+            # ------------------
+
             initial_prompt = row['initial_prompt']
             img_filename = f"chunk_{chunk_id}_{user_perspective}_{index}.png"
             save_path = os.path.join(output_dir_path, img_filename)
@@ -162,7 +189,7 @@ async def gen_images_from_aug(
                     base64_to_pil(current_image_b64).save(save_path)
                     df.at[index, 'img_path'] = str(save_path)
                     df.at[index, 'final_prompt'] = "NO_CHANGE"
-                    # Incremental save even on skip/copy
+                    # Incremental save
                     df.to_csv(csv_output_path, index=False)
                 continue
 
@@ -173,7 +200,6 @@ async def gen_images_from_aug(
             if current_image_b64:
                 print(f"  > [{index}] Refining prompt visually...")
                 try:
-                    # call_prompt_polisher handles the logic: if images are passed, it hits /edit
                     refined_response = await call_prompt_polisher(
                         utterance=initial_prompt,
                         images=[current_image_b64] 
@@ -208,7 +234,6 @@ async def gen_images_from_aug(
                 print(f"  > [{index}] Render error: {e}")
             
             # --- INCREMENTAL SAVE ---
-            # Save after every image generation
             df.to_csv(csv_output_path, index=False)
 
     return df
@@ -231,29 +256,38 @@ async def main():
 
     # Setup paths
     input_path = Path(args.file)
+    
+    # Define output path logic
     if args.aug_output_path == "output/":
         args.aug_output_path = Path("output") / f"{input_path.stem}_aug{input_path.suffix}"
+    else:
+        args.aug_output_path = Path(args.aug_output_path)
     
     if args.gen_images_from_aug and args.images_output_path == "output/":
         args.images_output_path = Path("output") / f"{input_path.stem}_images"
 
-    # Load DF
-    try:
-        # If we are just rendering, try loading the _aug file first if it exists
-        if args.gen_images_from_aug and not args.create_aug and Path(args.aug_output_path).exists():
-             df = pd.read_csv(args.aug_output_path, dtype={'chunk_id': str})
-             print(f"Loaded existing augmented file: {args.aug_output_path}")
-        else:
-             df = pd.read_csv(args.file, dtype={'chunk_id': str})
-             print(f"Loaded input file: {args.file}")
-    except Exception as e:
-        print(f"Error loading CSV: {e}")
-        return
+    # --- SMART LOAD LOGIC ---
+    # 1. Check if the output file already exists. If so, load it to resume work.
+    if args.aug_output_path.exists():
+        print(f"Found existing augmented file: {args.aug_output_path}")
+        print("Loading it to resume/update...")
+        try:
+            df = pd.read_csv(args.aug_output_path, dtype={'chunk_id': str})
+        except Exception as e:
+            print(f"Error reading existing output file: {e}. Falling back to input file.")
+            df = pd.read_csv(args.file, dtype={'chunk_id': str})
+    else:
+        # 2. Otherwise, load the original input file.
+        print(f"Loading original input file: {args.file}")
+        try:
+            df = pd.read_csv(args.file, dtype={'chunk_id': str})
+        except Exception as e:
+            print(f"Error loading input CSV: {e}")
+            return
 
     # Determine Users
     users_to_process = []
     if args.automatic_users:
-        # Get all unique characters, filtering out generic system roles if necessary
         users_to_process = [u for u in df['character'].unique() if pd.notna(u)]
         print(f"Automatically detected users: {users_to_process}")
     elif args.user:
