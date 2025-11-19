@@ -50,6 +50,10 @@ vlm_client:
     mod_polish_t: 'mod_polish.jinja2'
     mod_polish_edit_t: 'mod_polish_edit.jinja2'
 
+    ## FOR AUGMENTER
     # For chunk + utterance to prompt for img generation
     initial_start_t: 'initial_start.jinja2'
     initial_edit_t: 'initial_edit.jinja2'
+
+    final_start_t: 'final_start.jinja2'
+    final_edit_t: 'final_edit.jinja2'

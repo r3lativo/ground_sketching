@@ -2,14 +2,14 @@
 # Start the Image Generation (Diffusion) service
 set -e # Exit immediately if any command fails
 
-echo "--- 0. Load the necessary environmnental modules ---"
-module purge
-module load arch/a100
-module load pytorch-gpu/py3/2.8.0
+# echo "--- 0. Load the necessary environmnental modules ---"
+# module purge
+# module load arch/a100
+# module load pytorch-gpu/py3/2.8.0
 
 # --- 1. Set CUDA Device ---
 # Set this to a GPU that is NOT used by the VLM service.
-export CUDA_VISIBLE_DEVICES=1
+export CUDA_VISIBLE_DEVICES=2
 echo "--- 1b. Setting CUDA_VISIBLE_DEVICES=$CUDA_VISIBLE_DEVICES ---"
 
 # --- 2. Start Server ---

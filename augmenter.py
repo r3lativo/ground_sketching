@@ -1,4 +1,5 @@
 # augmenter.py
+
 import pandas as pd
 import argparse
 import asyncio
@@ -24,73 +25,64 @@ from src.api_clients import (
 
 def check_servers(args):
     """
-    Checks if all required backend services are running before starting.
-    Provides specific error messages for failed services.
+    Checks if all required backend services are running.
     """
     server_config = load_config(config_path='config/server_config.yaml')
     failed_services = []
 
-    # --- Check Prompt Polisher (Always required) ---
+    # --- Check Prompt Polisher ---
     polisher_conf = server_config["vlm_service"]
     if not check_server(polisher_conf["gateway"]["host"], polisher_conf["gateway"]["port"]):
         failed_services.append(
-            f"Prompt Polisher service at http://{polisher_conf["gateway"]['host']}:{polisher_conf["gateway"]['port']}"
+            f"Prompt Polisher service at http://{polisher_conf['gateway']['host']}:{polisher_conf['gateway']['port']}"
         )
 
-    # --- Check Image Gen (Conditionally required) ---
-    if args.gen_images_from_aug:  # Check if we intend to render
+    # --- Check Image Gen ---
+    if args.gen_images_from_aug:
         img_gen_conf = server_config["image_gen_service"]
         if not check_server(img_gen_conf["host"], img_gen_conf["port"]):
             failed_services.append(
                 f"Image Gen service at http://{img_gen_conf['host']}:{img_gen_conf['port']}"
             )
 
-    # --- Report results ---
     if failed_services:
         print("\n[Error] One or more required services are down:")
         for service_msg in failed_services:
             print(f"- {service_msg}")
-        
         print("Exiting.")
         sys.exit(1)
     
-    # If we get here, all required services are up.
     print("\nAll required services are running.")
-        
 
-async def create_aug(df: pd.DataFrame, user_perspective: str) -> pd.DataFrame:
-    """
-    Generates 'img_gen_prompt',
-    passing a history of previous prompts instead of images.
-    """
-    print(f"Creating contextual prompts for user: {user_perspective}...")
 
-    df['img_gen_prompt'] = pd.NA
+async def create_aug(df: pd.DataFrame, user_perspective: str, csv_output_path: str) -> pd.DataFrame:
+    """
+    Stage 1: Text Context -> Initial Image Prompt
+    Saves to CSV after every row.
+    """
+    print(f"--- Stage 1: Creating contextual prompts for user: {user_perspective} ---")
+
+    # Initialize column if not present
+    if 'initial_prompt' not in df.columns:
+        df['initial_prompt'] = pd.NA
+
     grouped = df.groupby('chunk_id')
 
     for chunk_id, chunk_df in grouped:
-        print(f"--- Processing Chunk {chunk_id} (Create Prompts) ---")
+        print(f"Processing Chunk {chunk_id} (Text -> Prompt)")
         
-        # This list tracks previous prompts *within this chunk*
         previous_prompts_history = []
         
-        # Get all utterances for the specified user
+        # Get utterances for the specific user
         user_utterances = chunk_df[
             chunk_df['character'] == user_perspective
         ].sort_index()
 
-        # Get full chunk context (all text from all users in order)
         context_list = chunk_df.sort_index()['text'].tolist()
         
         for index, row in user_utterances.iterrows():
             utterance_text = row['text']
             
-            # Log which type of polishing we're doing
-            if not previous_prompts_history:
-                print(f"  > Index {index} (Create): Polishing first utterance...")
-            else:
-                print(f"  > Index {index} (Edit): Polishing edit utterance...")
-
             try:
                 polished_prompt = await call_prompt_polisher(
                     utterance=utterance_text,
@@ -98,209 +90,200 @@ async def create_aug(df: pd.DataFrame, user_perspective: str) -> pd.DataFrame:
                     previous_prompts=previous_prompts_history if previous_prompts_history else None
                 )
 
-                print(f"  > {polished_prompt}")
-                
-                # --- Save the result ---
                 if polished_prompt:
-                    df.at[index, 'img_gen_prompt'] = polished_prompt
-                    # If the output is `[NO_CHANGE]`, skip
-                    if polished_prompt == "[NO_CHANGE]":
-                        continue
-                    # Add this *new* prompt to the history for the *next* iteration
-                    else:
+                    # Update DataFrame
+                    df.at[index, 'initial_prompt'] = polished_prompt
+                    
+                    if polished_prompt != "[NO_CHANGE]":
+                        print(f"  > [{index}] Prompt created.")
                         previous_prompts_history.append(polished_prompt)
+                    else:
+                        print(f"  > [{index}] [NO_CHANGE]")
                 else:
-                    print(f"Warning: Polishing failed for index {index}. Skipping.")
-            
-            except Exception as e:
-                print(f"Error during prompt creation at index {index}: {e}")
-                # We don't add to history if it failed
-                pass
+                    print(f"  > [{index}] Failed to generate prompt.")
                 
-    print("Contextual prompt creation complete.")
+                # --- INCREMENTAL SAVE ---
+                # Save after every attempt so we don't lose progress
+                df.to_csv(csv_output_path, index=False)
+
+            except Exception as e:
+                print(f"Error index {index}: {e}")
+                
     return df
 
 
 async def gen_images_from_aug(
     df: pd.DataFrame, 
     user_perspective: str, 
-    images_output_path_dir: str
+    images_output_dir: str,
+    csv_output_path: str
 ) -> pd.DataFrame:
     """
-    Generates images by iterating through prompts sequentially,
-    passing the output of one step as the input to the next.
+    Stage 2: (Initial Prompt + Previous Image) -> Final Prompt -> Image
+    Saves to CSV after every row.
     """
-    print(f"Rendering prompts for user: {user_perspective}...")
+    print(f"--- Stage 2: Visual Refinement & Rendering for user: {user_perspective} ---")
     
-    output_path = Path(images_output_path_dir)
-    output_path.mkdir(parents=True, exist_ok=True)
-    print(f"Saving images to: {output_path.resolve()}")
+    output_dir_path = Path(images_output_dir) / user_perspective
+    output_dir_path.mkdir(parents=True, exist_ok=True)
 
-    df['img_path'] = pd.NA
+    # Initialize columns
+    if 'final_prompt' not in df.columns:
+        df['final_prompt'] = pd.NA
+    if 'img_path' not in df.columns:
+        df['img_path'] = pd.NA
     
     current_image_b64 = None
     current_chunk_id = None
     
-    # Ensure processing in correct order
-    sorted_df = df.sort_values(by=['chunk_id', 'index'], kind='stable')
+    # Sort to ensure chronological order
+    sorted_df = df.sort_values(by=['chunk_id'], kind='stable')
     
     for index, row in sorted_df.iterrows():
         chunk_id = row['chunk_id']
         
-        # Reset the image context for each new chunk
+        # Reset context on new chunk
         if chunk_id != current_chunk_id:
             current_image_b64 = None 
             current_chunk_id = chunk_id
-            print(f"--- Processing Chunk {current_chunk_id} (Render) ---")
+            print(f"--- Chunk {current_chunk_id} (Render) ---")
 
-        # Only render for the target user and if a prompt exists
-        if (row['character'] == user_perspective) and pd.notna(row['img_gen_prompt']):
-            prompt = row['img_gen_prompt']
+        # Process only specific user rows that have a Stage 1 prompt
+        if (row['character'] == user_perspective) and pd.notna(row['initial_prompt']):
             
-            img_filename = f"chunk_{chunk_id}_index_{index}.png"
-            save_path = os.path.join(output_path, img_filename)
+            initial_prompt = row['initial_prompt']
+            img_filename = f"chunk_{chunk_id}_{user_perspective}_{index}.png"
+            save_path = os.path.join(output_dir_path, img_filename)
             
-            # Check whether to skip rendering if `NO_CHANGE`
-            if prompt == "NO_CHANGE":
-                print(f"Image for index:{index} has NO_CHANGE. Re-using previous image.")
+            # Skip if Stage 1 was NO_CHANGE
+            if initial_prompt == "NO_CHANGE":
                 if current_image_b64:
+                    # Just carry forward previous image
                     base64_to_pil(current_image_b64).save(save_path)
                     df.at[index, 'img_path'] = str(save_path)
-                continue # Skip rendering
+                    df.at[index, 'final_prompt'] = "NO_CHANGE"
+                    # Incremental save even on skip/copy
+                    df.to_csv(csv_output_path, index=False)
+                continue
 
+            # --- STEP A: Visual Refinement (Get Final Prompt) ---
+            final_prompt = initial_prompt
+            
+            # If we have a previous image, ask the VLM to adjust the prompt based on it
+            if current_image_b64:
+                print(f"  > [{index}] Refining prompt visually...")
+                try:
+                    # call_prompt_polisher handles the logic: if images are passed, it hits /edit
+                    refined_response = await call_prompt_polisher(
+                        utterance=initial_prompt,
+                        images=[current_image_b64] 
+                    )
+                    
+                    if refined_response and refined_response != "NO_CHANGE":
+                        final_prompt = refined_response
+                        print(f"  > [{index}] Refined: {final_prompt[:50]}...")
+                except Exception as e:
+                    print(f"  > [{index}] Refinement failed ({e}). Using initial prompt.")
+
+            # Save final prompt to CSV
+            df.at[index, 'final_prompt'] = final_prompt
+
+            # --- STEP B: Image Generation ---
             try:
-                # Pass the previous image (or None) to the image gen service
+                print(f"  > [{index}] Generating Image...")
                 new_image_b64 = await call_image_gen(
-                    prompt, 
+                    final_prompt, 
                     [current_image_b64] if current_image_b64 else None
                 )
 
                 if new_image_b64:
-                    # convert to pil and clean
                     cleaned_image_pil = clean_image_artifacts(base64_to_pil(new_image_b64))
-                    # save
                     cleaned_image_pil.save(save_path)
-                    print(f"Image for index:{index} saved at {save_path}")
+                    
                     df.at[index, 'img_path'] = str(save_path)
-                    # convert back to base64 and pass
                     current_image_b64 = pil_to_base64(cleaned_image_pil)
                 else:
-                    print(f"Warning: Render function returned None for index {index}")
-                    # Keep old image as context if render fails
+                    print(f"  > [{index}] Render returned None.")
             except Exception as e:
-                print(f"Error rendering prompt at index {index}: {e}")
-                pass # Keep old image and continue
+                print(f"  > [{index}] Render error: {e}")
+            
+            # --- INCREMENTAL SAVE ---
+            # Save after every image generation
+            df.to_csv(csv_output_path, index=False)
 
-    print("Image rendering complete.")
     return df
 
 
 async def main():
-    parser = argparse.ArgumentParser(
-        description="Augment conversation CSVs with generative prompts and render them."
-    )
-    parser.add_argument(
-        "--file", 
-        type=str, 
-        required=True, 
-        help="Path to the input conversation.csv file."
-    )
-    parser.add_argument(
-        "--user", 
-        type=str, 
-        required=True, 
-        help="The 'character' (user) perspective to render (e.g., 'Nathan')."
-    )
-    parser.add_argument(
-        "--create_aug", 
-        action='store_true', 
-        help="Flag to generate the 'img_gen_prompt' column."
-    )
-    parser.add_argument(
-        "--aug_output_path", 
-        type=str, 
-        default="output/",  # Changed default
-        help="Path to save the output conversation_aug.csv file. Defaults to output/[input_file_stem]_aug.csv if not provided."
-    )
-    parser.add_argument(
-        "--gen_images_from_aug", 
-        action='store_true', 
-        help="Flag to render images from the 'img_gen_prompt' column."
-    )
-    parser.add_argument(
-        "--images_output_path", 
-        type=str, 
-        default="output/",  # Changed default
-        help="Directory to save rendered images. Defaults to output/[input_file_stem]_aug/ if not provided."
-    )
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--file", type=str, required=True, help="Input CSV file.")
+    parser.add_argument("--user", type=str, help="Specific user (optional if using --automatic_users).")
+    parser.add_argument("--automatic_users", action='store_true', help="Automatically process all unique characters.")
+    parser.add_argument("--create_aug", action='store_true', help="Run Stage 1 (Text -> Prompt).")
+    parser.add_argument("--gen_images_from_aug", action='store_true', help="Run Stage 2 (Visual Refinement + Render).")
+    parser.add_argument("--aug_output_path", type=str, default="output/")
+    parser.add_argument("--images_output_path", type=str, default="output/")
     
     args = parser.parse_args()
 
-    # Call the improved server check
+    # Server check
     check_servers(args)
 
-    # Set the default output path for augmented version if it is not provided
-    # Check if the path is still the default directory value
+    # Setup paths
+    input_path = Path(args.file)
     if args.aug_output_path == "output/":
-        input_path = Path(args.file)
-        new_filename = f"{input_path.stem}_aug{input_path.suffix}"
-        args.aug_output_path = Path("output") / new_filename
-        print(f"No --aug_output_path provided. Defaulting to: {args.aug_output_path}")
-
-    # If generating images but no output path for those, set it
-    # Check if the path is still the default directory value
+        args.aug_output_path = Path("output") / f"{input_path.stem}_aug{input_path.suffix}"
+    
     if args.gen_images_from_aug and args.images_output_path == "output/":
-        input_path = Path(args.file)
-        new_directory = f"{input_path.stem}_aug"
-        args.images_output_path = Path("output") / new_directory
-        print(f"No --images_output_path provided. Defaulting to: {args.images_output_path}")
+        args.images_output_path = Path("output") / f"{input_path.stem}_images"
 
-    if not args.create_aug and not args.gen_images_from_aug:
-        print("Neither --create_aug nor --gen_images_from_aug was set. Doing nothing.")
-        return
-
+    # Load DF
     try:
-        df = pd.read_csv(args.file, dtype={'chunk_id': str})
-        print(f"Loaded {args.file}")
-    except FileNotFoundError:
-        print(f"Error: Input file not found at {args.file}")
-        return
+        # If we are just rendering, try loading the _aug file first if it exists
+        if args.gen_images_from_aug and not args.create_aug and Path(args.aug_output_path).exists():
+             df = pd.read_csv(args.aug_output_path, dtype={'chunk_id': str})
+             print(f"Loaded existing augmented file: {args.aug_output_path}")
+        else:
+             df = pd.read_csv(args.file, dtype={'chunk_id': str})
+             print(f"Loaded input file: {args.file}")
     except Exception as e:
         print(f"Error loading CSV: {e}")
         return
 
-    if args.create_aug:
-        df = await create_aug(df=df, user_perspective=args.user)
-        df.to_csv(args.aug_output_path, index=False)
-        print(f"Saved augmented CSV with prompts to {args.aug_output_path}")
+    # Determine Users
+    users_to_process = []
+    if args.automatic_users:
+        # Get all unique characters, filtering out generic system roles if necessary
+        users_to_process = [u for u in df['character'].unique() if pd.notna(u)]
+        print(f"Automatically detected users: {users_to_process}")
+    elif args.user:
+        users_to_process = [args.user]
+    else:
+        print("Error: Must specify --user or --automatic_users")
+        return
 
-    if args.gen_images_from_aug:
-        if not args.create_aug:
-            # If only rendering, load the file that supposedly has prompts
-            try:
-                # Use the path that was potentially set by the default logic
-                aug_file_to_load = args.aug_output_path
-                
-                if args.aug_output_path == "output/":
-                     input_path = Path(args.file)
-                     new_filename = f"{input_path.stem}_aug{input_path.suffix}"
-                     aug_file_to_load = Path("output") / new_filename
-                
-                df = pd.read_csv(aug_file_to_load)
-                print(f"Loaded {aug_file_to_load} for rendering.")
-                if 'img_gen_prompt' not in df.columns:
-                    print(f"Error: {aug_file_to_load} does not have 'img_gen_prompt' column.")
-                    return
-            except FileNotFoundError:
-                print(f"Error: {aug_file_to_load} not found. Run with --create_aug first.")
-                return
+    # --- Execution Loop ---
+    for user in users_to_process:
+        print(f"\n==================================================")
+        print(f"Processing User: {user}")
+        print(f"==================================================")
 
-        df = await gen_images_from_aug(df=df, user_perspective=args.user, images_output_path_dir=args.images_output_path)
-        df.to_csv(args.aug_output_path, index=False)
-        print(f"Saved final CSV with image paths to {args.aug_output_path}")
+        if args.create_aug:
+            df = await create_aug(
+                df=df, 
+                user_perspective=user, 
+                csv_output_path=str(args.aug_output_path)
+            )
+            print(f"Finished Stage 1 for {user}. Saved to {args.aug_output_path}")
+
+        if args.gen_images_from_aug:
+            df = await gen_images_from_aug(
+                df=df, 
+                user_perspective=user, 
+                images_output_dir=str(args.images_output_path),
+                csv_output_path=str(args.aug_output_path)
+            )
+            print(f"Finished Stage 2 for {user}. Saved to {args.aug_output_path}")
 
 if __name__ == "__main__":
-    try:
-        asyncio.run(main())
-    except Exception as e:
-        print(f"An unexpected error occurred in main: {e}")
+    asyncio.run(main())

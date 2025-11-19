@@ -1,0 +1,115 @@
+chunk_id,position,character,text
+001,E4,Zachary,"Hey, this is a huge warehouse. You hear that echo?"
+001,C2,Jennifer,"Hi! Yeah, it's pretty vast. I'm at the receiving dock."
+001,E4,Zachary,There's an open-top waste bin near the first aid station wall.
+001,C2,Jennifer,Uh-huh. A composite pallet is beside the delivery truck here.
+001,E4,Zachary,A five-wheel drum dolly's under the waste solvent container.
+001,C2,Jennifer,Got it. The dock bumper's rubber and mounted on the loading bay wall.
+001,E4,Zachary,"Workstation's composite, next to the utility sink. I'm heading to the central aisle connector."
+002,D4,Zachary,I just arrived in the storage aisles from the central aisle connector.
+002,D4,Zachary,There's a standard forklift behind the end of the aisle.
+002,C2,Jennifer,"Yeah, got it."
+002,D4,Zachary,A safety barrier is defining the pedestrian walkway here.
+002,C2,Jennifer,Understood.
+002,D4,Zachary,There's a storage bin nearby.
+002,C2,Jennifer,Okay.
+002,D4,Zachary,I'm heading back to the central aisle connector.
+002,C2,Jennifer,I'm moving towards the inbound staging route.
+003,C1,Jennifer,I just arrived in the maintenance area from the inbound staging route
+003,C1,Jennifer,There's an extra-large air compressor adjacent to the air dryer unit
+003,D5,Zachary,"Uh-huh, I see an air compressor here too"
+003,C1,Jennifer,I also see an LED work light and an overhead crane
+003,D5,Zachary,Got it - I see a work light and a four-port charging station beneath the lubricant drum
+003,C1,Jennifer,"Wait, I see a domed waste bin by the maintenance vehicle parking"
+003,D5,Zachary,I see an open-top waste bin near the first aid station wall
+003,C1,Jennifer,Is your waste bin near a workstation? Mine's by the maintenance vehicles
+003,D5,Zachary,"Yes, ours is near a workstation with a utility sink"
+003,C1,Jennifer,I'm heading to the inbound staging route now
+004,D1,Jennifer,I just arrived in the storage aisles from the outbound staging route
+004,D1,Jennifer,There's a triplex forklift parked near the aisle marker
+004,D5,Zachary,"Uh-huh, I see a standard forklift behind the end of the aisle"
+004,D1,Jennifer,Can you confirm if your forklift has a safety barrier nearby?
+004,D5,Zachary,"Yes, ours is behind a safety barrier defining the pedestrian walkway"
+004,D1,Jennifer,I see a four-level storage shelf here with a safety gate securing the loading bay opening
+004,D5,Zachary,Got it - I see a four-port charging station beneath the lubricant drum
+004,D1,Jennifer,The safety gate here is folded down to secure the loading bay opening
+004,D5,Zachary,I'm heading to the manual pick route now
+004,D1,Jennifer,I'm moving towards the inbound staging route
+005,D6,Zachary,I just arrived in the maintenance area from the manual pick route
+005,D6,Zachary,There's a recycled waste bin opposite the fluid collection pan here
+005,D1,Jennifer,Uh-huh
+005,D6,Zachary,A water spill kit is under the leaky pipe section
+005,D1,Jennifer,I see a domed waste bin by the maintenance vehicle parking
+005,D6,Zachary,Is your waste bin near a workstation? Mine's opposite a fluid collection pan
+005,D1,Jennifer,No ours is by maintenance vehicles with an LED work light nearby
+005,D6,Zachary,Got it - I see a recycled waste bin near the first aid station wall
+005,D1,Jennifer,I'm heading to the south wall perimeter now
+006,D2,Jennifer,I just arrived at the receiving dock from the south wall perimeter.
+006,D2,Jennifer,There's a plastic pallet next to the loading truck here.
+006,D2,Jennifer,"This reminds me of a composite pallet I saw beside the delivery truck earlier, which had a dock bumper."
+006,D6,Zachary,Uh-huh.
+006,D2,Jennifer,A 2D scanner is resting on the delivery manifest.
+006,D2,Jennifer,A flat-free hand truck is opposite the waste disposal unit.
+006,D6,Zachary,I'm heading to the dock door 2 approach now.
+007,E6,Zachary,I just arrived in the shipping bay from the dock door 2 approach.
+007,E6,Zachary,There's a tape dispenser here.
+007,E6,Zachary,A pallet wrapper with a turntable is near the conveyor belt.
+007,E6,Zachary,The conveyor belt is made of steel.
+007,D2,Jennifer,Uh-huh. I'm moving towards the equipment charging path now.
+008,E2,Jennifer,I just arrived in the maintenance area from the equipment charging path
+008,E6,Zachary,Uh-huh
+008,E2,Jennifer,There's a large air compressor in the compressor room corner here
+008,E2,Jennifer,"This reminds me of the extra-large air compressor I saw adjacent to the air dryer unit earlier, which had a waste bin nearby"
+008,E6,Zachary,Got it - I see a large air compressor here too
+008,E2,Jennifer,The fire extinguisher is near the safety shower in this area
+008,E6,Zachary,I see an open-top waste bin near the first aid station wall
+008,E2,Jennifer,The first aid kit is at the equipment testing area
+008,E6,Zachary,Uh-huh
+008,E2,Jennifer,There's a five-drawer tool cabinet here
+008,E6,Zachary,I see a four-port charging station beneath the lubricant drum
+008,E2,Jennifer,I'm moving towards the inbound staging route now
+009,E6,Zachary,I see a four-port charging station beneath the lubricant drum
+009,E6,Zachary,I'm heading to the delivery vehicle lane now
+010,F6,Zachary,I just arrived in the maintenance area from the delivery vehicle lane
+010,F6,Zachary,There's an air compressor here with no tank
+010,F2,Jennifer,Uh-huh
+010,F6,Zachary,A fire extinguisher with dry chemical is by the air hose reel
+010,F2,Jennifer,Got it
+010,F6,Zachary,An industrial fan is over the repair manual stand
+010,F2,Jennifer,Okay
+010,F6,Zachary,A fire alarm panel is monitoring the gas cylinder storage area
+010,F2,Jennifer,Understood
+010,F6,Zachary,Is your air compressor connected to an air distribution manifold?
+010,F2,Jennifer,"No, mine's in the compressor room corner. This one is large"
+010,F6,Zachary,Got it. So ours is different in location but both in the maintenance area
+010,F6,Zachary,"Your fire extinguisher is near a safety shower, right?"
+010,F2,Jennifer,"Yes, but mine has foam. This one is near a safety shower"
+010,F6,Zachary,"Ah, different types then. Ours is dry chemical"
+010,F6,Zachary,I'm heading to the equipment charging path now
+011,F5,Zachary,I just arrived in the receiving dock from forklift route 2
+011,F5,Zachary,There's a dock plate spanning the dock opening here
+011,F2,Jennifer,Uh-huh
+011,F2,Jennifer,I'm moving towards the low rack access now
+012,F3,Jennifer,I just arrived in the shipping bay from the low rack access
+012,F5,Zachary,Uh-huh
+012,F3,Jennifer,There's a high-speed loading dock door here
+012,F5,Zachary,Got it
+012,F3,Jennifer,A stretch wrapper machine is near the dock light
+012,F5,Zachary,I see a stretch wrapper here too
+012,F3,Jennifer,An industrial scale is positioned between the pallet racks
+012,F5,Zachary,Uh-huh
+012,F5,Zachary,I'm heading to the returns processing path now
+013,F4,Zachary,I just arrived in the maintenance area from the returns processing path.
+013,F4,Zachary,I'm heading to the central aisle connector now.
+013,F3,Jennifer,Got it. I'm still in the shipping bay.
+014,F3,Zachary,I just arrived in the shipping bay from cross aisle b.
+014,F3,Jennifer,Uh-huh. I'm still here in the shipping bay.
+014,F3,Zachary,There's a high-speed loading dock door next to the trailer hitch here.
+014,F3,Jennifer,Got it - I see the same loading dock door here.
+014,F3,Zachary,A stretch wrapper machine is near the dock light.
+014,F3,Jennifer,I see the stretch wrapper here too.
+014,F3,Zachary,An industrial scale is positioned at the loading point.
+014,F3,Jennifer,"Wait, I see an industrial scale between the pallet racks here."
+014,F3,Zachary,Same spot - that's the loading point between the racks.
+014,F3,Jennifer,"So we're both in the shipping bay with the loading dock, stretch wrapper, and industrial scale."
+014,F3,Zachary,Exactly - looks like we're in the same place now.

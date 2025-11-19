@@ -2,10 +2,10 @@
 # Start the prompt_polisher model and the vllm gateway
 set -e # Exit immediately if any command fails
 
-echo "--- 0. Load the necessary environmnental modules ---"
-module purge                        # Clear all inherited modules to start from a clean slate
-module load arch/a100               # Load the HPC's specific module for A100 GPUs (drivers, CUDA, etc.)
-module load pytorch-gpu/py3/2.8.0   # Load the PyTorch environment module
+# echo "--- 0. Load the necessary environmnental modules ---"
+# module purge                        # Clear all inherited modules to start from a clean slate
+# module load arch/a100               # Load the HPC's specific module for A100 GPUs (drivers, CUDA, etc.)
+# module load pytorch-gpu/py3/2.8.0   # Load the PyTorch environment module
 
 CONFIG_FILE="config/server_config.yaml"
 CONFIG_GATEWAY="vlm_service.gateway"

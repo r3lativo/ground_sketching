@@ -1,0 +1,114 @@
+chunk_id,position,character,text
+001,E5,David,"Hello, this is David. I'm in the secure archives of the intelligence agency headquarters."
+001,B3,Cynthia,"Hi David, I'm Cynthia in the command center. How's your area looking?"
+001,E5,David,Starting with the biometric scanner here—it uses palm print recognition.
+001,B3,Cynthia,"Uh-huh, got it. I see a dome security camera below the ventilation grille."
+001,E5,David,"Okay, the filing cabinet is flush against the wall here."
+001,B3,Cynthia,Mmhm. There's a whiteboard between two cubicles with a revolving panel.
+001,E5,David,Noted. I also see a soundproofing panel on the wall partition.
+001,B3,Cynthia,Copy that. I'm heading to the briefing room shortcut. Watch for the emergency exit sign here.
+002,B2,Cynthia,I just arrived at the secure archives from the briefing room shortcut.
+002,B2,Cynthia,"Under the equipment rack, there's a star-shaped power supply unit."
+002,E5,David,Got it.
+002,B2,Cynthia,"Before the restricted area, there's a security gate with a turnstile."
+002,E5,David,Copy that.
+002,B2,Cynthia,"Next to the paper recycling bin, there's a swing waste receptacle."
+002,E5,David,Noted. I'm moving towards fire escape route 1.
+003,E6,David,I just arrived at the command center from fire escape route 1.
+003,E6,David,"First, there's a standard conference table here."
+003,E6,David,Next to it is a thick display screen mounted on the wall.
+003,E6,David,There's also an integrated data terminal—part of the command console.
+003,B2,Cynthia,Got it. The data terminal being part of the console is key.
+003,B2,Cynthia,I'm moving toward elevated walkway 1 now.
+004,B1,Cynthia,I just arrived at the data analysis wing from elevated walkway 1.
+004,B1,Cynthia,There's an access panel with a keypad here.
+004,D6,David,Uh-huh.
+004,B1,Cynthia,A secure cabinet is positioned between two workstations.
+004,D6,David,Got it.
+004,B1,Cynthia,There's a composite data cable reel inside the supply closet.
+004,D6,David,I just arrived at the secure archives from the waste management path.
+004,D6,David,"First, there's a secure safe here."
+004,B1,Cynthia,Mmhm.
+004,D6,David,The filing cabinet is recessed under the overhead storage.
+004,D6,David,This reminds me of the flush filing cabinet integrated into the wall paneling I saw earlier with a biometric scanner.
+004,D6,David,There's also a round desk lamp on the desk here.
+004,D6,David,I'm moving toward the encrypted server room now.
+005,D5,David,I just arrived at the data analysis wing from the forensics lab connection.
+005,D5,David,"First, there's an access panel next to the emergency power switch."
+005,B1,Cynthia,"Uh-huh, got it."
+005,D5,David,A secure cabinet with three drawers is to the right of the shredder station.
+005,B1,Cynthia,Mmhm. I see an access panel with a keypad above the server bay here.
+005,D5,David,Noted. There's a network switch inside network cabinet one.
+005,B1,Cynthia,Copy that. The secure cabinet between two workstations here has six drawers.
+005,D5,David,I also see an uninterruptible power supply inside the ups housing.
+005,B1,Cynthia,Mmhm. I'm moving toward the supply depot connection now.
+006,D4,David,I just arrived at the operations support zone from the main corridor east.
+006,D4,David,"First, there's a tactical map displayed on the wall here."
+006,D4,David,Next to it is a triple secure workstation with reinforced panels.
+006,C1,Cynthia,"Mmhm, got it."
+006,D4,David,The conference table here is four-post with a whiteboard wall facing it.
+006,C1,Cynthia,Copy that. I see a conference table with a t-shaped design between two chairs in my area.
+006,D4,David,Noted. There's also a surveillance monitor mounted above the control console here.
+006,C1,Cynthia,I just arrived at the command center from the supply depot connection.
+006,C1,Cynthia,"First, there's a standard conference table here."
+006,C1,Cynthia,Next to it is a curved display screen positioned left of the tactical map stand.
+006,C1,Cynthia,There's also an encrypted phone mounted on the desk here.
+006,D4,David,Uh-huh. The surveillance monitor above the control console here matches the description of the thick display screen you mentioned earlier.
+006,C1,Cynthia,Mmhm. I also see a digital wall clock below the temperature gauge here.
+006,C1,Cynthia,I'm moving toward the encrypted server room now.
+007,C2,Cynthia,I just arrived at the secure archives from the south annex connection.
+007,C2,Cynthia,Behind the false wall here is a secure safe.
+007,C2,Cynthia,Next to the voltage regulator is a power supply unit.
+007,D4,David,Mmhm. The secure safe here has a time-delay mechanism.
+007,D4,David,"The power supply unit you mentioned has a honeycomb design, right?"
+007,C2,Cynthia,Copy that. The one I saw earlier had a star-shaped pattern under the equipment rack.
+007,C2,Cynthia,"David, the four-post conference table here—have you seen one like this before?"
+007,D4,David,Not exactly. Mine's T-shaped and sits between two chairs in the supply depot area.
+007,C2,Cynthia,Got it. Let me check the secure safe description again.
+007,C2,Cynthia,"David, the secure safe behind this false wall—did you see one with a dial inside a vault room?"
+007,D4,David,"Yes, that's the one I saw. Ours has a time-delay lock instead of a dial."
+007,C2,Cynthia,"Noted. The power supply units are different, but the secure safes are similar in concept."
+007,C2,Cynthia,I'm moving toward the encrypted server room now.
+008,D2,Cynthia,I just arrived at the secure archives from the data center cooling path.
+008,D2,Cynthia,The biometric scanner here uses facial recognition and is integrated into the reception desk.
+008,D2,Cynthia,The filing cabinet is flush against the west wall with a metal bar handle.
+008,D2,Cynthia,The intercom system has a mesh panel covering the speaker grille.
+008,D4,David,Mmhm. The biometric scanner I saw had a palm print reader below the security camera mount.
+008,D4,David,The filing cabinet in my zone was recessed under overhead storage with a recessed panel.
+008,D2,Cynthia,So your scanner uses palm print instead of facial recognition like mine here?
+008,D4,David,"Yes, and it was below a security camera mount with soundproofing panels nearby."
+008,D2,Cynthia,Got it. The filing cabinet in my zone is against the west wall with a bar handle—does yours have a recessed panel?
+008,D4,David,Mine was recessed under overhead storage with a secure safe nearby in the waste management path.
+008,D2,Cynthia,Noted. I'll check the intercom system's mesh panel for any matching features.
+008,D2,Cynthia,I'm moving back toward the data center cooling path now.
+009,D3,Cynthia,I just arrived at the operations support zone from the hvac duct crawlspace.  
+009,D3,Cynthia,I'm moving toward the main corridor east now.  
+009,D4,David,Mmhm.  
+009,D4,David,Got it.
+010,C3,Cynthia,I just arrived at the secure archives from the secure comms route.  
+010,D4,David,"Mmhm, got it.  "
+010,C3,Cynthia,"First, there's an emergency button mounted on the wall here.  "
+010,D4,David,Noted. The emergency button here is positioned near the security gate.  
+010,C3,Cynthia,I'm moving toward the encrypted server room now.  
+010,D4,David,Copy that. I'll check the encrypted server room for matching features.
+011,C4,Cynthia,I just arrived at the secure archives from the vehicle bay entrance.  
+011,C4,Cynthia,"First, there's a square power supply unit on the component shelf here.  "
+011,D4,David,Mmhm. Got it.  
+011,C4,Cynthia,Next to the component shelf is a water cooler with a button in the hallway alcove.  
+011,D4,David,Noted. The water cooler with a button in the hallway alcove—does yours have a security gate nearby?  
+011,C4,Cynthia,This power supply unit reminds me of the honeycomb one next to the voltage regulator I saw earlier in the south annex connection.  
+011,D4,David,Copy that. The secure safe in my zone has a time-delay mechanism.  
+011,C4,Cynthia,"That area also had a secure safe, but this one is just a component shelf.  "
+011,D4,David,I see. The secure safe in my zone was in a vault room with a dial lock.  
+011,C4,Cynthia,I'm moving toward the encrypted server room now.
+012,D4,Cynthia,I just arrived at the operations support zone from the visitor reception route.  
+012,D4,Cynthia,"First, there's a tactical map integrated into the control station here.  "
+012,D4,David,Mmhm. Got it.  
+012,D4,Cynthia,Next to the control station is a triple secure workstation adjacent to the storage cabinet.  
+012,D4,David,Copy that. The triple workstation here matches the description you just gave.  
+012,D4,Cynthia,The four-post conference table here faces the whiteboard wall—does yours do the same?  
+012,D4,David,Yes! The whiteboard wall in my zone is directly opposite the conference table.  
+012,D4,Cynthia,Noted. The surveillance monitor on the reception desk here—did you see one like this?  
+012,D4,David,"Yes, and it’s the same single monitor above the control console in my area.  "
+012,D4,Cynthia,"Then we must be in the same operations support zone, David. All the shared objects align.  "
+012,D4,David,Agreed. Let’s meet at the control station—no need to move further.

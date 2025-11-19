@@ -257,3 +257,268 @@ model_id
 2025-11-17 11:56:21,570 - __main__ - INFO - Gateway shutting down. HTTPX client closed.
 2025-11-17 11:56:21,571 - uvicorn.error - INFO - Application shutdown complete.
 2025-11-17 11:56:21,571 - uvicorn.error - INFO - Finished server process [2196885]
+2025-11-19 15:11:09,628 - __main__ - INFO - Starting FastAPI gateway on http://0.0.0.0:8001
+2025-11-19 15:11:09,773 - uvicorn.error - INFO - Started server process [3408031]
+2025-11-19 15:11:09,773 - uvicorn.error - INFO - Waiting for application startup.
+2025-11-19 15:11:09,994 - __main__ - INFO - Gateway started. HTTPX client created.
+2025-11-19 15:11:09,994 - uvicorn.error - INFO - Application startup complete.
+2025-11-19 15:11:10,007 - uvicorn.error - INFO - Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
+2025-11-19 15:12:07,454 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:12:07,455 - uvicorn.access - INFO - 127.0.0.1:33276 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:12:28,564 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:12:28,566 - uvicorn.access - INFO - 127.0.0.1:32912 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:13:02,238 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:13:02,238 - uvicorn.access - INFO - 127.0.0.1:51162 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:16:09,588 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:16:09,588 - uvicorn.access - INFO - 127.0.0.1:58900 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:17:06,471 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:17:06,472 - uvicorn.access - INFO - 127.0.0.1:58238 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:17:24,023 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:17:24,023 - uvicorn.access - INFO - 127.0.0.1:33704 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:18:37,154 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:18:37,154 - uvicorn.access - INFO - 127.0.0.1:49716 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:19:32,701 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:19:32,701 - uvicorn.access - INFO - 127.0.0.1:47120 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:19:41,205 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:19:41,205 - uvicorn.access - INFO - 127.0.0.1:51592 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:20:25,224 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:20:25,224 - uvicorn.access - INFO - 127.0.0.1:39364 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:20:58,148 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:20:58,148 - uvicorn.access - INFO - 127.0.0.1:49716 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:21:31,684 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:21:31,685 - uvicorn.access - INFO - 127.0.0.1:34538 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:22:09,309 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:22:09,310 - uvicorn.access - INFO - 127.0.0.1:44748 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:23:05,045 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:23:05,047 - uvicorn.access - INFO - 127.0.0.1:52962 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:24:12,331 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:24:12,332 - uvicorn.access - INFO - 127.0.0.1:43116 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:24:41,891 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:24:41,891 - uvicorn.access - INFO - 127.0.0.1:51758 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:24:53,777 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:24:53,787 - uvicorn.access - INFO - 127.0.0.1:42638 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:25:29,480 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:25:29,481 - uvicorn.access - INFO - 127.0.0.1:49760 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:26:07,382 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:26:07,386 - uvicorn.access - INFO - 127.0.0.1:49908 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:26:24,768 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:26:24,768 - uvicorn.access - INFO - 127.0.0.1:38360 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:26:44,420 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:26:44,421 - uvicorn.access - INFO - 127.0.0.1:50072 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:29:23,698 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:29:23,722 - uvicorn.access - INFO - 127.0.0.1:42714 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:29:31,292 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:29:31,292 - uvicorn.access - INFO - 127.0.0.1:38338 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:30:37,052 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:30:37,053 - uvicorn.access - INFO - 127.0.0.1:50282 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:32:34,824 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:32:34,825 - uvicorn.access - INFO - 127.0.0.1:37660 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:32:52,688 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:32:52,689 - uvicorn.access - INFO - 127.0.0.1:54686 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:33:20,111 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:33:20,111 - uvicorn.access - INFO - 127.0.0.1:58926 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:33:37,310 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:33:37,311 - uvicorn.access - INFO - 127.0.0.1:44302 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:33:48,943 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:33:48,944 - uvicorn.access - INFO - 127.0.0.1:37810 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:34:56,796 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:34:56,797 - uvicorn.access - INFO - 127.0.0.1:45618 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:35:48,783 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:35:48,785 - uvicorn.access - INFO - 127.0.0.1:47864 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:35:56,210 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:35:56,211 - uvicorn.access - INFO - 127.0.0.1:56198 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:36:11,844 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:36:11,845 - uvicorn.access - INFO - 127.0.0.1:32800 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:37:43,100 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:37:43,101 - uvicorn.access - INFO - 127.0.0.1:44864 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:37:51,828 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:37:51,829 - uvicorn.access - INFO - 127.0.0.1:49716 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:38:15,927 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:38:15,928 - uvicorn.access - INFO - 127.0.0.1:34152 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:40:00,460 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:40:00,461 - uvicorn.access - INFO - 127.0.0.1:38014 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:40:24,742 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:40:24,743 - uvicorn.access - INFO - 127.0.0.1:34714 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:40:48,067 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:40:48,068 - uvicorn.access - INFO - 127.0.0.1:36478 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:43:03,169 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:43:03,170 - uvicorn.access - INFO - 127.0.0.1:36580 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:43:10,383 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:43:10,384 - uvicorn.access - INFO - 127.0.0.1:43058 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:43:17,686 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:43:17,686 - uvicorn.access - INFO - 127.0.0.1:36750 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:43:32,396 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:43:32,397 - uvicorn.access - INFO - 127.0.0.1:36760 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:43:46,963 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:43:46,964 - uvicorn.access - INFO - 127.0.0.1:33440 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:43:57,694 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:43:57,697 - uvicorn.access - INFO - 127.0.0.1:49716 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:45:03,494 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:45:03,498 - uvicorn.access - INFO - 127.0.0.1:44962 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:46:13,084 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:46:13,089 - uvicorn.access - INFO - 127.0.0.1:37306 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:46:23,793 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:46:23,802 - uvicorn.access - INFO - 127.0.0.1:54658 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:46:31,204 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:46:31,205 - uvicorn.access - INFO - 127.0.0.1:41550 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:47:20,843 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:47:20,844 - uvicorn.access - INFO - 127.0.0.1:52118 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:47:26,214 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:47:26,215 - uvicorn.access - INFO - 127.0.0.1:33600 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:47:34,834 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:47:34,835 - uvicorn.access - INFO - 127.0.0.1:33616 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:47:52,323 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:47:52,324 - uvicorn.access - INFO - 127.0.0.1:54092 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:48:16,108 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:48:16,109 - uvicorn.access - INFO - 127.0.0.1:58242 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:48:51,589 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:48:51,596 - uvicorn.access - INFO - 127.0.0.1:59644 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:49:18,409 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:49:18,414 - uvicorn.access - INFO - 127.0.0.1:60362 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:49:40,209 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:49:40,210 - uvicorn.access - INFO - 127.0.0.1:34060 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:50:14,175 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:50:14,176 - uvicorn.access - INFO - 127.0.0.1:46230 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:50:32,539 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:50:32,551 - uvicorn.access - INFO - 127.0.0.1:56734 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:50:37,773 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:50:37,774 - uvicorn.access - INFO - 127.0.0.1:37196 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:51:27,360 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:51:27,363 - uvicorn.access - INFO - 127.0.0.1:57342 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:52:19,163 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:52:19,164 - uvicorn.access - INFO - 127.0.0.1:54360 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:52:39,903 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:52:39,912 - uvicorn.access - INFO - 127.0.0.1:37594 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:52:46,834 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:52:46,835 - uvicorn.access - INFO - 127.0.0.1:50382 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:54:03,379 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:54:03,384 - uvicorn.access - INFO - 127.0.0.1:50392 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:55:18,029 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:55:18,034 - uvicorn.access - INFO - 127.0.0.1:55732 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:56:09,003 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:56:09,010 - uvicorn.access - INFO - 127.0.0.1:57232 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:56:32,519 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:56:32,524 - uvicorn.access - INFO - 127.0.0.1:46826 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:56:52,921 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:56:52,922 - uvicorn.access - INFO - 127.0.0.1:51052 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:57:42,346 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:57:42,347 - uvicorn.access - INFO - 127.0.0.1:49716 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:57:49,484 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:57:49,484 - uvicorn.access - INFO - 127.0.0.1:40068 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:58:16,601 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:58:16,605 - uvicorn.access - INFO - 127.0.0.1:40076 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:58:51,266 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:58:51,270 - uvicorn.access - INFO - 127.0.0.1:34614 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:59:07,844 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:59:07,844 - uvicorn.access - INFO - 127.0.0.1:53346 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:59:33,995 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:59:33,996 - uvicorn.access - INFO - 127.0.0.1:55582 - "POST /generate HTTP/1.1" 200
+2025-11-19 15:59:50,590 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 15:59:50,594 - uvicorn.access - INFO - 127.0.0.1:35230 - "POST /generate HTTP/1.1" 200
+2025-11-19 16:00:06,285 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 16:00:06,286 - uvicorn.access - INFO - 127.0.0.1:52072 - "POST /generate HTTP/1.1" 200
+2025-11-19 16:00:40,246 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 16:00:40,252 - uvicorn.access - INFO - 127.0.0.1:40262 - "POST /generate HTTP/1.1" 200
+2025-11-19 16:00:55,193 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 16:00:55,194 - uvicorn.access - INFO - 127.0.0.1:42460 - "POST /generate HTTP/1.1" 200
+2025-11-19 16:01:10,105 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 16:01:10,106 - uvicorn.access - INFO - 127.0.0.1:59626 - "POST /generate HTTP/1.1" 200
+2025-11-19 16:01:32,953 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 16:01:32,954 - uvicorn.access - INFO - 127.0.0.1:43380 - "POST /generate HTTP/1.1" 200
+2025-11-19 16:02:15,911 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 16:02:15,912 - uvicorn.access - INFO - 127.0.0.1:34412 - "POST /generate HTTP/1.1" 200
+2025-11-19 16:02:28,457 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 16:02:28,458 - uvicorn.access - INFO - 127.0.0.1:41190 - "POST /generate HTTP/1.1" 200
+2025-11-19 16:03:34,004 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 16:03:34,004 - uvicorn.access - INFO - 127.0.0.1:39578 - "POST /generate HTTP/1.1" 200
+2025-11-19 16:04:01,483 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 16:04:01,484 - uvicorn.access - INFO - 127.0.0.1:41766 - "POST /generate HTTP/1.1" 200
+2025-11-19 16:04:31,750 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 16:04:31,751 - uvicorn.access - INFO - 127.0.0.1:60672 - "POST /generate HTTP/1.1" 200
+2025-11-19 16:04:53,057 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 16:04:53,057 - uvicorn.access - INFO - 127.0.0.1:51188 - "POST /generate HTTP/1.1" 200
+2025-11-19 16:05:19,561 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 16:05:19,562 - uvicorn.access - INFO - 127.0.0.1:60818 - "POST /generate HTTP/1.1" 200
+2025-11-19 16:05:51,086 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 16:05:51,087 - uvicorn.access - INFO - 127.0.0.1:54180 - "POST /generate HTTP/1.1" 200
+2025-11-19 16:06:16,985 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 16:06:16,986 - uvicorn.access - INFO - 127.0.0.1:51234 - "POST /generate HTTP/1.1" 200
+2025-11-19 16:06:58,369 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 16:06:58,369 - uvicorn.access - INFO - 127.0.0.1:41598 - "POST /generate HTTP/1.1" 200
+2025-11-19 16:08:31,816 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 16:08:31,817 - uvicorn.access - INFO - 127.0.0.1:57060 - "POST /generate HTTP/1.1" 200
+2025-11-19 16:09:13,408 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 16:09:13,408 - uvicorn.access - INFO - 127.0.0.1:43452 - "POST /generate HTTP/1.1" 200
+2025-11-19 16:09:27,521 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 16:09:27,522 - uvicorn.access - INFO - 127.0.0.1:44170 - "POST /generate HTTP/1.1" 200
+2025-11-19 16:09:52,757 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 16:09:52,758 - uvicorn.access - INFO - 127.0.0.1:52044 - "POST /generate HTTP/1.1" 200
+2025-11-19 16:11:25,460 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 16:11:25,537 - uvicorn.access - INFO - 127.0.0.1:60268 - "POST /generate HTTP/1.1" 200
+2025-11-19 16:11:42,575 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 16:11:42,576 - uvicorn.access - INFO - 127.0.0.1:42454 - "POST /generate HTTP/1.1" 200
+2025-11-19 16:12:03,939 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 16:12:03,941 - uvicorn.access - INFO - 127.0.0.1:33680 - "POST /generate HTTP/1.1" 200
+2025-11-19 16:12:34,794 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 16:12:34,794 - uvicorn.access - INFO - 127.0.0.1:50802 - "POST /generate HTTP/1.1" 200
+2025-11-19 16:15:21,363 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 16:15:21,364 - uvicorn.access - INFO - 127.0.0.1:59786 - "POST /generate HTTP/1.1" 200
+2025-11-19 16:15:39,468 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 16:15:39,469 - uvicorn.access - INFO - 127.0.0.1:41900 - "POST /generate HTTP/1.1" 200
+2025-11-19 16:17:06,697 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 16:17:06,698 - uvicorn.access - INFO - 127.0.0.1:50134 - "POST /generate HTTP/1.1" 200
+2025-11-19 16:17:58,197 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 16:17:58,198 - uvicorn.access - INFO - 127.0.0.1:46686 - "POST /generate HTTP/1.1" 200
+2025-11-19 16:18:10,795 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 16:18:10,795 - uvicorn.access - INFO - 127.0.0.1:54096 - "POST /generate HTTP/1.1" 200
+2025-11-19 16:18:19,055 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 16:18:19,056 - uvicorn.access - INFO - 127.0.0.1:33028 - "POST /generate HTTP/1.1" 200
+2025-11-19 16:19:02,353 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 16:19:02,354 - uvicorn.access - INFO - 127.0.0.1:33040 - "POST /generate HTTP/1.1" 200
+2025-11-19 16:19:32,217 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 16:19:32,218 - uvicorn.access - INFO - 127.0.0.1:50928 - "POST /generate HTTP/1.1" 200
+2025-11-19 16:20:10,338 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 16:20:10,339 - uvicorn.access - INFO - 127.0.0.1:56692 - "POST /generate HTTP/1.1" 200
+2025-11-19 16:20:20,928 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 16:20:20,929 - uvicorn.access - INFO - 127.0.0.1:39010 - "POST /generate HTTP/1.1" 200
+2025-11-19 16:21:13,162 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 16:21:13,163 - uvicorn.access - INFO - 127.0.0.1:41594 - "POST /generate HTTP/1.1" 200
+2025-11-19 16:22:11,388 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 16:22:11,389 - uvicorn.access - INFO - 127.0.0.1:58628 - "POST /generate HTTP/1.1" 200
+2025-11-19 16:22:28,771 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 16:22:28,771 - uvicorn.access - INFO - 127.0.0.1:56984 - "POST /generate HTTP/1.1" 200
+2025-11-19 16:23:06,553 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 16:23:06,553 - uvicorn.access - INFO - 127.0.0.1:33896 - "POST /generate HTTP/1.1" 200
+2025-11-19 16:24:00,717 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 16:24:00,718 - uvicorn.access - INFO - 127.0.0.1:51102 - "POST /generate HTTP/1.1" 200
+2025-11-19 16:24:12,545 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 16:24:12,546 - uvicorn.access - INFO - 127.0.0.1:58036 - "POST /generate HTTP/1.1" 200
+2025-11-19 16:24:22,601 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 16:24:22,602 - uvicorn.access - INFO - 127.0.0.1:36464 - "POST /generate HTTP/1.1" 200
+2025-11-19 16:24:49,528 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 16:24:49,529 - uvicorn.access - INFO - 127.0.0.1:56666 - "POST /generate HTTP/1.1" 200
+2025-11-19 16:27:06,814 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 16:27:06,815 - uvicorn.access - INFO - 127.0.0.1:50848 - "POST /generate HTTP/1.1" 200
+2025-11-19 16:28:25,716 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 16:28:25,717 - uvicorn.access - INFO - 127.0.0.1:58228 - "POST /generate HTTP/1.1" 200
+2025-11-19 16:29:00,063 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 16:29:00,063 - uvicorn.access - INFO - 127.0.0.1:35840 - "POST /generate HTTP/1.1" 200
+2025-11-19 16:29:23,219 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 16:29:23,220 - uvicorn.access - INFO - 127.0.0.1:46776 - "POST /generate HTTP/1.1" 200
+2025-11-19 16:29:48,889 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 16:29:48,890 - uvicorn.access - INFO - 127.0.0.1:37726 - "POST /generate HTTP/1.1" 200
+2025-11-19 16:31:00,809 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 16:31:00,809 - uvicorn.access - INFO - 127.0.0.1:57606 - "POST /generate HTTP/1.1" 200
+2025-11-19 16:31:30,306 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 16:31:30,307 - uvicorn.access - INFO - 127.0.0.1:42004 - "POST /generate HTTP/1.1" 200
+2025-11-19 16:32:31,457 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 16:32:31,458 - uvicorn.access - INFO - 127.0.0.1:50700 - "POST /generate HTTP/1.1" 200
+2025-11-19 16:33:43,663 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 16:33:43,664 - uvicorn.access - INFO - 127.0.0.1:56446 - "POST /generate HTTP/1.1" 200
+2025-11-19 16:35:42,758 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 16:35:42,759 - uvicorn.access - INFO - 127.0.0.1:40450 - "POST /generate HTTP/1.1" 200
+2025-11-19 16:37:23,045 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 16:37:23,046 - uvicorn.access - INFO - 127.0.0.1:39992 - "POST /generate HTTP/1.1" 200
+2025-11-19 16:39:02,552 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8008/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-19 16:39:02,582 - uvicorn.access - INFO - 127.0.0.1:60790 - "POST /generate HTTP/1.1" 200
+2025-11-19 16:39:50,770 - uvicorn.error - INFO - Shutting down

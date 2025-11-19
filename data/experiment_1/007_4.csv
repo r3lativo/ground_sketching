@@ -1,0 +1,146 @@
+chunk_id,position,character,text
+001,E5,Crystal,"Hey Melissa, this is a university campus. I'm currently outside."
+001,D2,Melissa,Uh-huh. I'm in the academic buildings. There's a whiteboard beside the projector screen here.
+001,E5,Crystal,I see an abstract statue near me. It's pretty large.
+001,D2,Melissa,Got it. There's also a metal podium in the room.
+001,E5,Crystal,There's a bollard next to the statue. It looks decorative.
+001,D2,Melissa,"Okay. I notice a desk near the podium. Oh, and a window adjacent to a column."
+001,E5,Crystal,Thanks for the details. Are there any other landmarks visible from your end?
+001,D2,Melissa,Not that I can see. I'm heading toward the geology building trail now.
+002,D3,Melissa,I just arrived in the residential halls from the geology building trail.
+002,D3,Melissa,There's a cubicle partition near the entrance.
+002,D3,Melissa,I see a speaker mounted on the wall here.
+002,D3,Melissa,There's a two-drawer filing cabinet under the desk.
+002,E5,Crystal,I'm moving towards the bike lane north now.
+002,D3,Melissa,Got it. I'll keep an eye out for any other landmarks.
+003,F5,Crystal,I just arrived in the outdoor area from the bike lane north.
+003,D3,Melissa,Got it.
+003,F5,Crystal,There's a picnic table made of recycled plastic beside the pond here.
+003,D3,Melissa,Okay.
+003,F5,Crystal,I see a waste bin with a dome at the pathway junction.
+003,D3,Melissa,Right.
+003,F5,Crystal,There's a double lamp post at the intersection.
+003,D3,Melissa,I'm heading toward the student services route now.
+004,C3,Melissa,I just arrived in the academic buildings from the student services route.
+004,C3,Melissa,There's an upholstered chair facing the presentation screen here.
+004,F5,Crystal,I'm heading toward the rec center bridge now.
+004,C3,Melissa,The plotter printer is next to the design studio table.
+004,F5,Crystal,Thanks for the update. I'll keep moving toward the rec center bridge.
+004,C3,Melissa,I'm departing toward the art studio corridor now.
+005,F6,Crystal,I just arrived in the residential halls from the rec center bridge.
+005,F6,Crystal,There's a cubicle partition dividing the open office area.
+005,F6,Crystal,I see a triple-tier locker near the entrance.
+005,F6,Crystal,There's a three-shelf bookcase adjacent to the cubicle.
+005,C2,Melissa,Uh-huh. I just arrived in the academic buildings from the theater district walk.
+005,C2,Melissa,There's a magnetic information board near the classroom entrance.
+005,C2,Melissa,I see a wooden podium on the stage floor.
+005,F6,Crystal,Does your podium have a metal base like the one I saw before?
+005,C2,Melissa,"No, mine's entirely wood with a curved edge. The stage also has a spotlight nearby."
+005,F6,Crystal,Got it. I'll check if my bookcase matches the one near the speaker in the residential halls.
+005,C2,Melissa,"Wait—your cubicle partition is glass, right? The one I saw was metal with a speaker mounted."
+005,F6,Crystal,"Yes, ours is glass. Let me confirm if the three-shelf bookcase has a label."
+005,C2,Melissa,Mine has a 'Textbooks' label. Does yours match?
+005,F6,Crystal,"No, ours is unlabeled. Maybe we're in different halls."
+005,C2,Melissa,I'm departing toward the geology building trail now.
+005,F6,Crystal,I'm heading toward the bike lane north. Let's reconvene there.
+006,E6,Crystal,I just arrived in the academic buildings from the service road west.
+006,E6,Crystal,There's a whiteboard above the lecture hall stage here.
+006,C2,Melissa,Uh-huh. The one you saw before was beside the projector screen.
+006,E6,Crystal,Right. Is there a podium in your area with a curved edge?
+006,C2,Melissa,Yes—mine's wooden with a spotlight nearby. Yours?
+006,E6,Crystal,"Mine's acrylic, positioned behind the lectern."
+006,C2,Melissa,Got it. There's also a desk near my podium with an information board.
+006,E6,Crystal,I see a door at the entryway here. It's solid wood.
+006,C2,Melissa,Okay. I noticed a metal filing cabinet under the desk in my zone.
+006,E6,Crystal,And there's a vending machine beside the student lounge here.
+006,C2,Melissa,I'm departing toward the science building link now.
+006,E6,Crystal,I'm moving toward the rec center bridge. Let's reconvene there.
+007,D6,Crystal,I just arrived in the outdoor area from the admin building approach.
+007,B2,Melissa,Got it.
+007,D6,Crystal,There's a picnic table made of concrete near the barbecue pit here.
+007,B2,Melissa,Okay. I see a mesh chair under the desk in the academic buildings.
+007,D6,Crystal,The waste bin has a swing mechanism near the picnic area.
+007,B2,Melissa,Right. The one I saw had a dome at the pathway junction.
+007,D6,Crystal,This sign is projecting and extending from the building corner.
+007,B2,Melissa,Uh-huh. Does it have any text or symbols?
+007,D6,Crystal,It's just a directional arrow. This bench has a grid pattern beside the lawn.
+007,B2,Melissa,I remember a similar bench near the student lounge—was yours painted?
+007,D6,Crystal,"No, it's unpainted concrete. This picnic table reminds me of the one beside the pond with a lamp post."
+007,B2,Melissa,The waste bin here also has a swing lid like the one at the pathway junction.
+007,D6,Crystal,Exactly. I'm heading toward the science building link now.
+007,B2,Melissa,I'll stay here and watch for any new landmarks.
+008,C6,Crystal,I just arrived in the academic buildings from the campus perimeter route.  
+008,C6,Crystal,There's a fire extinguisher mounted on the pillar near the entrance here.  
+008,B2,Melissa,Got it.  
+008,C6,Crystal,I see a chair next to the bookshelf in this area.  
+008,B2,Melissa,Okay.  
+008,C6,Crystal,The podium here has a laminate surface near the microphone stand.  
+008,C6,Crystal,This reminds me of the acrylic podium I saw earlier behind the lectern.  
+008,B2,Melissa,I noticed a mesh chair under the desk in my zone—was yours near a bookshelf?  
+008,C6,Crystal,"Yes, mine's open and next to the bookshelf. Is there a desk with an information board near yours?  "
+008,B2,Melissa,"Yes, the desk has a metal filing cabinet under it. I'm departing toward the police station access now."
+009,A2,Melissa,I just arrived in the campus facilities from the police station access.
+009,A2,Melissa,There's a kiosk with a touch screen here.
+009,A2,Melissa,I see a hand dryer near the kiosk.
+009,C6,Crystal,I'm departing toward the bus stop connector now.
+010,C5,Crystal,I just arrived in the campus facilities from the bus stop connector.
+010,C5,Crystal,There's a kiosk with an outdoor screen here.
+010,A2,Melissa,Uh-huh.
+010,C5,Crystal,I see a paper towel dispenser with manual pull beside the waste bin.
+010,A2,Melissa,Got it.
+010,C5,Crystal,"Hey, the kiosk with the outdoor screen—does it match the one you saw before?"
+010,A2,Melissa,"No, mine had a touch screen at the facility entrance. There was also a hand dryer nearby after taking the police station access."
+010,C5,Crystal,Right—my kiosk is outside the event hall. I'll check if the paper towel dispenser matches yours.
+010,A2,Melissa,I'm departing toward the delivery bay access now.
+011,A3,Melissa,I just arrived in the campus facilities from the delivery bay access.  
+011,A3,Melissa,There's a projector here.  
+011,C5,Crystal,Got it. I'm departing toward the dining hall pathway now.
+012,C4,Crystal,I just arrived in the academic buildings from the dining hall pathway.
+012,A3,Melissa,Got it. I see a projector here in the campus facilities.
+012,C4,Crystal,Thanks. Are there any other objects visible from your end?
+012,A3,Melissa,"No, just the projector. I'm departing toward the music hall pathway now."
+013,A4,Melissa,I just arrived in the residential halls from the music hall pathway.
+013,A4,Melissa,There's a display case here.
+013,A4,Melissa,It's doorless and within the alcove.
+013,C4,Crystal,I'm moving towards the maintenance tunnel entrance.
+014,B4,Crystal,I just arrived in the outdoor area from the maintenance tunnel entrance.
+014,B4,Crystal,There's a charging station near the bicycle rack here.
+014,A4,Melissa,Got it.
+014,B4,Crystal,I see a water fountain with tile patterns at the pathway corner.
+014,A4,Melissa,Okay.
+014,B4,Crystal,There's a waste bin with an open-top by the bench here.
+014,B4,Crystal,This waste bin reminds me of the one I saw earlier near the picnic area with a swing lid.
+014,A4,Melissa,Right. I'm departing toward the campus lake path now.
+014,B4,Crystal,I'll keep looking for landmarks matching yours. Does your waste bin have a dome like the one at the pathway junction?
+014,A4,Melissa,"No, mine's cylindrical with a hinged lid. I'll check if the campus lake path has a similar bench."
+015,A5,Melissa,I just arrived in the academic buildings from the campus lake path.
+015,A5,Melissa,There's a digital information board above the reception counter here.
+015,B4,Crystal,Got it. Is that the same as the magnetic one near the classroom entrance you mentioned earlier?
+015,A5,Melissa,"No, this one's digital—much brighter. I remember the magnetic one had a chalkboard surface."
+015,A5,Melissa,There's also a composite podium adjacent to the projection screen.
+015,B4,Crystal,Does your podium have a laminate surface like the one I saw near the microphone stand?
+015,A5,Melissa,Mine's composite with a curved edge. The stage has a spotlight nearby.
+015,B4,Crystal,Right—my podium's acrylic behind the lectern. I see a chair next to my bookshelf.
+015,A5,Melissa,I noticed a mesh chair under the desk in my zone. Is yours near a bookshelf?
+015,B4,Crystal,"Yes, ours is open and next to the bookshelf. I'm departing toward the science building link now."
+016,B5,Melissa,I just arrived in the academic buildings from the emergency exit route.
+016,B4,Crystal,Got it.
+016,B5,Melissa,There's a fire extinguisher with foam on the floor stand here.
+016,B4,Crystal,Understood. Is it mounted or freestanding?
+016,B5,Melissa,Freestanding. The information board is acrylic beside the main entrance.
+016,B4,Crystal,Is that the same as the magnetic one near the classroom entrance you mentioned earlier?
+016,B5,Melissa,"No, this one's acrylic. It reminds me of the digital board above the reception counter in the campus lake path."
+016,B4,Crystal,Right—my magnetic board had a chalkboard surface. Does your acrylic one have any text?
+016,B5,Melissa,Just directional arrows. I'm asking about the fire extinguisher you saw before—was yours mounted on a pillar?
+016,B4,Crystal,"Yes, mine's mounted on a pillar with abc dry chemical. Yours has foam, so they're different."
+016,B5,Melissa,Got it. I'm departing toward the campus lake path now.
+017,B4,Melissa,I just arrived in the outdoor area from the engineering quad path.
+017,B4,Melissa,There's a two-port charging station near the electric vehicle parking here.
+017,B4,Crystal,Uh-huh. Does it have a solar panel cover like the one near the pond?
+017,B4,Melissa,"No, just a standard canopy. I see a grid bicycle rack behind the bus stop."
+017,B4,Crystal,Got it. Is the rack welded or bolted to the ground?
+017,B4,Melissa,Welded. There's a tile water fountain within the courtyard feature.
+017,B4,Crystal,Right—my fountain has geometric tile patterns. Is there a bench nearby?
+017,B4,Melissa,"Yes, with an open-top waste bin by the bench. This matches the one you described earlier."
+017,B4,Crystal,Exactly—yours has a hinged lid like mine. We must be in the same outdoor zone!
+017,B4,Melissa,Definitely. Let's meet at the charging station between the bus stop and parking.

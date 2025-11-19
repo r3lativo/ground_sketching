@@ -1,0 +1,66 @@
+Working Directory: /lustre/fswork/projects/rech/bgp/upa38qy/ground_sketching
+--- python path ---
+/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/bin/python3
+--- pip packages ---
+diffusers                                0.36.0.dev0
+fastapi                                  0.116.1
+fastapi-cli                              0.0.13
+fastapi-cloud-cli                        0.3.0
+pandas                                   2.3.1
+prometheus-fastapi-instrumentator        7.1.0
+vllm                                     0.11.0
+yq                                       3.4.3
+--- STARTING SERVICES ---
+--- 1. Reading configuration from config/server_config.yaml ---
+Waiting for services to be healthy...
+--- 1b. Setting CUDA_VISIBLE_DEVICES=2 ---
+--- 2. Starting Image Generation server... ---
+Waiting for VLM Backend... (0/60)
+Waiting for VLM Backend... (1/60)
+Waiting for VLM Backend... (2/60)
+Waiting for VLM Backend... (3/60)
+Waiting for VLM Backend... (4/60)
+Waiting for VLM Backend... (5/60)
+Waiting for VLM Backend... (6/60)
+Waiting for VLM Backend... (7/60)
+Waiting for VLM Backend... (8/60)
+Waiting for VLM Backend... (9/60)
+Waiting for VLM Backend... (10/60)
+Waiting for VLM Backend... (11/60)
+Waiting for VLM Backend... (12/60)
+Waiting for VLM Backend... (13/60)
+Waiting for VLM Backend... (14/60)
+Waiting for VLM Backend... (15/60)
+Waiting for VLM Backend... (16/60)
+Waiting for VLM Backend... (17/60)
+Waiting for VLM Backend... (18/60)
+Waiting for VLM Backend... (19/60)
+2025-11-19 14:48:41,304 - __main__ - INFO - Starting Image Generation server on http://0.0.0.0:8002
+2025-11-19 14:48:41,982 - uvicorn.error - INFO - Started server process [3387898]
+2025-11-19 14:48:41,982 - uvicorn.error - INFO - Waiting for application startup.
+2025-11-19 14:48:41,982 - __main__ - INFO - Application startup: Loading model...
+2025-11-19 14:48:41,982 - __main__ - INFO - CUDA available. Using device: cuda with dtype: torch.bfloat16
+2025-11-19 14:48:44,333 - __main__ - INFO - Loading base pipeline: Qwen/Qwen-Image-Edit-2509...
+2025-11-19 14:48:47,405 - __main__ - INFO - Loading LoRA weights: Qwen-Image-Lightning/Qwen-Image-Edit-2509/Qwen-Image-Edit-2509-Lightning-8steps-V1.0-fp32.safetensors...
+Waiting for VLM Backend... (20/60)
+Waiting for VLM Backend... (21/60)
+Waiting for VLM Backend... (22/60)
+Waiting for VLM Backend... (23/60)
+Waiting for VLM Backend... (24/60)
+Waiting for VLM Backend... (25/60)
+2025-11-19 14:49:47,182 - __main__ - INFO - Moving pipeline to device: cuda...
+Waiting for VLM Backend... (26/60)
+Waiting for VLM Backend... (27/60)
+Waiting for VLM Backend... (28/60)
+Waiting for VLM Backend... (29/60)
+Waiting for VLM Backend... (30/60)
+Waiting for VLM Backend... (31/60)
+Waiting for VLM Backend... (32/60)
+Waiting for VLM Backend... (33/60)
+Waiting for VLM Backend... (34/60)
+Waiting for VLM Backend... (35/60)
+Waiting for VLM Backend... (36/60)
+Waiting for VLM Backend... (37/60)
+Waiting for VLM Backend... (38/60)
+Waiting for VLM Backend... (39/60)
+Waiting for VLM Backend... (40/60)

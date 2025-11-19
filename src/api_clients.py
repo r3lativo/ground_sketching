@@ -39,14 +39,23 @@ try:
     )
     polish_template = env.get_template(config['vlm_client']['jinja']['polish_t'])
     edit_template = env.get_template(config['vlm_client']['jinja']['edit_t'])
+
     initial_start_template = env.get_template(config['vlm_client']['jinja']['initial_start_t'])
     initial_edit_template = env.get_template(config['vlm_client']['jinja']['initial_edit_t'])
+
+    final_start_template = env.get_template(config['vlm_client']['jinja']['final_start_t'])
+    final_edit_template = env.get_template(config['vlm_client']['jinja']['final_edit_t'])
     
     # Render templates
     polish_system_prompt = polish_template.render()
     edit_system_prompt = edit_template.render()
+
     initial_start_system_prompt = initial_start_template.render()
     inital_edit_system_prompt = initial_edit_template.render()
+
+    final_start_system_prompt = final_start_template.render()
+    final_edit_system_prompt = final_edit_template.render()
+    
     logger.info("System prompts loaded from Jinja2 templates.")
 
 except FileNotFoundError:
@@ -188,7 +197,7 @@ async def call_prompt_polisher(
         content.append({"type": "text", "text": utterance})
         
         messages = [
-            {"role": "system", "content": edit_system_prompt},
+            {"role": "system", "content": final_edit_system_prompt},
             {"role": "user", "content": content}
         ]
 
@@ -220,7 +229,7 @@ async def call_prompt_polisher(
         # No JSON key, expects plain text
         
         messages = [
-            {"role": "system", "content": polish_system_prompt},
+            {"role": "system", "content": final_start_system_prompt},
             {"role": "user", "content": utterance}
         ]
 
