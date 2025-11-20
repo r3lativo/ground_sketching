@@ -28,96 +28,103 @@ module load pytorch-gpu/py3/2.8.0
 # Add the folder where pip installs executable scripts to the system PATH
 export PATH=$HOME/.local/bin:$PATH
 
-# DEBUG: Verify python environment and packages
-echo "--- python path ---"
-which python3
-echo "--- pip packages ---"
-pip list | grep -E "diffusers|vllm|pandas|fastapi|yq"
+# # DEBUG: Verify python environment and packages
+# echo "--- python path ---"
+# which python3
+# echo "--- pip packages ---"
+# pip list | grep -E "diffusers|vllm|pandas|fastapi|yq"
 
 # --- 2. Start Services ---
 echo "--- STARTING SERVICES ---"
 
-# GPU 0,1 -> VLM Service (TP=2)
-# The script internally sets CUDA_VISIBLE_DEVICES based on config, 
-# but relies on the assumption that 0 and 1 are free.
+# Launch VLM (GPUs 0,1)
 ./scripts/start_vlm_service.sh &
 VLM_SCRIPT_PID=$!
 
-# Give VLM a head start to claim its GPUs
-sleep 10
-
-# GPU 2 -> Image Gen Service
+# Launch Image Gen (GPU 2)
 ./scripts/start_image_gen_service.sh &
 IMG_GEN_PID=$!
 
 # --- 3. Wait for Health Checks ---
 echo "Waiting for services to be healthy..."
 
-# VLM Health Check (Backend port 8008)
 VLLM_HEALTH="http://127.0.0.1:8008/health"
-# Image Gen Health Check (Port 8002)
 IMG_HEALTH="http://0.0.0.0:8002/health"
 
-# Wait loop for VLM (usually takes longer)
-MAX_RETRIES=60 # 10 minutes (60 * 10s)
-count=0
-until curl -s -f "$VLLM_HEALTH" > /dev/null; do
-    if [ $count -eq $MAX_RETRIES ]; then
-        echo "Timeout waiting for VLM service."
-        exit 1
-    fi
-    echo "Waiting for VLM Backend... ($count/$MAX_RETRIES)"
-    sleep 10
-    count=$((count+1))
-done
-echo "VLM Backend is ready."
+check_service() {
+    local url=$1
+    local name=$2
+    local max_retries=60
+    local count=0
+    until curl -s -f "$url" > /dev/null; do
+        if [ $count -eq $max_retries ]; then
+            echo "Timeout waiting for $name."
+            exit 1
+        fi
+        # Print dot to show progress without spamming lines
+        echo -n "."
+        sleep 10
+        count=$((count+1))
+    done
+    echo ""
+    echo "$name is ready."
+}
 
-# Wait loop for Image Gen
-until curl -s -f "$IMG_HEALTH" > /dev/null; do
-    echo "Waiting for Image Gen Service..."
-    sleep 5
-done
-echo "Image Gen Service is ready."
+# Run checks in background
+check_service "$VLLM_HEALTH" "VLM Backend" &
+CHECK_PID_1=$!
+
+check_service "$IMG_HEALTH" "Image Gen Service" &
+CHECK_PID_2=$!
+
+wait $CHECK_PID_1 $CHECK_PID_2
+
+echo "All systems operational. Starting Experiments."
 
 # --- 4. Run Experiment Loop ---
 
-INPUT_DIR="data/experiment_1"
-OUTPUT_DIR="output/experiment_1"
+INPUT_DIR="data/experiment_2"
+OUTPUT_DIR="output/experiment_2"
 mkdir -p "$OUTPUT_DIR"
 
-# Cleanup trap
+MAX_JOBS=4 
+current_jobs=0
+
 cleanup() {
     echo "Shutting down services..."
-    # Kill the wrapper scripts
     kill $VLM_SCRIPT_PID 2>/dev/null
     kill $IMG_GEN_PID 2>/dev/null
-    
-    # Force kill the python processes if wrappers didn't catch them
     pkill -u $USER -f "vllm_gateway"
     pkill -u $USER -f "image_gen_app"
     pkill -u $USER -f "vllm serve"
-    
-    rm -f start_image_gen_service_gpu2.sh
+    jobs -p | xargs -r kill
 }
 trap cleanup EXIT
 
-# Iterate over files
 for csv_file in "$INPUT_DIR"/*.csv; do
     [ -e "$csv_file" ] || continue
     
     filename=$(basename -- "$csv_file")
-    echo "----------------------------------------------------------------"
-    echo "Processing File: $filename"
-    echo "----------------------------------------------------------------"
+    
+    (
+        echo ">>> Starting File: $filename"
+        python3 augmenter.py \
+            --file "$csv_file" \
+            --automatic_users \
+            --create_aug \
+            --gen_images_from_aug \
+            --aug_output_path "$OUTPUT_DIR/${filename%.*}_augmented.csv" \
+            --images_output_path "$OUTPUT_DIR/${filename%.*}_images"
+        echo "<<< Finished File: $filename"
+    ) &
 
-    python3 augmenter.py \
-        --file "$csv_file" \
-        --automatic_users \
-        --create_aug \
-        --gen_images_from_aug \
-        --aug_output_path "$OUTPUT_DIR/${filename%.*}_augmented.csv" \
-        --images_output_path "$OUTPUT_DIR/${filename%.*}_images"
+    current_jobs=$((current_jobs + 1))
+    if [ $current_jobs -ge $MAX_JOBS ]; then
+        wait -n
+        current_jobs=$((current_jobs - 1))
+    fi
 
 done
 
+wait
 echo "All experiments completed."
