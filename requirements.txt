@@ -13,3 +13,4 @@ PyYAML
 vllm
 Jinja2
 yq
+streamlit # for data visualization

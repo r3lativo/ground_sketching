@@ -1,0 +1,146 @@
+chunk_id,position,character,text
+001,D2,Mark,"Hi Sara, I'm in the climbing area of this indoor rock climbing center."
+001,B5,Sara,Hi Mark. I'm in the training area.
+001,D2,Mark,I see a sloper climbing hold here.
+001,B5,Sara,Uh-huh. I see a ribbed exercise mat under a weight bench here.
+001,D2,Mark,There's a quickdraw clipped to the wall.
+001,B5,Sara,Got it. My campus board is below the hangboard mount.
+001,D2,Mark,There's a rope bag against the wall corner here.
+001,B5,Sara,"Right, my campus board is ten-inch thick and below the hangboard mount."
+001,D2,Mark,I'll head to the back office corridor now.
+001,B5,Sara,I see a weight rack near the mat surface here.
+002,D1,Mark,I just arrived at the training area from the back office corridor.
+002,B5,Sara,I'm heading to the staff only corridor now.
+003,B6,Sara,I just arrived at the climbing area from the staff only corridor.
+003,D1,Mark,Got it.
+003,B6,Sara,There's a two-bolt belay station anchor on the main climbing wall here.
+003,D1,Mark,Uh-huh.
+003,B6,Sara,An anchor point with a quicklink is secured to the ceiling anchor.
+003,D1,Mark,Right.
+003,B6,Sara,A drawstring chalk bag is on the chalk station table.
+003,D1,Mark,Noted.
+003,B6,Sara,I'll head back to the staff only corridor now.
+004,C6,Sara,I just arrived at the training area from the membership desk queue.
+004,D1,Mark,Uh-huh.
+004,C6,Sara,There's a smooth exercise mat on the stretching floor here.
+004,D1,Mark,Got it.
+004,C6,Sara,A hangboard is mounted on the wall near the mat.
+004,D1,Mark,Right. I'm heading to the climbing hold storage path now.
+004,C6,Sara,This smooth mat is different from the ribbed one I saw under the weight bench earlier.
+004,C6,Sara,"Oh, and there was a campus board there too."
+005,C1,Mark,I just arrived at the bouldering zone from the climbing hold storage path.
+005,C6,Sara,Uh-huh.
+005,C1,Mark,There's a training board here.
+005,C6,Sara,Got it.
+005,C1,Mark,I see a campus board rung on the wall.
+005,C6,Sara,Right.
+005,C1,Mark,A bouldering problem card with adhesive is next to the volume attachment point.
+005,C6,Sara,Noted.
+005,C1,Mark,I'll head back to the climbing hold storage path now.
+005,C6,Sara,I'm heading to the lost and found path.
+006,D6,Sara,I just arrived at the bouldering zone from the lost and found path.
+006,C2,Mark,Uh-huh.
+006,D6,Sara,There's a crash pad under the bouldering wall here.
+006,C2,Mark,Got it.
+006,D6,Sara,The crash pad has an integrated carry strap.
+006,C2,Mark,Right.
+006,D6,Sara,A training board is mounted above the bouldering wall here.
+006,C2,Mark,Noted. I see a plastic hangboard below the training wall frame in my training area.
+006,D6,Sara,That's different from the urethane hangboard I saw next to the support column earlier.
+006,C2,Mark,I see. Are you still in the bouldering zone?
+006,D6,Sara,"Yes, the training board here is positioned higher than my campus board."
+006,C2,Mark,Got it. I'll head to the climbing hold storage path now.
+007,D5,Sara,I just arrived at the bouldering zone from the drinking fountain access.
+007,D5,Sara,There's a training board with a pinch grip below the campus board frame here.
+007,C2,Mark,Uh-huh.
+007,D5,Sara,A campus board rung is mounted on the wall.
+007,C2,Mark,Got it.
+007,D5,Sara,A volume boulder is stacked near the training board.
+007,C2,Mark,Right.
+007,D5,Sara,"Wait, you mentioned a campus board rung earlier. Was yours made of urethane?"
+007,C2,Mark,"No, mine was composite and next to a volume attachment point with a bouldering problem card."
+007,D5,Sara,"Ah, that's different from my urethane rung above the bouldering wall."
+007,C2,Mark,I'll head to the kids zone walkway now.
+008,B2,Mark,I just arrived at the training area from the kids zone walkway.
+008,B2,Mark,There's a waffle-patterned exercise mat near the pull up bar frame here.
+008,D5,Sara,Uh-huh. My smooth exercise mat is on the stretching floor in the bouldering zone.
+008,B2,Mark,Got it. I see a twelve-inch campus board against the support column here.
+008,D5,Sara,"Right, my campus board is ten-inch thick and below the hangboard mount."
+008,B2,Mark,Noted. There's a pull up bar with a 1.5-inch diameter above the weight bench here.
+008,D5,Sara,"Okay, I see a hangboard mounted on the wall near my campus board."
+008,B2,Mark,I'll head to the climbing hold storage path now.
+008,D5,Sara,I just arrived at the bouldering zone from the membership desk queue.
+008,D5,Sara,There's a hangboard there with a weight rack nearby.
+008,B2,Mark,Right. I see a stretching area sign near the pull up bar here.
+008,D5,Sara,Got it. I'm heading to the cafe seating area route now.
+009,C5,Sara,I just arrived at the training area from the cafe seating area route.
+009,B2,Mark,I'm heading to the waste disposal route now.
+010,A2,Mark,I just arrived at the bouldering zone from the waste disposal route.
+010,A2,Mark,There's a quad-fold crash pad near the support column here.
+010,C5,Sara,Uh-huh. My hinge-fold crash pad is under the bouldering wall.
+010,A2,Mark,I see a plastic campus board rung below the hangboard mount on the wall.
+010,C5,Sara,Got it. My urethane rung is above the bouldering wall.
+010,A2,Mark,There's a traverse wall section with a volume attachment point and a bouldering problem card nearby.
+010,C5,Sara,Right. I see a training board with a pinch grip below the campus board frame here.
+010,A2,Mark,Are you still in the bouldering zone?
+010,C5,Sara,"Yes, I just placed a training board above the bouldering wall."
+010,A2,Mark,The traverse wall section here has a volume stacked near the training board.
+010,C5,Sara,That's different from my volume boulder stacked near the training board in the training area.
+010,A2,Mark,I'll head to the cafe to pro shop now.
+010,C5,Sara,I'm departing the training area for the cafe to pro shop route.
+011,C4,Sara,I just arrived at the climbing area from the cafe to pro shop.
+011,A2,Mark,Uh-huh.
+011,C4,Sara,There's a three-bolt belay station anchor above the climbing wall base here.
+011,A2,Mark,Got it.
+011,C4,Sara,This reminds me of the two-bolt anchor on the main climbing wall I saw in the staff only corridor earlier.
+011,A2,Mark,Right.
+011,C4,Sara,That place also had a chalk bag.
+011,A2,Mark,Uh-huh.
+011,C4,Sara,An anchor point with a carabiner is threaded through the route setting rail here.
+011,A2,Mark,Noted.
+011,C4,Sara,This is similar to the quicklink I saw secured to the ceiling anchor in the staff corridor.
+011,A2,Mark,Right.
+011,C4,Sara,A panelized climbing wall section rises above the base here.
+011,A2,Mark,I see. I'm heading to the gear check out lane now.
+012,A3,Mark,I just arrived at the training area from the gear check out lane.
+012,C4,Sara,Uh-huh. I see a three-bolt belay station anchor above the climbing wall base here.
+012,A3,Mark,There's a pebble-grain exercise mat against the wall corner here.
+012,C4,Sara,Got it. My hinge-fold crash pad is under the bouldering wall.
+012,A3,Mark,An extra-heavy resistance band is coiled next to the mat.
+012,C4,Sara,Right. I see a traverse wall section with a volume attachment point nearby.
+012,A3,Mark,This pebble-grain mat reminds me of the waffle-patterned mat I saw near the pull up bar frame earlier.
+012,C4,Sara,"Uh-huh. That place also had a 12-inch campus board, right?"
+012,A3,Mark,"Yes, the waffle mat was positioned near the pull up bar frame there."
+012,C4,Sara,I'll head to the equipment return pathway now.
+013,B4,Sara,I just arrived at the climbing area from the equipment return pathway.
+013,A3,Mark,Uh-huh.
+013,B4,Sara,There's a single-point belay station anchor secured to the support column here.
+013,A3,Mark,Got it.
+013,B4,Sara,This single-point anchor secured to the support column reminds me of the three-bolt anchor I saw above the climbing wall base in the staff only corridor earlier.
+013,A3,Mark,Right.
+013,B4,Sara,An auto belay device is mounted on the upper wall section here.
+013,A3,Mark,Noted.
+013,B4,Sara,It's composite in material.
+013,A3,Mark,Got it.
+013,B4,Sara,There's a route tag on the wall near the anchor.
+013,A3,Mark,Uh-huh.
+013,B4,Sara,A striped climbing rope is coiled near the base here.
+013,A3,Mark,Right. I'm heading to the main wall access ramp now.
+014,A4,Mark,I just arrived at the training area from the main wall access ramp.
+014,B4,Sara,Uh-huh. I see a single-point belay station anchor secured to the support column here.
+014,A4,Mark,There's a resin hangboard above the pull up bar frame here.
+014,B4,Sara,Got it. My auto belay device is mounted on the upper wall section here.
+014,A4,Mark,A diagonal peg board is above the training wall frame.
+014,B4,Sara,Right. I see a striped climbing rope coiled near the base here.
+014,A4,Mark,I'm heading to the climbing hold storage path now.
+014,B4,Sara,Noted. I'll head to the equipment return pathway now.
+015,B4,Mark,I just arrived at the climbing area from the bouldering to training path.
+015,B4,Mark,There's a single-point belay station anchor secured to the support column here.
+015,B4,Sara,Uh-huh. I see a composite auto belay device mounted on the upper wall section nearby.
+015,B4,Mark,Got it. A zip-tie route tag is wrapped around a quickdraw hanger on the wall.
+015,B4,Sara,Right. A striped climbing rope is draped over the rope storage bin near the base.
+015,B4,Mark,That's the same rope storage bin I see with the striped rope coiled there.
+015,B4,Sara,And the belay station anchor you mentioned matches the one secured to this support column.
+015,B4,Mark,Exactly. All these objects align with what I described.
+015,B4,Sara,So we must be in the same climbing area then.
+015,B4,Mark,Looks like it. Let's meet at the rope storage bin to confirm.
