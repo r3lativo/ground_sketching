@@ -27,7 +27,23 @@ from src.api_clients import (
 file_write_lock = asyncio.Lock()
 
 # Semaphore to prevent overwhelming the VLM API
-VLM_CONCURRENCY = asyncio.Semaphore(10) 
+VLM_CONCURRENCY = asyncio.Semaphore(10)
+
+def is_no_change_token(s: str) -> bool:
+    """
+    Return True if `s` is a NO_CHANGE marker in any common variant.
+    Canonical output = '[NO_CHANGE]'.
+    """
+    if s is None:
+        return False
+    normalized = str(s).strip().upper()
+    return normalized in ("[NO_CHANGE]", "NO_CHANGE", "[NO CHANGE]")
+
+
+def canonical_no_change() -> str:
+    """Return canonical [NO_CHANGE] marker."""
+    return "[NO_CHANGE]"
+
 
 def check_servers(args):
     server_config = load_config(config_path='config/server_config.yaml')
@@ -48,25 +64,30 @@ def check_servers(args):
 # --- STAGE 1: PARALLEL CHUNK PROCESSING ---
 
 async def process_chunk_create(chunk_id, chunk_df, df, user_perspective, csv_output_path):
-    async with VLM_CONCURRENCY: 
+    async with VLM_CONCURRENCY:
         print(f"  [Start] Chunk {chunk_id} (Create)")
-        
+
         previous_prompts_history = []
         user_utterances = chunk_df[chunk_df['character'] == user_perspective].sort_index()
         context_list = chunk_df.sort_index()['text'].tolist()
-        
+
         params_changed = False
 
         for index, row in user_utterances.iterrows():
             # Skip if exists
             current_val = df.at[index, 'initial_prompt']
             if pd.notna(current_val) and str(current_val).strip() != "":
-                 if current_val != "[NO_CHANGE]":
-                     previous_prompts_history.append(current_val)
+                 # Even if skipping, we must update history for context
+                 if not is_no_change_token(current_val):
+                     previous_prompts_history.append(str(current_val).strip())
+                 else:
+                     # Normalize stored version
+                     df.at[index, 'initial_prompt'] = canonical_no_change()
                  continue
 
+            # Normal case
             utterance_text = row['text']
-            
+
             try:
                 polished_prompt = await call_prompt_polisher(
                     utterance=utterance_text,
@@ -75,23 +96,34 @@ async def process_chunk_create(chunk_id, chunk_df, df, user_perspective, csv_out
                 )
 
                 if polished_prompt:
+                    # Normalize NO_CHANGE tokens into canonical form
+                    if is_no_change_token(polished_prompt):
+                        polished_prompt = canonical_no_change()
+
                     df.at[index, 'initial_prompt'] = polished_prompt
                     params_changed = True
-                    if polished_prompt != "[NO_CHANGE]":
+
+                    if not is_no_change_token(polished_prompt):
                         previous_prompts_history.append(polished_prompt)
+
+                else:
+                    # Empty polished prompt — should not occur normally
+                    df.at[index, 'initial_prompt'] = ""
+
             except Exception as e:
                 print(f"    Error Chunk {chunk_id} Index {index}: {e}")
 
         if params_changed:
             async with file_write_lock:
                 df.to_csv(csv_output_path, index=False)
-        
+
         print(f"  [Done] Chunk {chunk_id} (Create)")
 
 
 async def create_aug(df: pd.DataFrame, user_perspective: str, csv_output_path: str) -> pd.DataFrame:
     print(f"--- Stage 1: Parallel Contextual Prompts ({user_perspective}) ---")
-    if 'initial_prompt' not in df.columns: df['initial_prompt'] = pd.NA
+    if 'initial_prompt' not in df.columns:
+        df['initial_prompt'] = pd.NA
 
     grouped = df.groupby('chunk_id')
     tasks = []
@@ -100,7 +132,7 @@ async def create_aug(df: pd.DataFrame, user_perspective: str, csv_output_path: s
         tasks.append(
             process_chunk_create(chunk_id, chunk_df, df, user_perspective, csv_output_path)
         )
-    
+
     await asyncio.gather(*tasks)
     return df
 
@@ -113,7 +145,7 @@ async def process_chunk_render(chunk_id, chunk_df, df, user_perspective, output_
     Runs fully parallel. The Image Gen server now queues requests internally.
     """
     print(f"  [Start] Chunk {chunk_id} (Render)")
-    
+
     current_image_b64 = None
     chunk_sorted = chunk_df.sort_index()
     params_changed = False
@@ -121,28 +153,25 @@ async def process_chunk_render(chunk_id, chunk_df, df, user_perspective, output_
     for index, row in chunk_sorted.iterrows():
         if (row['character'] != user_perspective) or pd.isna(row['initial_prompt']):
             continue
-            
+
         img_filename = f"chunk_{chunk_id}_{user_perspective}_{index}.png"
         save_path = os.path.join(output_dir_path, img_filename)
 
-        # Check existing image
+        # Check existing image to resume context
         if pd.notna(row['img_path']) and str(row['img_path']).strip() != "":
             if os.path.exists(row['img_path']):
                 try:
                     with Image.open(row['img_path']) as img:
                         current_image_b64 = pil_to_base64(img)
-                    continue 
+                    continue
                 except:
-                    pass 
-        
-        initial_prompt = row['initial_prompt']
+                    pass
 
-        if initial_prompt == "NO_CHANGE":
-            if current_image_b64:
-                base64_to_pil(current_image_b64).save(save_path)
-                df.at[index, 'img_path'] = str(save_path)
-                df.at[index, 'final_prompt'] = "NO_CHANGE"
-                params_changed = True
+        initial_prompt = str(row['initial_prompt']).strip()
+
+        if is_no_change_token(initial_prompt):
+            # Standardize formatting in the DF
+            df.at[index, 'initial_prompt'] = canonical_no_change()
             continue
 
         # 1. Visual Refinement
@@ -151,25 +180,28 @@ async def process_chunk_render(chunk_id, chunk_df, df, user_perspective, output_
             async with VLM_CONCURRENCY:
                 try:
                     refined = await call_prompt_polisher(initial_prompt, images=[current_image_b64])
-                    if refined and refined != "NO_CHANGE":
+
+                    if refined:
+                        if is_no_change_token(refined):
+                            df.at[index, 'final_prompt'] = canonical_no_change()
+                            continue
                         final_prompt = refined
                 except Exception as e:
                     print(f"    Refine Error {index}: {e}")
-        
+
         df.at[index, 'final_prompt'] = final_prompt
 
         # 2. Image Generation
-        # Just call it! The server will queue it.
         try:
             new_image_b64 = await call_image_gen(
-                final_prompt, 
+                final_prompt,
                 [current_image_b64] if current_image_b64 else None
             )
-            
+
             if new_image_b64:
                 img_pil = clean_image_artifacts(base64_to_pil(new_image_b64))
                 img_pil.save(save_path)
-                
+
                 df.at[index, 'img_path'] = str(save_path)
                 current_image_b64 = pil_to_base64(img_pil)
                 params_changed = True
@@ -177,7 +209,7 @@ async def process_chunk_render(chunk_id, chunk_df, df, user_perspective, output_
                 print(f"    Render None {index}")
         except Exception as e:
              print(f"    Render Error {index}: {e}")
-        
+
         if params_changed:
             async with file_write_lock:
                  df.to_csv(csv_output_path, index=False)
@@ -187,13 +219,16 @@ async def process_chunk_render(chunk_id, chunk_df, df, user_perspective, output_
 
 async def gen_images_from_aug(df: pd.DataFrame, user_perspective: str, images_output_dir: str, csv_output_path: str) -> pd.DataFrame:
     print(f"--- Stage 2: Parallel Rendering ({user_perspective}) ---")
-    
+
     output_dir_path = Path(images_output_dir) / user_perspective
     output_dir_path.mkdir(parents=True, exist_ok=True)
-    
-    if 'final_prompt' not in df.columns: df['final_prompt'] = pd.NA
-    if 'img_path' not in df.columns: df['img_path'] = pd.NA
-    if 'index' not in df.columns: df['index'] = df.index
+
+    if 'final_prompt' not in df.columns:
+        df['final_prompt'] = pd.NA
+    if 'img_path' not in df.columns:
+        df['img_path'] = pd.NA
+    if 'index' not in df.columns:
+        df['index'] = df.index
 
     grouped = df.groupby('chunk_id')
     tasks = []
@@ -202,7 +237,7 @@ async def gen_images_from_aug(df: pd.DataFrame, user_perspective: str, images_ou
         tasks.append(
             process_chunk_render(chunk_id, chunk_df, df, user_perspective, str(output_dir_path), csv_output_path)
         )
-    
+
     await asyncio.gather(*tasks)
     return df
 
@@ -225,7 +260,7 @@ async def main():
         args.aug_output_path = Path("output") / f"{input_path.stem}_aug{input_path.suffix}"
     else:
         args.aug_output_path = Path(args.aug_output_path)
-    
+
     if args.gen_images_from_aug and args.images_output_path == "output/":
         args.images_output_path = Path("output") / f"{input_path.stem}_images"
 
@@ -249,6 +284,7 @@ async def main():
 
         if args.gen_images_from_aug:
             df = await gen_images_from_aug(df, user, str(args.images_output_path), str(args.aug_output_path))
+
 
 if __name__ == "__main__":
     asyncio.run(main())
