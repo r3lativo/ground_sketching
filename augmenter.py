@@ -253,16 +253,26 @@ async def process_chunk_create(chunk_id, chunk_df, df, user_perspective, csv_out
         previous_prompts_history = []
         chunk_sorted = chunk_df.sort_index()
         user_utterances = chunk_sorted[chunk_sorted['character'] == user_perspective]
-        formatted_dialogue = chunk_sorted[['character', 'text']].agg(': '.join, axis=1)
-        full_context_list = formatted_dialogue.tolist()
+        
+        # 1. Prepare a global formatted series for slicing based on absolute index
+        # We use 'df' (the full dataframe) because the 'start_idx' might theoretically 
+        # refer to a row slightly before this chunk if the logic dictates it.
+        full_formatted_series = df[['character', 'text']].agg(': '.join, axis=1)
 
-        # DEBUG
-        # print(f"\n\n\nFULLCONTEXTLIST:{full_context_list}")
+        # 2. Identify the correct context start column (e.g., 'ctx_start_idx_A')
+        context_start_col = f"ctx_start_idx_{user_perspective}"
+        
+        # Safety check: ensure the column exists, otherwise fallback to chunk start
+        has_context_idx = context_start_col in df.columns
+        if not has_context_idx:
+            print(f"    [Warning] Column '{context_start_col}' not found. Falling back to simple chunk slicing.")
 
         params_changed = False
 
         for index, row in user_utterances.iterrows():
             current_val = df.at[index, 'initial_prompt']
+            
+            # --- Existing Skip Logic ---
             if pd.notna(current_val) and str(current_val).strip() != "":
                  if not is_no_change_token(current_val):
                      previous_prompts_history.append(str(current_val).strip())
@@ -270,16 +280,47 @@ async def process_chunk_create(chunk_id, chunk_df, df, user_perspective, csv_out
                      df.at[index, 'initial_prompt'] = canonical_no_change()
                  continue
 
-            utterance_text = row['text']
+            utterance_text = f"{row['character']}: {row['text']}"
 
-            if realistic_chunk:
-                current_context = formatted_dialogue[formatted_dialogue.index < index].tolist()
+            # --- NEW CONTEXT LOGIC ---
+            if has_context_idx:
+                # Get the absolute index where this character's context technically began
+                start_idx = int(row[context_start_col])
+                
+                # Define End Point
+                # If realistic: strictly history (up to current index)
+                # If not realistic: could include future? Usually context is strictly past.
+                # We assume 'index' (exclusive) is the cutoff for context.
+                end_idx = index 
+                
+                # Validate indices (prevent negative slicing or look-ahead errors)
+                start_idx = max(0, start_idx)
+                
+                # Slice the full series using the calculated range
+                # .loc includes the endpoint, .iloc excludes it. 
+                # Since our indices are labels (RangeIndex), .loc is safer but includes the end.
+                # We want start_idx (inclusive) to index (exclusive).
+                # Let's use boolean masking on the index for clarity.
+                mask = (full_formatted_series.index >= start_idx) & (full_formatted_series.index < end_idx)
+                current_context = full_formatted_series.loc[mask].tolist()
+            
             else:
-                current_context = full_context_list
-            # DEBUG
-            # if current_context: print(current_context)
-            # else: print("EMPTY LIST = CONTEXT IS FALSE")
+                # Fallback to original logic (Chunk-based) if column missing
+                if realistic_chunk:
+                    # Formatted dialogue *within this chunk* up to now
+                    chunk_formatted = chunk_sorted[['character', 'text']].agg(': '.join, axis=1)
+                    current_context = chunk_formatted[chunk_formatted.index < index].tolist()
+                else:
+                    # Whole chunk
+                    chunk_formatted = chunk_sorted[['character', 'text']].agg(': '.join, axis=1)
+                    current_context = chunk_formatted.tolist()
 
+            # Debugging context boundaries (Optional)
+            # print(f"    [Ctx Debug] Index {index-3} | Start: {start_idx} | Len: {index - start_idx - 1}") # NOT WORKING RN TO IMPROVE
+            print(f"    [Ctx Debug] Utterance: {utterance_text} | Current Context: {current_context}")
+
+
+            # --- Call Polisher ---
             try:
                 polished_prompt = await call_prompt_polisher(
                     utterance=utterance_text,
