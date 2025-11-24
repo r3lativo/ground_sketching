@@ -7,10 +7,11 @@ import base64
 import io
 import json
 from pathlib import Path
-from PIL import Image
+from PIL import Image, ImageDraw
 import os
 import sys
 import re
+import random
 
 from src.utils import (
     pil_to_base64,
@@ -31,10 +32,67 @@ file_write_lock = asyncio.Lock()
 # Semaphore to prevent overwhelming the VLM API
 VLM_CONCURRENCY = asyncio.Semaphore(10)
 
+# --- MOCKING UTILITIES ---
+
+def generate_random_chaos_prompt(utterance):
+    """
+    Randomly selects a complex scenario to test the pipeline's 
+    handling of splits, zooms, and skips.
+    """
+    val = random.random()
+    
+    # 10% Chance: No Change
+    if val < 0.1:
+        return "[NO_CHANGE]"
+    
+    # 20% Chance: Zoom Out Sequence
+    # This tests: Generation -> Local CPU Zoom -> Generation
+    elif val < 0.3:
+        return f"Close up shot of {utterance} $$$ [ZOOM_OUT] $$$ Wide angle shot of {utterance}"
+    
+    # 20% Chance: Multi-Step (No Zoom)
+    # This tests: Generation -> Generation (Sequential context)
+    elif val < 0.5:
+        return f"First angle of {utterance} $$$ Second angle of {utterance}"
+    
+    # 50% Chance: Standard Single Prompt
+    else:
+        return f"[Mock Prompt] {utterance}"
+
+async def mock_prompt_polisher(utterance, context=None, previous_prompts=None, images=None):
+    """Simulates the VLM returning a prompt."""
+    await asyncio.sleep(0.01) # Fast simulation
+    
+    # If images are present, we are in Stage 2 (Refinement).
+    # We usually want to keep the prompt stable here to not break the chaos logic we set in Stage 1.
+    if images:
+        return f"[Refined] {utterance}"
+    
+    # If no images, we are in Stage 1 (Initial Creation).
+    # Trigger the chaos generator.
+    return generate_random_chaos_prompt(utterance)
+
+async def mock_image_gen(prompt, history=None):
+    """Simulates Image Gen returning a valid Base64 image."""
+    await asyncio.sleep(0.05) 
+    
+    # Create a 128x128 random colored image
+    # We use random colors so you can visually verify that multi-step images change.
+    color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+    img = Image.new('RGB', (128, 128), color=color)
+    
+    d = ImageDraw.Draw(img)
+    
+    # Draw simple text or shapes to indicate content
+    d.rectangle([10, 10, 40, 40], fill="white")
+    if "[ZOOM_OUT]" in str(prompt):
+        d.text((10, 50), "ZOOM", fill="white")
+    
+    return pil_to_base64(img)
+
+# -------------------------
+
 def is_no_change_token(s: str) -> bool:
-    """
-    Return True if `s` is a NO_CHANGE marker.
-    """
     if s is None:
         return False
     normalized = str(s).strip().upper()
@@ -53,6 +111,10 @@ def canonical_no_change() -> str:
     return "[NO_CHANGE]"
 
 def check_servers(args):
+    if args.mock:
+        print("\n[INFO] Running in MOCK MODE. Skipping server checks.")
+        return
+
     server_config = load_config(config_path='config/server_config.yaml')
     failed_services = []
     polisher_conf = server_config["vlm_service"]
@@ -76,15 +138,12 @@ async def process_chunk_create(chunk_id, chunk_df, df, user_perspective, csv_out
         print(f"  [Start] Chunk {chunk_id} (Create - {mode_label} Context)")
 
         previous_prompts_history = []
-        
         chunk_sorted = chunk_df.sort_index()
         user_utterances = chunk_sorted[chunk_sorted['character'] == user_perspective]
         full_context_list = chunk_sorted['text'].tolist()
-
         params_changed = False
 
         for index, row in user_utterances.iterrows():
-            # Skip if exists
             current_val = df.at[index, 'initial_prompt']
             if pd.notna(current_val) and str(current_val).strip() != "":
                  if not is_no_change_token(current_val):
@@ -95,11 +154,15 @@ async def process_chunk_create(chunk_id, chunk_df, df, user_perspective, csv_out
 
             utterance_text = row['text']
 
-            # Realistic vs Oracle Context
             if realistic_chunk:
                 current_context = chunk_sorted[chunk_sorted.index < index]['text'].tolist()
             else:
                 current_context = full_context_list
+            # DEBUG
+            # if current_context:
+            #     print(current_context)
+            # else:
+            #     print("EMPTY LIST = CONTEXT IS FALSE")
 
             try:
                 polished_prompt = await call_prompt_polisher(
@@ -148,7 +211,7 @@ async def create_aug(df: pd.DataFrame, user_perspective: str, csv_output_path: s
     return df
 
 
-# --- STAGE 2: PARALLEL RENDERING ---
+# --- STAGE 2: PARALLEL RENDERING (WITH MULTI-STEP LOGIC) ---
 
 async def process_chunk_render(chunk_id, chunk_df, df, user_perspective, output_dir_path, csv_output_path):
     """
@@ -165,10 +228,6 @@ async def process_chunk_render(chunk_id, chunk_df, df, user_perspective, output_
         if (row['character'] != user_perspective) or pd.isna(row['initial_prompt']):
             continue
 
-        img_filename = f"chunk_{chunk_id}_{user_perspective}_{index}.png"
-        save_path = os.path.join(output_dir_path, img_filename)
-
-        # Check existing image to resume context
         if pd.notna(row['img_path']) and str(row['img_path']).strip() != "":
             if os.path.exists(row['img_path']):
                 try:
@@ -181,7 +240,6 @@ async def process_chunk_render(chunk_id, chunk_df, df, user_perspective, output_
         initial_prompt = str(row['initial_prompt']).strip()
 
         if is_no_change_token(initial_prompt):
-            # Standardize formatting in the DF
             df.at[index, 'initial_prompt'] = canonical_no_change()
             continue
 
@@ -191,7 +249,6 @@ async def process_chunk_render(chunk_id, chunk_df, df, user_perspective, output_
             async with VLM_CONCURRENCY:
                 try:
                     refined = await call_prompt_polisher(initial_prompt, images=[current_image_b64])
-
                     if refined:
                         if is_no_change_token(refined):
                             df.at[index, 'final_prompt'] = canonical_no_change()
@@ -202,24 +259,64 @@ async def process_chunk_render(chunk_id, chunk_df, df, user_perspective, output_
 
         df.at[index, 'final_prompt'] = final_prompt
 
-        # 2. Image Generation
-        try:
-            new_image_b64 = await call_image_gen(
-                final_prompt,
-                [current_image_b64] if current_image_b64 else None
-            )
+        # 2. Multi-Step Processing
+        sub_prompts = [p.strip() for p in final_prompt.split("$$$") if p.strip()]
 
-            if new_image_b64:
-                img_pil = clean_image_artifacts(base64_to_pil(new_image_b64))
-                img_pil.save(save_path)
+        if not sub_prompts:
+            print(f"    Warning: Empty prompts at index {index}")
+            continue
 
-                df.at[index, 'img_path'] = str(save_path)
-                current_image_b64 = pil_to_base64(img_pil)
-                params_changed = True
-            else:
-                print(f"    Render None {index}")
-        except Exception as e:
-             print(f"    Render Error {index}: {e}")
+        last_saved_path = None
+
+        for step_i, sub_prompt in enumerate(sub_prompts):
+            suffix = f"_seq{step_i}" if len(sub_prompts) > 1 else ""
+            img_filename = f"chunk_{chunk_id}_{user_perspective}_{index}{suffix}.png"
+            save_path = os.path.join(output_dir_path, img_filename)
+
+            # --- ZOOM OUT LOGIC ---
+            if is_zoom_out_token(sub_prompt):
+                if current_image_b64:
+                    try:
+                        # This runs locally (CPU) even in mock mode
+                        current_pil = base64_to_pil(current_image_b64)
+                        zoomed_pil = add_padding_to_image(current_pil, scale_factor=0.8, fill_color="white")
+                        
+                        if zoomed_pil:
+                            zoomed_pil.save(save_path)
+                            current_image_b64 = pil_to_base64(zoomed_pil)
+                            last_saved_path = str(save_path)
+                            params_changed = True
+                        else:
+                            print(f"    Zoom failed at index {index}")
+                    except Exception as e:
+                        print(f"    Zoom Error index {index}: {e}")
+                else:
+                    print(f"    Cannot Zoom Out: No current image context at index {index}")
+                continue
+
+            # --- STANDARD GENERATION (OR MOCK) ---
+            try:
+                new_image_b64 = await call_image_gen(
+                    sub_prompt,
+                    [current_image_b64] if current_image_b64 else None
+                )
+
+                if new_image_b64:
+                    img_pil = clean_image_artifacts(base64_to_pil(new_image_b64))
+                    img_pil.save(save_path)
+
+                    current_image_b64 = pil_to_base64(img_pil)
+                    last_saved_path = str(save_path)
+                    params_changed = True
+                else:
+                    print(f"    Render None {index} step {step_i}")
+                    break 
+            except Exception as e:
+                 print(f"    Render Error {index} step {step_i}: {e}")
+                 break
+
+        if last_saved_path:
+            df.at[index, 'img_path'] = last_saved_path
 
         if params_changed:
             async with file_write_lock:
@@ -230,7 +327,6 @@ async def process_chunk_render(chunk_id, chunk_df, df, user_perspective, output_
 
 async def gen_images_from_aug(df: pd.DataFrame, user_perspective: str, images_output_dir: str, csv_output_path: str) -> pd.DataFrame:
     print(f"--- Stage 2: Parallel Rendering ({user_perspective}) ---")
-
     output_dir_path = Path(images_output_dir) / user_perspective
     output_dir_path.mkdir(parents=True, exist_ok=True)
 
@@ -255,7 +351,7 @@ async def gen_images_from_aug(df: pd.DataFrame, user_perspective: str, images_ou
 
 async def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--file", type=str, required=True)
+    parser.add_argument("--file", type=str, default=None) # Default None to allow mock override
     parser.add_argument("--user", type=str)
     parser.add_argument("--automatic_users", action='store_true')
     parser.add_argument("--create_aug", action='store_true')
@@ -264,26 +360,67 @@ async def main():
     parser.add_argument("--images_output_path", type=str, default="output/")
     parser.add_argument("--realistic_chunk", action='store_true', 
                         help="If set, context provided to VLM is strictly previous utterances.")
+    parser.add_argument("--mock", action='store_true',
+                        help="Run in mock mode (no API calls, generates chaos data).")
     
     args = parser.parse_args()
 
-    check_servers(args)
+    # --- MOCK LOGIC & PATH OVERRIDES ---
+    if args.mock:
+        # 1. Inject Mock Functions
+        global call_prompt_polisher, call_image_gen
+        call_prompt_polisher = mock_prompt_polisher
+        call_image_gen = mock_image_gen
+        print(">>> MOCK MODE ENGAGED: CHAOS PROMPTS ACTIVE <<<")
 
-    input_path = Path(args.file)
-    if args.aug_output_path == "output/":
-        args.aug_output_path = Path("output") / f"{input_path.stem}_aug{input_path.suffix}"
+        # 2. Hardcode Paths for Consistency
+        args.file = "data/mock.csv"
+        mock_output_root = Path("output/mock")
+        args.aug_output_path = mock_output_root / "mock_aug.csv"
+        args.images_output_path = mock_output_root / "mock_images"
+
+        print(f"    Input: {args.file}")
+        print(f"    Output Root: {mock_output_root}")
+
+        # 3. Clean and Recreate Output Directory
+        if mock_output_root.exists():
+            print("    Cleaning existing mock output directory...")
+            import shutil
+            shutil.rmtree(mock_output_root)
+        
+        # Create fresh directories
+        args.aug_output_path.parent.mkdir(parents=True, exist_ok=True)
+        
+        # Ensure input mock file exists to prevent crash
+        if not Path(args.file).exists():
+            print(f"[Error] Mock data file not found at {args.file}. Please create it before running.")
+            sys.exit(1)
+            
+    # --- STANDARD PATH SETUP (Only run if NOT mocking or if specific paths weren't set) ---
     else:
-        args.aug_output_path = Path(args.aug_output_path)
+        if not args.file:
+             print("Error: --file argument is required when not in --mock mode.")
+             sys.exit(1)
+             
+        check_servers(args)
 
-    if args.gen_images_from_aug and args.images_output_path == "output/":
-        args.images_output_path = Path("output") / f"{input_path.stem}_images"
+        input_path = Path(args.file)
+        if args.aug_output_path == "output/":
+            args.aug_output_path = Path("output") / f"{input_path.stem}_aug{input_path.suffix}"
+        else:
+            args.aug_output_path = Path(args.aug_output_path)
 
-    # Smart Load
+        if args.gen_images_from_aug and args.images_output_path == "output/":
+            args.images_output_path = Path("output") / f"{input_path.stem}_images"
+
+    # --- LOAD DATAFRAME ---
+    # Smart Load: If output exists (and we aren't cleaning it), resume. 
+    # Since Mock Mode cleans the dir, this will always load the fresh source file in Mock Mode.
     if args.aug_output_path.exists():
         print(f"Resuming from {args.aug_output_path}")
         df = pd.read_csv(args.aug_output_path, dtype={'chunk_id': str})
     else:
-        print(f"Loading {args.file}")
+        print(f"Loading Source: {args.file}")
         df = pd.read_csv(args.file, dtype={'chunk_id': str})
 
     users_to_process = []
@@ -298,7 +435,6 @@ async def main():
 
         if args.gen_images_from_aug:
             df = await gen_images_from_aug(df, user, str(args.images_output_path), str(args.aug_output_path))
-
 
 if __name__ == "__main__":
     asyncio.run(main())

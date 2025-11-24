@@ -1,0 +1,17 @@
+chunk_id,position,character,text
+001,E4,Zachary,"Hey, this is a huge warehouse. You hear that echo?"
+001,C2,Jennifer,"Hi! Yeah, it's pretty vast. I'm at the receiving dock."
+001,E4,Zachary,There's an open-top waste bin near the first aid station wall.
+001,C2,Jennifer,Uh-huh. A composite pallet is beside the delivery truck here.
+001,E4,Zachary,A five-wheel drum dolly's under the waste solvent container.
+001,C2,Jennifer,Got it. The dock bumper's rubber and mounted on the loading bay wall.
+001,E4,Zachary,"Workstation's composite, next to the utility sink. I'm heading to the central aisle connector."
+002,D4,Zachary,I just arrived in the storage aisles from the central aisle connector.
+002,D4,Zachary,There's a standard forklift behind the end of the aisle.
+002,C2,Jennifer,"Yeah, got it."
+002,D4,Zachary,A safety barrier is defining the pedestrian walkway here.
+002,C2,Jennifer,Understood.
+002,D4,Zachary,There's a storage bin nearby.
+002,C2,Jennifer,Okay.
+002,D4,Zachary,I'm heading back to the central aisle connector.
+002,C2,Jennifer,I'm moving towards the inbound staging route.

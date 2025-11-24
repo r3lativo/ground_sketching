@@ -291,7 +291,7 @@ def add_padding_to_image(img_pil, scale_factor=0.8, fill_color="white"):
 
         # 3. Resize the image
         # Use Image.LANCZOS (or Image.ANTIALIAS) for high-quality downscaling
-        resized_image = original_image.resize((new_width, new_height), Image.LANCZOS)
+        resized_image = img_pil.resize((new_width, new_height), Image.LANCZOS)
 
         # 4. & 5. Create and fill the new canvas
         final_image = Image.new("RGB", (original_width, original_height), fill_color)
