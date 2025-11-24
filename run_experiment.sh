@@ -83,8 +83,8 @@ echo "All systems operational. Starting Experiments."
 
 # --- 4. Run Experiment Loop ---
 
-INPUT_DIR="data/experiment_2"
-OUTPUT_DIR="output/experiment_2"
+INPUT_DIR="data/experiment_1_mini"
+OUTPUT_DIR="output/experiment_1_mini"
 mkdir -p "$OUTPUT_DIR"
 
 MAX_JOBS=4 
@@ -114,7 +114,8 @@ for csv_file in "$INPUT_DIR"/*.csv; do
             --create_aug \
             --gen_images_from_aug \
             --aug_output_path "$OUTPUT_DIR/${filename%.*}_augmented.csv" \
-            --images_output_path "$OUTPUT_DIR/${filename%.*}_images"
+            --images_output_path "$OUTPUT_DIR/${filename%.*}_images" \
+            --realistic_chunk
         echo "<<< Finished File: $filename"
     ) &
 

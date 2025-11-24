@@ -10,13 +10,15 @@ from pathlib import Path
 from PIL import Image
 import os
 import sys
+import re
 
 from src.utils import (
     pil_to_base64,
     base64_to_pil,
     clean_image_artifacts,
     check_server,
-    load_config
+    load_config,
+    add_padding_to_image
 )
 from src.api_clients import (
     call_prompt_polisher,
@@ -31,19 +33,24 @@ VLM_CONCURRENCY = asyncio.Semaphore(10)
 
 def is_no_change_token(s: str) -> bool:
     """
-    Return True if `s` is a NO_CHANGE marker in any common variant.
-    Canonical output = '[NO_CHANGE]'.
+    Return True if `s` is a NO_CHANGE marker.
     """
     if s is None:
         return False
     normalized = str(s).strip().upper()
     return normalized in ("[NO_CHANGE]", "NO_CHANGE", "[NO CHANGE]")
 
+def is_zoom_out_token(s: str) -> bool:
+    """
+    Return True if `s` is a ZOOM_OUT marker.
+    """
+    if s is None:
+        return False
+    normalized = str(s).strip().upper()
+    return normalized in ("[ZOOM_OUT]", "ZOOM_OUT", "[ZOOM OUT]")
 
 def canonical_no_change() -> str:
-    """Return canonical [NO_CHANGE] marker."""
     return "[NO_CHANGE]"
-
 
 def check_servers(args):
     server_config = load_config(config_path='config/server_config.yaml')
@@ -63,13 +70,16 @@ def check_servers(args):
 
 # --- STAGE 1: PARALLEL CHUNK PROCESSING ---
 
-async def process_chunk_create(chunk_id, chunk_df, df, user_perspective, csv_output_path):
+async def process_chunk_create(chunk_id, chunk_df, df, user_perspective, csv_output_path, realistic_chunk=False):
     async with VLM_CONCURRENCY:
-        print(f"  [Start] Chunk {chunk_id} (Create)")
+        mode_label = "Realistic" if realistic_chunk else "Full"
+        print(f"  [Start] Chunk {chunk_id} (Create - {mode_label} Context)")
 
         previous_prompts_history = []
-        user_utterances = chunk_df[chunk_df['character'] == user_perspective].sort_index()
-        context_list = chunk_df.sort_index()['text'].tolist()
+        
+        chunk_sorted = chunk_df.sort_index()
+        user_utterances = chunk_sorted[chunk_sorted['character'] == user_perspective]
+        full_context_list = chunk_sorted['text'].tolist()
 
         params_changed = False
 
@@ -77,26 +87,28 @@ async def process_chunk_create(chunk_id, chunk_df, df, user_perspective, csv_out
             # Skip if exists
             current_val = df.at[index, 'initial_prompt']
             if pd.notna(current_val) and str(current_val).strip() != "":
-                 # Even if skipping, we must update history for context
                  if not is_no_change_token(current_val):
                      previous_prompts_history.append(str(current_val).strip())
                  else:
-                     # Normalize stored version
                      df.at[index, 'initial_prompt'] = canonical_no_change()
                  continue
 
-            # Normal case
             utterance_text = row['text']
+
+            # Realistic vs Oracle Context
+            if realistic_chunk:
+                current_context = chunk_sorted[chunk_sorted.index < index]['text'].tolist()
+            else:
+                current_context = full_context_list
 
             try:
                 polished_prompt = await call_prompt_polisher(
                     utterance=utterance_text,
-                    context=context_list,
+                    context=current_context,
                     previous_prompts=previous_prompts_history if previous_prompts_history else None
                 )
 
                 if polished_prompt:
-                    # Normalize NO_CHANGE tokens into canonical form
                     if is_no_change_token(polished_prompt):
                         polished_prompt = canonical_no_change()
 
@@ -105,9 +117,7 @@ async def process_chunk_create(chunk_id, chunk_df, df, user_perspective, csv_out
 
                     if not is_no_change_token(polished_prompt):
                         previous_prompts_history.append(polished_prompt)
-
                 else:
-                    # Empty polished prompt — should not occur normally
                     df.at[index, 'initial_prompt'] = ""
 
             except Exception as e:
@@ -120,8 +130,9 @@ async def process_chunk_create(chunk_id, chunk_df, df, user_perspective, csv_out
         print(f"  [Done] Chunk {chunk_id} (Create)")
 
 
-async def create_aug(df: pd.DataFrame, user_perspective: str, csv_output_path: str) -> pd.DataFrame:
-    print(f"--- Stage 1: Parallel Contextual Prompts ({user_perspective}) ---")
+async def create_aug(df: pd.DataFrame, user_perspective: str, csv_output_path: str, realistic_chunk: bool) -> pd.DataFrame:
+    mode_label = "Realistic" if realistic_chunk else "Full"
+    print(f"--- Stage 1: Parallel Contextual Prompts ({user_perspective}) [Context: {mode_label}] ---")
     if 'initial_prompt' not in df.columns:
         df['initial_prompt'] = pd.NA
 
@@ -130,7 +141,7 @@ async def create_aug(df: pd.DataFrame, user_perspective: str, csv_output_path: s
 
     for chunk_id, chunk_df in grouped:
         tasks.append(
-            process_chunk_create(chunk_id, chunk_df, df, user_perspective, csv_output_path)
+            process_chunk_create(chunk_id, chunk_df, df, user_perspective, csv_output_path, realistic_chunk)
         )
 
     await asyncio.gather(*tasks)
@@ -251,6 +262,9 @@ async def main():
     parser.add_argument("--gen_images_from_aug", action='store_true')
     parser.add_argument("--aug_output_path", type=str, default="output/")
     parser.add_argument("--images_output_path", type=str, default="output/")
+    parser.add_argument("--realistic_chunk", action='store_true', 
+                        help="If set, context provided to VLM is strictly previous utterances.")
+    
     args = parser.parse_args()
 
     check_servers(args)
@@ -280,7 +294,7 @@ async def main():
 
     for user in users_to_process:
         if args.create_aug:
-            df = await create_aug(df, user, str(args.aug_output_path))
+            df = await create_aug(df, user, str(args.aug_output_path), args.realistic_chunk)
 
         if args.gen_images_from_aug:
             df = await gen_images_from_aug(df, user, str(args.images_output_path), str(args.aug_output_path))

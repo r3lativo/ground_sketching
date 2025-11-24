@@ -22,6 +22,7 @@ setup_logging(log_file='logs/api_clients.log', log_to_console=False)
 try:
     # Load Server Config
     config = load_config(config_path='config/server_config.yaml')
+    config.update(load_config(config_path='config/experiment_config.yaml'))
 
     # Construct the base URL for the OpenAI compatible endpoint
     image_gen_url = f"http://{config['image_gen_service']['host']}:{config['image_gen_service']['port']}"
@@ -34,24 +35,35 @@ try:
 
     # Load Jinja Templates for System Prompts
     env = Environment(
-        loader=FileSystemLoader(config['vlm_client']['jinja']['env']),
+        loader=FileSystemLoader(config['experiment']['jinja']['env']),
         autoescape=select_autoescape(['html', 'xml'])
     )
-    polish_template = env.get_template(config['vlm_client']['jinja']['polish_t'])
-    edit_template = env.get_template(config['vlm_client']['jinja']['edit_t'])
+    polish_template = env.get_template(config['experiment']['jinja']['polish_t'])
+    edit_template = env.get_template(config['experiment']['jinja']['edit_t'])
 
-    initial_start_template = env.get_template(config['vlm_client']['jinja']['initial_start_t'])
-    initial_edit_template = env.get_template(config['vlm_client']['jinja']['initial_edit_t'])
+    # ORACLE
+    initial_start_oracle_template = env.get_template(config['experiment']['jinja']['initial_start_o'])
+    initial_edit_oracle_template = env.get_template(config['experiment']['jinja']['initial_edit_o'])
 
-    final_start_template = env.get_template(config['vlm_client']['jinja']['final_start_t'])
-    final_edit_template = env.get_template(config['vlm_client']['jinja']['final_edit_t'])
+    # REAL
+    initial_start_real1_template = env.get_template(config['experiment']['jinja']['initial_start_r1'])
+    initial_start_real2_template = env.get_template(config['experiment']['jinja']['initial_start_r2'])
+    initial_edit_real_template = env.get_template(config['experiment']['jinja']['initial_edit_r'])
+
+    # FINAL (DOES NOT CHANGE)
+    final_start_template = env.get_template(config['experiment']['jinja']['final_start_t'])
+    final_edit_template = env.get_template(config['experiment']['jinja']['final_edit_t'])
     
     # Render templates
     polish_system_prompt = polish_template.render()
     edit_system_prompt = edit_template.render()
 
-    initial_start_system_prompt = initial_start_template.render()
-    inital_edit_system_prompt = initial_edit_template.render()
+    initial_start_oracle_prompt = initial_start_oracle_template.render()
+    initial_edit_oracle_prompt = initial_edit_oracle_template.render()
+
+    initial_start_real1_prompt = initial_start_real1_template.render()
+    initial_start_real2_prompt = initial_start_real2_template.render()
+    initial_edit_real_prompt = initial_edit_real_template.render()
 
     final_start_system_prompt = final_start_template.render()
     final_edit_system_prompt = final_edit_template.render()
@@ -182,56 +194,112 @@ async def call_prompt_polisher(
     messages = []
     endpoint_path = "/generate"  # Default to text-only endpoint
     json_key_to_parse = None # Default to expecting plain text
+
+    is_oracle = config["experiment"]["is_oracle"]
     
     # --- 1. Determine API Configuration based on inputs ---
 
-    if images:
-        # --- Case 1: Multimodal Edit (uses /edit endpoint) ---
-        logger.info(f"Polisher Case: Multimodal Edit (Utterance: '{utterance.replace('\n', ' ')}')")
-        endpoint_path = "/edit"
-        json_key_to_parse = "Rewritten" # Expects JSON
-        
-        content: List[Dict[str, Any]] = []
-        for img_b64 in images:
-            content.append({"type": "image", "image": f"data:image/jpeg;base64,{img_b64}"})
-        content.append({"type": "text", "text": utterance})
-        
-        messages = [
-            {"role": "system", "content": final_edit_system_prompt},
-            {"role": "user", "content": content}
-        ]
+    # IF IS ORACLE
+    if is_oracle:
 
-    elif context and previous_prompts is not None:
-        # --- Case 2: Initial Edit (Text-only, uses /generate) ---
-        logger.info(f"Polisher Case: Contextual Edit (Utterance: '{utterance.replace('\n', ' ')}')")
-        json_key_to_parse = "Rewritten" # Expects JSON
-        
-        content_str = f"Conversation Context:\n{context}\nTarget Utterance:\n{utterance}\nPrevious Prompts:\n{previous_prompts}\nRewritten:\n"
-        messages = [
-            {"role": "system", "content": inital_edit_system_prompt},
-            {"role": "user", "content": content_str}
-        ]
+        if images:
+            # --- Case 1: Multimodal Edit (uses /edit endpoint) ---
+            logger.info(f"Polisher Case: Multimodal Edit (Utterance: '{utterance.replace('\n', ' ')}')")
+            endpoint_path = "/edit"
+            json_key_to_parse = "Rewritten" # Expects JSON
+            
+            content: List[Dict[str, Any]] = []
+            for img_b64 in images:
+                content.append({"type": "image", "image": f"data:image/jpeg;base64,{img_b64}"})
+            content.append({"type": "text", "text": utterance})
+            
+            messages = [
+                {"role": "system", "content": final_edit_system_prompt},
+                {"role": "user", "content": content}
+            ]
 
-    elif context:
-        # --- Case 3: Initial Start (Text-only, uses /generate) ---
-        logger.info(f"Polisher Case: Contextual Create (Utterance: '{utterance.replace('\n', ' ')}')")
-        # No JSON key, expects plain text
-        
-        content_str = f"Conversation Context:\n{context}\nTarget Utterance:\n{utterance}\nRewritten Prompt:\n"
-        messages = [
-            {"role": "system", "content": initial_start_system_prompt},
-            {"role": "user", "content": content_str}
-        ]
+        elif context and (previous_prompts is not None):
+            # --- Case 2: Initial Edit (Text-only, uses /generate) ---
+            logger.info(f"Polisher Case: Contextual Edit (Utterance: '{utterance.replace('\n', ' ')}')")
+            json_key_to_parse = "Rewritten" # Expects JSON
+            
+            content_str = f"Conversation Context:\n{context}\nTarget Utterance:\n{utterance}\nPrevious Prompts:\n{previous_prompts}\nRewritten:\n"
+            messages = [
+                {"role": "system", "content": initial_edit_oracle_prompt},
+                {"role": "user", "content": content_str}
+            ]
 
+        elif context:
+            # --- Case 3: Initial Start (Text-only, uses /generate) ---
+            logger.info(f"Polisher Case: Contextual Create (Utterance: '{utterance.replace('\n', ' ')}')")
+            # No JSON key, expects plain text
+            
+            content_str = f"Conversation Context:\n{context}\nTarget Utterance:\n{utterance}\nRewritten Prompt:\n"
+            messages = [
+                {"role": "system", "content": initial_start_oracle_prompt},
+                {"role": "user", "content": content_str}
+            ]
+
+        else:
+            # --- Case 4: Simple Text-Only Polish (uses /generate) ---
+            logger.info(f"Polisher Case: Simple Text-Only (Utterance: '{utterance.replace('\n', ' ')}')")
+            # No JSON key, expects plain text
+            
+            messages = [
+                {"role": "system", "content": final_start_system_prompt},
+                {"role": "user", "content": utterance}
+            ]
+    
+    # IF NOT ORACLE (REAL)
     else:
-        # --- Case 4: Simple Text-Only Polish (uses /generate) ---
-        logger.info(f"Polisher Case: Simple Text-Only (Utterance: '{utterance.replace('\n', ' ')}')")
-        # No JSON key, expects plain text
-        
-        messages = [
-            {"role": "system", "content": final_start_system_prompt},
-            {"role": "user", "content": utterance}
-        ]
+        if images:
+            # --- Case 1: Multimodal Edit (uses /edit endpoint) ---
+            logger.info(f"Polisher Case: Multimodal Edit (Utterance: '{utterance.replace('\n', ' ')}')")
+            endpoint_path = "/edit"
+            json_key_to_parse = "Rewritten" # Expects JSON
+            
+            content: List[Dict[str, Any]] = []
+            for img_b64 in images:
+                content.append({"type": "image", "image": f"data:image/jpeg;base64,{img_b64}"})
+            content.append({"type": "text", "text": utterance})
+            
+            messages = [
+                {"role": "system", "content": final_edit_system_prompt},
+                {"role": "user", "content": content}
+            ]
+
+        elif context and (previous_prompts is not None):
+            # --- Case 2: Initial Edit Real (Text-only, uses /generate) ---
+            logger.info(f"Polisher Case: Contextual Edit (Utterance: '{utterance.replace('\n', ' ')}')")
+            json_key_to_parse = "Rewritten" # Expects JSON
+            
+            content_str = f"Conversation Context:\n{context}\nTarget Utterance:\n{utterance}\nPrevious Prompts:\n{previous_prompts}\nRewritten:\n"
+            messages = [
+                {"role": "system", "content": initial_edit_real_prompt},
+                {"role": "user", "content": content_str}
+            ]
+
+        elif context:
+            # --- Case 3: Initial Start (Text-only, uses /generate) ---
+            logger.info(f"Polisher Case: Contextual Create (Utterance: '{utterance.replace('\n', ' ')}')")
+            # No JSON key, expects plain text
+            
+            content_str = f"Conversation Context:\n{context}\nTarget Utterance:\n{utterance}\nRewritten Prompt:\n"
+            messages = [
+                {"role": "system", "content": initial_start_real2_prompt},
+                {"role": "user", "content": content_str}
+            ]
+
+        else:
+            # --- Case 4: Simple Text-Only Polish (uses /generate) ---
+            logger.info(f"Polisher Case: Simple Text-Only (Utterance: '{utterance.replace('\n', ' ')}')")
+            # No JSON key, expects plain text
+            
+            content_str = f"Target Utterance: {utterance}\nRewritten Prompt:\n"
+            messages = [
+                {"role": "system", "content": initial_start_real1_prompt},
+                {"role": "user", "content": content_str}
+            ]
 
     # --- 2. Build the Final Payload ---
     endpoint = f"{polisher_api_base_url}{endpoint_path}"

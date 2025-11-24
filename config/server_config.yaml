@@ -22,7 +22,10 @@ vlm_service:
   # Settings for the vLLM server (scripts/start_vlm_service.sh)
   backend: 
     # model_id: "/lustre/fsmisc/dataset/HuggingFace_Models/Qwen/Qwen2.5-VL-32B-Instruct"
+    #THINKING
     model_id: "/linkhome/rech/genxzs01/upa38qy/.cache/huggingface/hub/models--Qwen--Qwen3-VL-32B-Thinking/snapshots/7edd10ffd1196091948fb245ff63e406ccb2d4d1"
+    # #INSTRUCT
+    # model_id: "/linkhome/rech/genxzs01/upa38qy/.cache/huggingface/hub/models--Qwen--Qwen3-VL-32B-Instruct/snapshots/0cfaf48183f594c314753d30a4c4974bc75f3ccb"
     vllm_host: "127.0.0.1"
     vllm_port: 8008
     tensor_parallel_size: 2
@@ -37,23 +40,3 @@ vlm_client:
   top_p: 0.95
   temperature: 0.8
   max_tokens: 15000  # OUTPUT limit
-  
-  jinja:
-    env: 'templates'
-
-    # Originals from https://github.com/QwenLM/Qwen-Image/blob/main/src/examples/tools/prompt_utils.py
-    polish_t: 'polish.jinja2'
-    edit_t: 'polish_edit.jinja2'
-
-    # Modified with style-as-semantics and move/resize commands
-    ## NOT USED AT THE MOMENT
-    mod_polish_t: 'mod_polish.jinja2'
-    mod_polish_edit_t: 'mod_polish_edit.jinja2'
-
-    ## FOR AUGMENTER
-    # For chunk + utterance to prompt for img generation
-    initial_start_t: 'initial_start.jinja2'
-    initial_edit_t: 'initial_edit.jinja2'
-
-    final_start_t: 'final_start.jinja2'
-    final_edit_t: 'final_edit.jinja2'

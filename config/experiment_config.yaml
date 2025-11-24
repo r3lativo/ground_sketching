@@ -1,0 +1,26 @@
+experiment:
+  is_oracle: False
+
+  jinja:
+    env: 'templates'
+
+    # Originals from https://github.com/QwenLM/Qwen-Image/blob/main/src/examples/tools/prompt_utils.py
+    polish_t: 'polish.jinja2'
+    edit_t: 'polish_edit.jinja2'
+
+    # Modified with style-as-semantics and move/resize commands
+    ## NOT USED AT THE MOMENT
+    mod_polish_t: 'mod_polish.jinja2'
+    mod_polish_edit_t: 'mod_polish_edit.jinja2'
+
+    ## FOR AUGMENTER
+    # For chunk + utterance to prompt for img generation
+    initial_start_o: 'initial_start_oracle.jinja2'
+    initial_edit_o: 'initial_edit_oracle.jinja2'
+
+    initial_start_r1: 'initial_start_real_1.jinja2'
+    initial_start_r2: 'initial_start_real_2.jinja2'
+    initial_edit_r: 'initial_edit_real.jinja2'
+
+    final_start_t: 'final_start.jinja2'
+    final_edit_t: 'final_edit.jinja2'

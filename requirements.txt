@@ -2,6 +2,7 @@
 
 fastapi
 uvicorn[standard]
+httpx
 diffusers #v36+
 transformers
 torch

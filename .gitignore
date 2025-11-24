@@ -3,3 +3,4 @@ Qwen-Image-Lightning/
 *.ipynb_checkpoints
 output/*
 *.old
+logs/*
