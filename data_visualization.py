@@ -1,9 +1,10 @@
 import streamlit as st
 import pandas as pd
 import os
+import re
 
 # --- CONFIGURATION ---
-DATA_FOLDER = "output/experiment_2"
+DATA_FOLDER = "output/experiment_1_mini"
 st.set_page_config(layout="wide", page_title="Data Visualization Tool")
 
 # Custom CSS for chat bubbles
@@ -14,7 +15,7 @@ st.markdown("""
         height: auto;
         padding-top: 10px;
         padding-bottom: 10px;
-        white-space: pre-wrap; /* Ensures long text wraps nicely */
+        white-space: pre-wrap;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -26,7 +27,6 @@ def load_data(file_path):
     return pd.read_csv(file_path)
 
 def get_csv_files(folder_path):
-    """Scans the directory for .csv files."""
     if not os.path.exists(folder_path):
         os.makedirs(folder_path)
         return []
@@ -34,7 +34,7 @@ def get_csv_files(folder_path):
 
 def backfill_images(df_chunk):
     """
-    Fills in missing images using the 'last seen' image for that SPECIFIC character.
+    Fills in missing images using the 'last seen' image for that character.
     """
     df_chunk['display_image'] = None
     character_states = {}
@@ -43,6 +43,7 @@ def backfill_images(df_chunk):
         char = row['character']
         raw_img_path = str(row['img_path']) 
         
+        # Basic validation
         is_valid_image = (
             raw_img_path.lower() != 'nan' and 
             raw_img_path.strip() != '' and 
@@ -62,45 +63,63 @@ def backfill_images(df_chunk):
     return df_chunk
 
 def assign_character_styles(df):
-    """
-    Dynamically determines who goes on Left vs Right.
-    Returns a dictionary mapping character names to layout configs.
-    """
     unique_chars = df['character'].unique()
-    
-    # Default Avatars to cycle through
-    avatars = ["🦊", "🦉", "🤖", "👽"]
-    
     style_map = {}
     
-    # Logic: 
-    # 1st character found -> LEFT alignment
-    # 2nd character found -> RIGHT alignment
-    # 3rd+ character found -> LEFT alignment (Group chat style)
-    
     for i, char in enumerate(unique_chars):
-        avatar = avatars[i % len(avatars)]
-        
-        if i == 1: # The second character goes to the RIGHT
-            style_map[char] = {
-                'col_ratio': [1, 4], # Spacer left, Content right
-                'avatar': avatar,
-                'align': 'right'
-            }
-        else: # Everyone else goes to the LEFT
-            style_map[char] = {
-                'col_ratio': [4, 1], # Content left, Spacer right
-                'avatar': avatar,
-                'align': 'left'
-            }
-            
+        if i == 1: 
+            style_map[char] = {'col_ratio': [1, 4], 'align': 'right'}
+        else:
+            style_map[char] = {'col_ratio': [4, 1], 'align': 'left'}
     return style_map
+
+def get_image_sequence(img_path, final_prompt):
+    """
+    Detects if the image is part of a sequence (e.g., _seq2.png).
+    Returns a list of dictionaries: [{'path': str, 'prompt': str}]
+    """
+    if not img_path or not os.path.exists(img_path):
+        return []
+
+    # Split prompts by $$$
+    prompts = [p.strip() for p in str(final_prompt).split("$$$") if p.strip()]
+    
+    # Check if filename indicates a sequence (ends with _seqN.png)
+    # Regex matches "_seq" followed by digits, just before the extension
+    match = re.search(r"_seq(\d+)\.(png|jpg|jpeg)$", img_path)
+    
+    sequence_data = []
+
+    if match:
+        # It is a sequence!
+        current_seq_num = int(match.group(1))
+        base_name = img_path[:match.start()] # Remove _seqN.png
+        extension = match.group(2)
+        
+        # Reconstruct 0 to N
+        for i in range(current_seq_num + 1):
+            step_path = f"{base_name}_seq{i}.{extension}"
+            # Try to match with prompt. If more images than prompts, use empty string
+            step_prompt = prompts[i] if i < len(prompts) else "???"
+            
+            if os.path.exists(step_path):
+                sequence_data.append({'path': step_path, 'prompt': step_prompt})
+    else:
+        # Standard single image
+        # If prompts has $$$, it means we tried multi-step but maybe only saved one file 
+        # or logic didn't trigger suffix (augmenter logic: suffix only if >1 prompt)
+        
+        # We return just this image, associated with the FULL prompt string or the last one?
+        # Let's associate it with the full prompt for clarity.
+        sequence_data.append({'path': img_path, 'prompt': final_prompt})
+
+    return sequence_data
 
 # --- MAIN APP ---
 def main():
     st.title("💬 Data Visualization Tool")
 
-    # 1. SIDEBAR: FILE SELECTION
+    # 1. SIDEBAR
     st.sidebar.header("Data Source")
     csv_files = get_csv_files(DATA_FOLDER)
     
@@ -111,89 +130,84 @@ def main():
     selected_file = st.sidebar.selectbox("Select Conversation File", csv_files)
     file_path = os.path.join(DATA_FOLDER, selected_file)
 
-    # 2. LOAD DATA
+    # 2. LOAD & PROCESS
     try:
         df = load_data(file_path)
     except Exception as e:
         st.error(f"Error loading file: {e}")
         st.stop()
 
-    # 3. SIDEBAR: CHUNK SELECTION
     chunk_ids = df['chunk_id'].unique()
     selected_chunk_id = st.sidebar.selectbox("Select Conversation Chunk", chunk_ids)
 
-    # 4. PROCESS DATA
     chunk_df = df[df['chunk_id'] == selected_chunk_id].copy()
     chunk_df = chunk_df.sort_values(by='index')
     processed_df = backfill_images(chunk_df)
-    
-    # Generate Dynamic Styles for this specific file's characters
     char_styles = assign_character_styles(processed_df)
 
-    # --- STATE MANAGEMENT (Prevents Index Error on switch) ---
-    # We track both File AND Chunk changes now
+    # 3. STATE TRACKING
     tracker_key = f"{selected_file}_{selected_chunk_id}"
-    
-    if 'tracker_key' not in st.session_state:
-        st.session_state.tracker_key = tracker_key
-        st.session_state.selected_index = processed_df.iloc[0]['index']
-    
-    if st.session_state.tracker_key != tracker_key:
+    if 'tracker_key' not in st.session_state or st.session_state.tracker_key != tracker_key:
         st.session_state.tracker_key = tracker_key
         st.session_state.selected_index = processed_df.iloc[0]['index']
 
-    # Safety fallback
     if st.session_state.selected_index not in processed_df['index'].values:
          st.session_state.selected_index = processed_df.iloc[0]['index']
 
-    # 5. LAYOUT
+    # 4. LAYOUT
     col_chat, col_viz = st.columns([1, 1]) 
 
-    # --- LEFT COLUMN: DYNAMIC CHAT ---
+    # --- LEFT: CHAT ---
     with col_chat:
         st.subheader(f"Chunk: {selected_chunk_id}")
-        
         for idx, row in processed_df.iterrows():
             char = row['character']
-            style = char_styles.get(char, {'col_ratio': [4,1], 'avatar': '❓'}) # Fallback
-            
-            # Dynamic Columns based on character style
+            style = char_styles.get(char, {'col_ratio': [4,1], 'avatar': '❓', 'align': 'left'})
             c1, c2 = st.columns(style['col_ratio'])
-            
-            # Determine where to put the button based on alignment
-            if style['align'] == 'left':
-                btn_col = c1
-            else:
-                btn_col = c2
+            btn_col = c1 if style['align'] == 'left' else c2
             
             with btn_col:
-                btn_label = f"{style['avatar']} {char}: {row['text']}"
-                
-                is_selected = (st.session_state.selected_index == row['index'])
-                btn_type = "primary" if is_selected else "secondary"
-                
+                btn_label = f"**{char}:** {row['text']}"
+                btn_type = "primary" if st.session_state.selected_index == row['index'] else "secondary"
                 if st.button(btn_label, key=f"btn_{row['index']}", use_container_width=True, type=btn_type):
                     st.session_state.selected_index = row['index']
                     st.rerun()
 
-    # --- RIGHT COLUMN: VISUALIZER ---
+    # --- RIGHT: VISUALIZER (UPDATED) ---
     with col_viz:
         st.subheader("Visual Context")
         
         active_row = processed_df[processed_df['index'] == st.session_state.selected_index].iloc[0]
         img_path = active_row['display_image']
+        final_prompt = active_row['final_prompt']
         
-        # Image Display
-        if img_path and os.path.exists(img_path):
-            st.image(img_path, caption=f"POV: {active_row['character']}", width=450)
+        # Retrieve Sequence
+        sequence = get_image_sequence(img_path, final_prompt)
+
+        if sequence:
+            if len(sequence) > 1:
+                st.info(f"Multi-step Generation Detected: {len(sequence)} steps")
+                
+                # Create Tabs for each step
+                tabs = st.tabs([f"Step {i+1}" for i in range(len(sequence))])
+                
+                for i, tab in enumerate(tabs):
+                    step_data = sequence[i]
+                    with tab:
+                        st.image(step_data['path'], caption=f"Step {i+1}: {active_row['character']}", width=450)
+                        st.caption(f"**Instruction:** {step_data['prompt']}")
+            else:
+                # Single Image Case
+                st.image(sequence[0]['path'], caption=f"POV: {active_row['character']}", width=450)
+        
         elif img_path:
-             st.warning(f"Image not found: {img_path}")
+             st.warning(f"Image file not found on disk: {img_path}")
         else:
             st.info("No image context available yet.")
 
         st.divider()
 
-        # Prompts
+        # Prompt Evolution
         st.markdown("#### Prompt Evolution")
         p_col1, p_col2 = st.columns(2)
         
