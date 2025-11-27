@@ -13,7 +13,7 @@ from src.utils import pil_to_base64, base64_to_pil, clean_image_artifacts, add_p
 from src.data_manager import ConversationDataManager
 from src.api_clients import (
     execute_vlm_strategy,
-    get_polisher_strategy,
+    get_strategy_vlm,
     call_image_gen
 )
 
@@ -28,7 +28,8 @@ class AugmentationPipeline:
     def __init__(self, data_manager: ConversationDataManager, mock_mode: bool = False):
         self.dm = data_manager
         self.mock_mode = mock_mode
-        self.vlm_semaphore = asyncio.Semaphore(10) # Limit concurrent VLM calls
+        self.vlm_semaphore = asyncio.Semaphore(1) # Limit concurrent VLM calls
+        # TODO think about re implementing parallelization
 
     # --- Entry Points ---
 
@@ -129,12 +130,28 @@ class AugmentationPipeline:
                 logger.info(f"Previous prompts: {previous_prompts}")
 
                 # Strategy Selection
-                strategy = get_polisher_strategy(
-                    is_oracle=self.mock_mode, 
-                    has_images=False,
-                    has_context=True,
-                    has_history=bool(previous_prompts)
+                strategy, strategy_name = await get_strategy_vlm(
+                    is_oracle=self.mock_mode,
+                    utterance=utterance,
+                    context=context,
+                    previous_prompts=previous_prompts
                 )
+                
+                if strategy is None:
+                    print("NO STRATEGY??")
+                    return
+
+                # Base: it's a new frame
+                choice = '[NEW]'
+
+                if 'edit' in strategy_name:
+                    choice = '[CONTINUE]'
+
+                # Wipe p_p if create (so, new frame)
+                if 'create' in strategy_name:
+                    previous_prompts = []
+                
+                self.dm.update_cell(index, 'frame_choice', choice)
 
                 # Execute
                 if self.mock_mode:
@@ -188,6 +205,11 @@ class AugmentationPipeline:
                     pass
 
             initial_prompt = str(row['initial_prompt']).strip()
+            choice = str(row['frame_choice'])
+
+            # If NEW, wipe out current image
+            if choice == '[NEW]':
+                current_image_b64 = None
             
             if self._is_no_change(initial_prompt):
                 # Ensure marker is set if missing
@@ -203,11 +225,9 @@ class AugmentationPipeline:
                      final_prompt = f"[Refined] {initial_prompt}"
                 else:
                     # Stage 2 Strategy: Multimodal Edit
-                    strategy = get_polisher_strategy(
+                    strategy, _ = await get_strategy_vlm(
                         is_oracle=False,
-                        has_images=True,
-                        has_context=False,
-                        has_history=False
+                        has_images=True
                     )
                     try:
                         async with self.vlm_semaphore:

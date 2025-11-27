@@ -13,6 +13,9 @@ experiment:
     mod_polish_t: 'mod_polish.jinja2'
     mod_polish_edit_t: 'mod_polish_edit.jinja2'
 
+    # NEW OR CONTINUE
+    meta_extraction: 'meta_extraction.jinja2'
+
     ## FOR AUGMENTER
     # For chunk + utterance to prompt for img generation
     initial_start_o: 'initial_start_oracle.jinja2'

@@ -52,6 +52,12 @@ try:
     )
 
     # 4. Instantiate Strategies with System Prompts
+    
+    # META EXTRACTION
+    STRATEGIES['meta_extraction'] = TextEditStrategy(
+        env.get_template(config['experiment']['jinja']['new_or_continue']).render()
+    )
+
     # ORACLE STRATEGIES
     STRATEGIES['oracle_create_context'] = TextCreateStrategy(
         env.get_template(config['experiment']['jinja']['initial_start_o']).render()
@@ -88,35 +94,80 @@ except Exception as e:
 
 # --- Strategy Factory ---
 
-def get_polisher_strategy(
+async def get_strategy_vlm(
     is_oracle: bool,
-    has_images: bool,
-    has_context: bool,
-    has_history: bool
-) -> PromptStrategy:
+    utterance: Optional[str] = None,
+    context: Optional[List[str]] = None,
+    previous_prompts: Optional[List[str]] = None,
+    has_images: Optional[bool] = False,
+    timeout: int = 300
+) -> (PromptStrategy, str):
     """
-    Selects the correct strategy based on the conversation state.
-    This replaces the complex if/else chain in the execution logic.
+    Meta Extraction + Strategy selection based on inputs.
+    call vlm and send prompt to choose NEW or CONTINUE
+    based on CONTEXT and PREVIOUS PROMPTS and UTTERANCE
     """
-    if has_images:
-        # Stage 2: Refinement (Images present) -> Always Multimodal Edit
-        return STRATEGIES['multimodal_edit']
 
+    # If image, we know it's MM edit
+    if has_images:
+        return STRATEGIES['multimodal_edit'], 'multimodal_edit'
+    
+    if not context:
+        if is_oracle:
+            return STRATEGIES['oracle_simple'], 'oracle_simple'
+        else:
+            return STRATEGIES['real_simple'], 'real_simple'
+
+    choice = None
+    strategy = STRATEGIES['meta_extraction']
+    client_config = config.get("vlm_client", {})
+    endpoint = f"{polisher_api_base_url}{strategy.endpoint_suffix}"
+    
+    # DEBUG LOG
+    logger.info(f"DEBUG: Executing meta_extraction")
+
+    # 1. Build Payload
+    payload = strategy.build_payload(
+        utterance=utterance,
+        config=client_config,
+        context=context,
+        previous_prompts=previous_prompts,
+        images=None
+    )
+
+    # 2. Call to META EXTRACTION
+    logger.info(f"Call to META EXTRACTION via VLM ({strategy.endpoint_suffix})")
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(endpoint, json=payload, timeout=timeout)
+            response.raise_for_status()
+            result = response.json()
+                        
+            # 3. Process Response
+            choice = strategy.process_response(result.get("text"))
+            # TODO deal with <meta> etc. (TO IMPLEMENT)
+            logger.info(f"CHOICE: {choice}")
+
+    except Exception as e:
+        logger.error(f"VLM Request failed: {e}", exc_info=True)
+    
+    # Process the choice
     if is_oracle:
-        if has_context and has_history:
-            return STRATEGIES['oracle_edit_context']
-        elif has_context:
-            return STRATEGIES['oracle_create_context']
+        if choice == '[NEW]':
+            return STRATEGIES['oracle_create_context'], 'oracle_create_context'
+        elif choice == '[CONTINUE]':
+            return STRATEGIES['oracle_edit_context'], 'oracle_edit_context'
         else:
-            return STRATEGIES['oracle_simple']
+            print("BAD CHOICE")
+            return None, None
     else:
-        # Real (Model)
-        if has_context and has_history:
-            return STRATEGIES['real_edit_context']
-        elif has_context:
-            return STRATEGIES['real_create_context']
+        if choice == '[NEW]':
+            return STRATEGIES['real_create_context'], 'real_create_context'
+        elif choice == '[CONTINUE]':
+            return STRATEGIES['real_edit_context'], 'real_edit_context'
         else:
-            return STRATEGIES['real_simple']
+            print("BAD CHOICE")
+            return None, None
 
 
 # --- VLM Client (The Strategy Executor) ---

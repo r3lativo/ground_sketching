@@ -166,7 +166,7 @@ def main():
                 label = f"{prefix}**{char}:** {txt}"
                 
                 # Render Button
-                if st.button(label, key=f"btn_{row_idx}", use_container_width=True, type=btn_type):
+                if st.button(label, key=f"btn_{row_idx}", width='stretch', type=btn_type):
                     st.session_state.selected_index = row_idx
                     st.rerun()
 
@@ -197,9 +197,9 @@ def main():
                     tabs = st.tabs([f"Step {i+1}" for i in range(len(sequence))])
                     for i, tab in enumerate(tabs):
                         with tab:
-                            st.image(sequence[i]['path'], caption=sequence[i]['prompt'], use_container_width=True)
+                            st.image(sequence[i]['path'], caption=sequence[i]['prompt'], width='stretch')
                 else:
-                    st.image(sequence[0]['path'], caption="Result", use_container_width=True)
+                    st.image(sequence[0]['path'], caption="Result", width='stretch')
             else:
                 st.warning("Image path exists but file read failed.")
         else:

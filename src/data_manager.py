@@ -68,7 +68,7 @@ class ConversationDataManager:
 
     def get_context_for_index(self, index: int, user: str, realistic: bool = False) -> List[str]:
         """
-        Retrieves context and inserts a <marker> where the user's actual visual scene began.
+        Retrieves context and inserts a <moved> where the user's actual visual scene began.
         """
         # 1. Prepare formatted strings
         full_formatted = self.df[['character', 'text']].agg(': '.join, axis=1)
@@ -114,7 +114,7 @@ class ConversationDataManager:
                 # if continuous.
                 insert_pos = scene_start_idx - start_idx
                 if 0 <= insert_pos < len(ctx_list):
-                    ctx_list.insert(insert_pos, "<marker>")
+                    ctx_list.insert(insert_pos, "<moved>")
 
         return ctx_list
 
@@ -187,8 +187,9 @@ class ConversationDataManager:
                     df[target_col_name] = df[target_col_name].astype(int)
         
         # 4. Initialize columns if missing
-        for col in ['initial_prompt', 'final_prompt', 'img_path']:
+        for col in ['frame_choice', 'initial_prompt', 'final_prompt', 'img_path']:
             if col not in df.columns:
                 df[col] = pd.NA
+        #TODO add the columns for <meta> and modified_utterance (TO IMPLEMENT)
 
         self.df = df
