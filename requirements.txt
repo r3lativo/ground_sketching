@@ -12,6 +12,8 @@ safetensors
 peft
 PyYAML
 vllm
+pandas
+numpy
 Jinja2
 yq
 streamlit # for data visualization

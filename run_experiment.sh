@@ -40,10 +40,12 @@ echo "--- STARTING SERVICES ---"
 # Launch VLM (GPUs 0,1)
 ./scripts/start_vlm_service.sh &
 VLM_SCRIPT_PID=$!
+disown $VLM_SCRIPT_PID
 
 # Launch Image Gen (GPU 2)
 ./scripts/start_image_gen_service.sh &
 IMG_GEN_PID=$!
+disown $IMG_GEN_PID
 
 # --- 3. Wait for Health Checks ---
 echo "Waiting for services to be healthy..."
@@ -99,7 +101,7 @@ cleanup() {
     pkill -u $USER -f "vllm serve"
     jobs -p | xargs -r kill
 }
-trap cleanup EXIT
+trap cleanup EXIT SIGTERM SIGINT
 
 for csv_file in "$INPUT_DIR"/*.csv; do
     [ -e "$csv_file" ] || continue

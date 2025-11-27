@@ -1,63 +1,0 @@
-Loading pytorch-gpu/py3/2.8.0
-  Loading requirement: gcc/11.4.1 cuda/12.8.0 nccl/2.27.3-1-cuda
-    cudnn/9.10.2.21-12-cuda openmpi/4.1.8-cuda intel-oneapi-mkl/2023.1
-    magma/2.9.0-cuda sox/14.4.2 ffmpeg/6.1.1-cuda hdf5/1.12.0-mpi-cuda
-    libjpeg-turbo/2.1.3 libpng/1.6.37 libwebp/1.2.2 graphviz/2.49.0
-Flax classes are deprecated and will be removed in Diffusers v1.0.0. We recommend migrating to PyTorch classes or pinning your version of Diffusers.
-Flax classes are deprecated and will be removed in Diffusers v1.0.0. We recommend migrating to PyTorch classes or pinning your version of Diffusers.
-Loading checkpoint shards:   0%|          | 0/5 [00:00<?, ?it/s]Loading checkpoint shards:  80%|████████  | 4/5 [00:00<00:00, 38.20it/s]Loading checkpoint shards: 100%|██████████| 5/5 [00:00<00:00, 34.13it/s]
-Loading pipeline components...:   0%|          | 0/6 [00:00<?, ?it/s]Loading pipeline components...:  33%|███▎      | 2/6 [00:00<00:01,  3.35it/s]`torch_dtype` is deprecated! Use `dtype` instead!
-
-Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s][A
-Loading checkpoint shards:  25%|██▌       | 1/4 [00:00<00:01,  2.54it/s][A
-Loading checkpoint shards:  50%|█████     | 2/4 [00:00<00:00,  4.22it/s][ALoading checkpoint shards: 100%|██████████| 4/4 [00:00<00:00,  7.00it/s]
-Loading pipeline components...:  50%|█████     | 3/6 [00:01<00:01,  2.27it/s]Loading pipeline components...:  83%|████████▎ | 5/6 [00:01<00:00,  3.93it/s]Loading pipeline components...: 100%|██████████| 6/6 [00:01<00:00,  4.19it/s]
-Traceback (most recent call last):
-  File "/lustre/fswork/projects/rech/bgp/upa38qy/ground_sketching/augmenter.py", line 289, in <module>
-    asyncio.run(main())
-  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/asyncio/runners.py", line 195, in run
-    return runner.run(main)
-           ^^^^^^^^^^^^^^^^
-  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/asyncio/runners.py", line 118, in run
-    return self._loop.run_until_complete(task)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/asyncio/base_events.py", line 691, in run_until_complete
-    return future.result()
-           ^^^^^^^^^^^^^^^
-  File "/lustre/fswork/projects/rech/bgp/upa38qy/ground_sketching/augmenter.py", line 280, in main
-    df = await gen_images_from_aug(
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/lustre/fswork/projects/rech/bgp/upa38qy/ground_sketching/augmenter.py", line 140, in gen_images_from_aug
-    sorted_df = df.sort_values(by=['chunk_id', 'index'], kind='stable')
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/pandas/core/frame.py", line 7179, in sort_values
-    keys = [self._get_label_or_level_values(x, axis=axis) for x in by]
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/pandas/core/generic.py", line 1911, in _get_label_or_level_values
-    raise KeyError(key)
-KeyError: 'index'
-Traceback (most recent call last):
-  File "/lustre/fswork/projects/rech/bgp/upa38qy/ground_sketching/augmenter.py", line 289, in <module>
-    asyncio.run(main())
-  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/asyncio/runners.py", line 195, in run
-    return runner.run(main)
-           ^^^^^^^^^^^^^^^^
-  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/asyncio/runners.py", line 118, in run
-    return self._loop.run_until_complete(task)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/asyncio/base_events.py", line 691, in run_until_complete
-    return future.result()
-           ^^^^^^^^^^^^^^^
-  File "/lustre/fswork/projects/rech/bgp/upa38qy/ground_sketching/augmenter.py", line 280, in main
-    df = await gen_images_from_aug(
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/lustre/fswork/projects/rech/bgp/upa38qy/ground_sketching/augmenter.py", line 140, in gen_images_from_aug
-    sorted_df = df.sort_values(by=['chunk_id'], kind='stable')
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/pandas/core/frame.py", line 7179, in sort_values
-    keys = [self._get_label_or_level_values(x, axis=axis) for x in by]
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/lustre/fshomisc/sup/hpe/pub/miniforge/24.11.3/envs/pytorch-gpu-2.8.0+py3.12.11/lib/python3.12/site-packages/pandas/core/generic.py", line 1911, in _get_label_or_level_values
-    raise KeyError(key)
-KeyError: 'index'
-slurmstepd: error: *** JOB 1794354 ON jean-zay-iam06 CANCELLED AT 2025-11-19T16:39:50 ***

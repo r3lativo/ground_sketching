@@ -4,19 +4,22 @@ import os
 import re
 
 # --- CONFIGURATION ---
-DATA_FOLDER = "output/experiment_1_mini"
-st.set_page_config(layout="wide", page_title="Data Visualization Tool")
+DATA_FOLDER = "output/"  # Or "output/mock"
+st.set_page_config(layout="wide", page_title="Ground Sketching Viz")
 
-# Custom CSS for chat bubbles
+# --- CSS STYLING ---
+# We use CSS to highlight the "Context" rows differently from standard rows
 st.markdown("""
 <style>
     div.stButton > button {
         text-align: left;
         height: auto;
-        padding-top: 10px;
-        padding-bottom: 10px;
+        padding-top: 5px;
+        padding-bottom: 5px;
         white-space: pre-wrap;
     }
+    /* Highlight for Context Rows (Custom class if we could inject it, 
+       but for now we rely on visual markers in text) */
 </style>
 """, unsafe_allow_html=True)
 
@@ -24,200 +27,205 @@ st.markdown("""
 
 @st.cache_data
 def load_data(file_path):
-    return pd.read_csv(file_path)
+    df = pd.read_csv(file_path)
+    # Ensure index column exists and is sorted
+    if 'index' not in df.columns:
+        df['index'] = df.index
+    return df.sort_values(by='index')
 
 def get_csv_files(folder_path):
     if not os.path.exists(folder_path):
-        os.makedirs(folder_path)
         return []
-    return [f for f in os.listdir(folder_path) if f.endswith('.csv')]
+    files = []
+    for root, dirs, filenames in os.walk(folder_path):
+        for f in filenames:
+            if f.endswith('.csv'):
+                files.append(os.path.join(root, f))
+    return files
 
-def backfill_images(df_chunk):
-    """
-    Fills in missing images using the 'last seen' image for that character.
-    """
-    df_chunk['display_image'] = None
-    character_states = {}
+def get_image_sequence(img_path, final_prompt):
+    """Detects multi-step sequences."""
+    if pd.isna(img_path) or not img_path:
+        return []
 
-    for index, row in df_chunk.iterrows():
-        char = row['character']
-        raw_img_path = str(row['img_path']) 
-        
-        # Basic validation
-        is_valid_image = (
-            raw_img_path.lower() != 'nan' and 
-            raw_img_path.strip() != '' and 
-            '[NO_CHANGE]' not in row['text'] and 
-            '[NO_CHANGE]' not in raw_img_path
-        )
-
-        if is_valid_image:
-            character_states[char] = raw_img_path
-            df_chunk.at[index, 'display_image'] = raw_img_path
-        else:
-            if char in character_states:
-                df_chunk.at[index, 'display_image'] = character_states[char]
-            else:
-                df_chunk.at[index, 'display_image'] = None
-                
-    return df_chunk
+    prompts = [p.strip() for p in str(final_prompt).split("$$$") if p.strip()] if pd.notna(final_prompt) else []
+    match = re.search(r"_seq(\d+)\.(png|jpg|jpeg)$", img_path)
+    
+    sequence_data = []
+    if match:
+        current_seq_num = int(match.group(1))
+        base_name = img_path[:match.start()]
+        extension = match.group(2)
+        for i in range(current_seq_num + 1):
+            step_path = f"{base_name}_seq{i}.{extension}"
+            step_prompt = prompts[i] if i < len(prompts) else "???"
+            if os.path.exists(step_path):
+                sequence_data.append({'path': step_path, 'prompt': step_prompt})
+    else:
+        sequence_data.append({'path': img_path, 'prompt': str(final_prompt) if pd.notna(final_prompt) else ""})
+    return sequence_data
 
 def assign_character_styles(df):
-    unique_chars = df['character'].unique()
+    unique_chars = [c for c in df['character'].unique() if pd.notna(c)]
     style_map = {}
-    
     for i, char in enumerate(unique_chars):
-        if i == 1: 
+        if i % 2 != 0: 
             style_map[char] = {'col_ratio': [1, 4], 'align': 'right'}
         else:
             style_map[char] = {'col_ratio': [4, 1], 'align': 'left'}
     return style_map
 
-def get_image_sequence(img_path, final_prompt):
-    """
-    Detects if the image is part of a sequence (e.g., _seq2.png).
-    Returns a list of dictionaries: [{'path': str, 'prompt': str}]
-    """
-    if not img_path or not os.path.exists(img_path):
-        return []
-
-    # Split prompts by $$$
-    prompts = [p.strip() for p in str(final_prompt).split("$$$") if p.strip()]
-    
-    # Check if filename indicates a sequence (ends with _seqN.png)
-    # Regex matches "_seq" followed by digits, just before the extension
-    match = re.search(r"_seq(\d+)\.(png|jpg|jpeg)$", img_path)
-    
-    sequence_data = []
-
-    if match:
-        # It is a sequence!
-        current_seq_num = int(match.group(1))
-        base_name = img_path[:match.start()] # Remove _seqN.png
-        extension = match.group(2)
-        
-        # Reconstruct 0 to N
-        for i in range(current_seq_num + 1):
-            step_path = f"{base_name}_seq{i}.{extension}"
-            # Try to match with prompt. If more images than prompts, use empty string
-            step_prompt = prompts[i] if i < len(prompts) else "???"
-            
-            if os.path.exists(step_path):
-                sequence_data.append({'path': step_path, 'prompt': step_prompt})
-    else:
-        # Standard single image
-        # If prompts has $$$, it means we tried multi-step but maybe only saved one file 
-        # or logic didn't trigger suffix (augmenter logic: suffix only if >1 prompt)
-        
-        # We return just this image, associated with the FULL prompt string or the last one?
-        # Let's associate it with the full prompt for clarity.
-        sequence_data.append({'path': img_path, 'prompt': final_prompt})
-
-    return sequence_data
-
 # --- MAIN APP ---
 def main():
-    st.title("💬 Data Visualization Tool")
+    st.title("💬 Conversation Context Visualizer")
 
-    # 1. SIDEBAR
+    # 1. SIDEBAR: File Selection Only
     st.sidebar.header("Data Source")
-    csv_files = get_csv_files(DATA_FOLDER)
-    
-    if not csv_files:
-        st.error(f"No CSV files found in folder: '{DATA_FOLDER}'")
-        st.stop()
+    all_files = get_csv_files(DATA_FOLDER)
+    if not all_files:
+         st.error(f"No CSV files found in {DATA_FOLDER}")
+         st.stop()
+         
+    file_map = {os.path.basename(f): f for f in all_files}
+    selected_filename = st.sidebar.selectbox("Select File", list(file_map.keys()))
+    file_path = file_map[selected_filename]
 
-    selected_file = st.sidebar.selectbox("Select Conversation File", csv_files)
-    file_path = os.path.join(DATA_FOLDER, selected_file)
-
-    # 2. LOAD & PROCESS
+    # 2. LOAD DATA
     try:
         df = load_data(file_path)
     except Exception as e:
         st.error(f"Error loading file: {e}")
         st.stop()
 
-    chunk_ids = df['chunk_id'].unique()
-    selected_chunk_id = st.sidebar.selectbox("Select Conversation Chunk", chunk_ids)
+    char_styles = assign_character_styles(df)
 
-    chunk_df = df[df['chunk_id'] == selected_chunk_id].copy()
-    chunk_df = chunk_df.sort_values(by='index')
-    processed_df = backfill_images(chunk_df)
-    char_styles = assign_character_styles(processed_df)
-
-    # 3. STATE TRACKING
-    tracker_key = f"{selected_file}_{selected_chunk_id}"
+    # 3. STATE MANAGEMENT
+    tracker_key = f"{selected_filename}"
     if 'tracker_key' not in st.session_state or st.session_state.tracker_key != tracker_key:
         st.session_state.tracker_key = tracker_key
-        st.session_state.selected_index = processed_df.iloc[0]['index']
+        # Default to first row
+        st.session_state.selected_index = df.iloc[0]['index']
 
-    if st.session_state.selected_index not in processed_df['index'].values:
-         st.session_state.selected_index = processed_df.iloc[0]['index']
+    # 4. CONTEXT CALCULATION (For the Selected Row)
+    # Get the row the user clicked on
+    active_row = df[df['index'] == st.session_state.selected_index].iloc[0]
+    
+    # Who is speaking?
+    active_char = active_row['character']
+    
+    # What is their context start?
+    ctx_col = f"ctx_start_idx_{active_char}"
+    
+    context_indices = []
+    if ctx_col in df.columns:
+        start_idx = active_row[ctx_col]
+        if pd.notna(start_idx):
+            # Context is [Start, Current] (inclusive of current row usually in this logic)
+            context_indices = list(range(int(start_idx), int(active_row['index']) + 1))
+    else:
+        # Fallback if column missing
+        context_indices = [active_row['index']]
 
-    # 4. LAYOUT
+    # 5. LAYOUT
     col_chat, col_viz = st.columns([1, 1]) 
 
-    # --- LEFT: CHAT ---
+    # --- LEFT: CHAT HISTORY ---
     with col_chat:
-        st.subheader(f"Chunk: {selected_chunk_id}")
-        for idx, row in processed_df.iterrows():
+        st.subheader("Conversation")
+        
+        # We iterate through the whole DF
+        for idx, row in df.iterrows():
             char = row['character']
-            style = char_styles.get(char, {'col_ratio': [4,1], 'avatar': '❓', 'align': 'left'})
+            style = char_styles.get(char, {'col_ratio': [4,1], 'align': 'left'})
+            
             c1, c2 = st.columns(style['col_ratio'])
             btn_col = c1 if style['align'] == 'left' else c2
             
             with btn_col:
-                btn_label = f"**{char}:** {row['text']}"
-                btn_type = "primary" if st.session_state.selected_index == row['index'] else "secondary"
-                if st.button(btn_label, key=f"btn_{row['index']}", use_container_width=True, type=btn_type):
-                    st.session_state.selected_index = row['index']
+                row_idx = row['index']
+                
+                # Determine Visual State
+                is_selected = (row_idx == st.session_state.selected_index)
+                is_in_context = (row_idx in context_indices)
+                
+                # Visual Markers
+                prefix = ""
+                if is_selected:
+                    btn_type = "primary"
+                    prefix = "⬛ " # Marker for "You are here"
+                elif is_in_context:
+                    btn_type = "secondary" # Streamlit doesn't support tertiary colors well
+                    prefix = "👁️ " # Marker for "Included in Context"
+                else:
+                    btn_type = "secondary"
+                    prefix = ""
+
+                # Construct Label
+                txt = str(row['text'])
+                # Optional: Add line break for clearer reading
+                label = f"{prefix}**{char}:** {txt}"
+                
+                # Render Button
+                if st.button(label, key=f"btn_{row_idx}", use_container_width=True, type=btn_type):
+                    st.session_state.selected_index = row_idx
                     st.rerun()
 
-    # --- RIGHT: VISUALIZER (UPDATED) ---
+    # --- RIGHT: INSPECTOR ---
     with col_viz:
-        st.subheader("Visual Context")
+        st.subheader(f"Inspector (Index {active_row['index']})")
         
-        active_row = processed_df[processed_df['index'] == st.session_state.selected_index].iloc[0]
-        img_path = active_row['display_image']
-        final_prompt = active_row['final_prompt']
+        # 1. Context Explanation
+        st.info(f"**Perspective:** {active_char} | **Context Window:** Index {context_indices[0]} ➡ {context_indices[-1]}")
         
-        # Retrieve Sequence
-        sequence = get_image_sequence(img_path, final_prompt)
+        with st.expander("📄 See Exact Context Text", expanded=False):
+            # Reconstruct the exact text block passed to the model
+            ctx_df = df[df['index'].isin(context_indices)]
+            for _, ctx_row in ctx_df.iterrows():
+                if ctx_row['index'] == active_row['index']:
+                    st.markdown(f"**{ctx_row['character']}: {ctx_row['text']}** (Target)")
+                else:
+                    st.text(f"{ctx_row['character']}: {ctx_row['text']}")
 
-        if sequence:
-            if len(sequence) > 1:
-                st.info(f"Multi-step Generation Detected: {len(sequence)} steps")
-                
-                # Create Tabs for each step
-                tabs = st.tabs([f"Step {i+1}" for i in range(len(sequence))])
-                
-                for i, tab in enumerate(tabs):
-                    step_data = sequence[i]
-                    with tab:
-                        st.image(step_data['path'], caption=f"Step {i+1}: {active_row['character']}", width=450)
-                        st.caption(f"**Instruction:** {step_data['prompt']}")
+        # 2. Image Visualization
+        img_path = active_row.get('img_path')
+        if pd.notna(img_path) and os.path.exists(str(img_path)):
+             # Sequence Logic
+            sequence = get_image_sequence(img_path, active_row.get('final_prompt'))
+            
+            if sequence:
+                if len(sequence) > 1:
+                    tabs = st.tabs([f"Step {i+1}" for i in range(len(sequence))])
+                    for i, tab in enumerate(tabs):
+                        with tab:
+                            st.image(sequence[i]['path'], caption=sequence[i]['prompt'], use_container_width=True)
+                else:
+                    st.image(sequence[0]['path'], caption="Result", use_container_width=True)
             else:
-                # Single Image Case
-                st.image(sequence[0]['path'], caption=f"POV: {active_row['character']}", width=450)
-        
-        elif img_path:
-             st.warning(f"Image file not found on disk: {img_path}")
+                st.warning("Image path exists but file read failed.")
         else:
-            st.info("No image context available yet.")
+            if pd.isna(img_path):
+                st.info("No image generated for this line.")
+            else:
+                st.warning(f"File missing: {img_path}")
 
         st.divider()
 
-        # Prompt Evolution
-        st.markdown("#### Prompt Evolution")
-        p_col1, p_col2 = st.columns(2)
-        
-        with p_col1:
-            st.markdown("**Initial Prompt:**")
-            st.info(active_row['initial_prompt'])
-            
-        with p_col2:
-            st.markdown("**Final Prompt:**")
-            st.success(active_row['final_prompt'])
+        # 3. Prompts
+        c1, c2 = st.columns(2)
+        with c1:
+            st.markdown("**Initial Prompt**")
+            val = active_row.get('initial_prompt')
+            if pd.notna(val) and val != "":
+                st.caption(val)
+            else:
+                st.text("-")
+        with c2:
+            st.markdown("**Final Prompt**")
+            val = active_row.get('final_prompt')
+            if pd.notna(val) and val != "":
+                st.caption(val)
+            else:
+                st.text("-")
 
 if __name__ == "__main__":
     main()

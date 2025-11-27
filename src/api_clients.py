@@ -2,80 +2,173 @@
 
 import httpx
 import logging
-import yaml
-import os
-import json
 from typing import List, Optional, Dict, Any
 from jinja2 import Environment, FileSystemLoader, select_autoescape
-import torch
 from PIL import Image
 
-from src.utils import setup_logging, load_config, pil_to_base64, json_parser, thinking_parser
+from src.utils import setup_logging, load_config, pil_to_base64
+from src.strategies import (
+    PromptStrategy, 
+    TextCreateStrategy, 
+    TextEditStrategy, 
+    MultimodalEditStrategy
+)
 
-torch.backends.cudnn.deterministic = True
-torch.backends.cudnn.benchmark = False
+try:
+    import torch
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+except ImportError:
+    pass
 
 logger = logging.getLogger(__name__)
+# Assuming setup_logging is called by the main entry point, but keeping this for standalone usage validity
 setup_logging(log_file='logs/api_clients.log', log_to_console=False)
 
-# --- Configuration Loading ---
+# --- Configuration & Strategy Initialization ---
+
+# Global Config
+config = {}
+STRATEGIES: Dict[str, PromptStrategy] = {}
+image_gen_url = ""
+polisher_api_base_url = ""
+
 try:
-    # Load Server Config
+    # 1. Load Configs
     config = load_config(config_path='config/server_config.yaml')
     config.update(load_config(config_path='config/experiment_config.yaml'))
 
-    # Construct the base URL for the OpenAI compatible endpoint
+    # 2. Setup URLs
     image_gen_url = f"http://{config['image_gen_service']['host']}:{config['image_gen_service']['port']}"
     polisher_api_base_url = f"http://{config['vlm_service']['gateway']['host']}:{config['vlm_service']['gateway']['port']}"
-    polisher_model_id = config['vlm_service']['backend']['model_id']
-
+    
     logger.info(f"Image Gen API URL: {image_gen_url}")
     logger.info(f"Prompt Polisher API Base URL: {polisher_api_base_url}")
-    logger.info(f"Using Polisher Model ID: {polisher_model_id}")
 
-    # Load Jinja Templates for System Prompts
+    # 3. Setup Jinja2
     env = Environment(
         loader=FileSystemLoader(config['experiment']['jinja']['env']),
         autoescape=select_autoescape(['html', 'xml'])
     )
-    polish_template = env.get_template(config['experiment']['jinja']['polish_t'])
-    edit_template = env.get_template(config['experiment']['jinja']['edit_t'])
 
-    # ORACLE
-    initial_start_oracle_template = env.get_template(config['experiment']['jinja']['initial_start_o'])
-    initial_edit_oracle_template = env.get_template(config['experiment']['jinja']['initial_edit_o'])
-
-    # REAL
-    initial_start_real1_template = env.get_template(config['experiment']['jinja']['initial_start_r1'])
-    initial_start_real2_template = env.get_template(config['experiment']['jinja']['initial_start_r2'])
-    initial_edit_real_template = env.get_template(config['experiment']['jinja']['initial_edit_r'])
-
-    # FINAL (DOES NOT CHANGE)
-    final_start_template = env.get_template(config['experiment']['jinja']['final_start_t'])
-    final_edit_template = env.get_template(config['experiment']['jinja']['final_edit_t'])
+    # 4. Instantiate Strategies with System Prompts
+    # ORACLE STRATEGIES
+    STRATEGIES['oracle_create_context'] = TextCreateStrategy(
+        env.get_template(config['experiment']['jinja']['initial_start_o']).render()
+    )
+    STRATEGIES['oracle_edit_context'] = TextEditStrategy(
+        env.get_template(config['experiment']['jinja']['initial_edit_o']).render()
+    )
+    # The 'simple' cases often use the final templates or specific ones
+    STRATEGIES['oracle_simple'] = TextCreateStrategy(
+        env.get_template(config['experiment']['jinja']['final_start_t']).render()
+    )
     
-    # Render templates
-    polish_system_prompt = polish_template.render()
-    edit_system_prompt = edit_template.render()
+    # REAL STRATEGIES
+    STRATEGIES['real_create_context'] = TextCreateStrategy(
+        env.get_template(config['experiment']['jinja']['initial_start_r2']).render()
+    )
+    STRATEGIES['real_edit_context'] = TextEditStrategy(
+        env.get_template(config['experiment']['jinja']['initial_edit_r']).render()
+    )
+    STRATEGIES['real_simple'] = TextCreateStrategy(
+        env.get_template(config['experiment']['jinja']['initial_start_r1']).render()
+    )
 
-    initial_start_oracle_prompt = initial_start_oracle_template.render()
-    initial_edit_oracle_prompt = initial_edit_oracle_template.render()
-
-    initial_start_real1_prompt = initial_start_real1_template.render()
-    initial_start_real2_prompt = initial_start_real2_template.render()
-    initial_edit_real_prompt = initial_edit_real_template.render()
-
-    final_start_system_prompt = final_start_template.render()
-    final_edit_system_prompt = final_edit_template.render()
+    # SHARED / FINAL STRATEGIES (Multimodal is usually consistent across conditions)
+    STRATEGIES['multimodal_edit'] = MultimodalEditStrategy(
+        env.get_template(config['experiment']['jinja']['final_edit_t']).render()
+    )
     
-    logger.info("System prompts loaded from Jinja2 templates.")
+    logger.info("VLM Strategies initialized successfully.")
 
-except FileNotFoundError:
-    logger.error(f"Configuration or template file not found. Using defaults.")
-except KeyError as e:
-    logger.error(f"Missing key in configuration file: {e}. Using defaults.")
 except Exception as e:
-    logger.error(f"Error loading config or templates: {e}", exc_info=True)
+    logger.error(f"Error loading config or strategies: {e}", exc_info=True)
+
+
+# --- Strategy Factory ---
+
+def get_polisher_strategy(
+    is_oracle: bool,
+    has_images: bool,
+    has_context: bool,
+    has_history: bool
+) -> PromptStrategy:
+    """
+    Selects the correct strategy based on the conversation state.
+    This replaces the complex if/else chain in the execution logic.
+    """
+    if has_images:
+        # Stage 2: Refinement (Images present) -> Always Multimodal Edit
+        return STRATEGIES['multimodal_edit']
+
+    if is_oracle:
+        if has_context and has_history:
+            return STRATEGIES['oracle_edit_context']
+        elif has_context:
+            return STRATEGIES['oracle_create_context']
+        else:
+            return STRATEGIES['oracle_simple']
+    else:
+        # Real (Model)
+        if has_context and has_history:
+            return STRATEGIES['real_edit_context']
+        elif has_context:
+            return STRATEGIES['real_create_context']
+        else:
+            return STRATEGIES['real_simple']
+
+
+# --- VLM Client (The Strategy Executor) ---
+
+async def execute_vlm_strategy(
+    strategy: PromptStrategy,
+    utterance: str,
+    context: Optional[List[str]] = None,
+    previous_prompts: Optional[List[str]] = None,
+    images: Optional[List[str]] = None,
+    timeout: int = 300
+) -> Optional[str]:
+    """
+    Executes a specific PromptStrategy against the VLM API.
+    """
+    client_config = config.get("vlm_client", {})
+    endpoint = f"{polisher_api_base_url}{strategy.endpoint_suffix}"
+    
+    # DEBUG LOG
+    logger.info(f"DEBUG: Executing Strategy: {type(strategy).__name__}")
+
+    # 1. Build Payload
+    payload = strategy.build_payload(
+        utterance=utterance,
+        config=client_config,
+        context=context,
+        previous_prompts=previous_prompts,
+        images=images
+    )
+
+    # 2. Network Call
+    logger.info(f"Sending request to VLM ({strategy.endpoint_suffix})")
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(endpoint, json=payload, timeout=timeout)
+            response.raise_for_status()
+            result = response.json()
+            
+            raw_text = result.get("text")
+            
+            # 3. Process Response
+            final_prompt = strategy.process_response(raw_text)
+            
+            if final_prompt:
+                return final_prompt
+            else:
+                logger.warning(f"Strategy returned None after processing raw text.")
+                return None
+
+    except Exception as e:
+        logger.error(f"VLM Request failed: {e}", exc_info=True)
+        return None
 
 
 # --- Image Generation Client ---
@@ -84,6 +177,7 @@ async def call_image_gen(prompt: str, base64_images: Optional[List[str]], timeou
     """Calls the image generation service API."""
     endpoint = f"{image_gen_url}/img_generate"
     image_gen_config = config.get('image_gen_client', {})
+    
     payload = {
         "prompt": prompt,
         "seed": image_gen_config.get("seed"),
@@ -92,261 +186,20 @@ async def call_image_gen(prompt: str, base64_images: Optional[List[str]], timeou
         "num_inference_steps": image_gen_config.get("num_inference_steps"),
     }
 
-    # Add the image if present, else generate a dummy white image.
     if base64_images:
         payload["images"] = base64_images
     else:
         dummy_image_pil = Image.new('RGB', (1024,1024), color='white')
         payload["images"] = [pil_to_base64(dummy_image_pil)]
     
-    logger.info(f"Sending request to Image Gen API: {endpoint} with prompt '{prompt.replace('\n', ' ')}'")
     try:
-        async with httpx.AsyncClient() as client_http:
-            response = await client_http.post(endpoint, json=payload, timeout=timeout)
+        async with httpx.AsyncClient() as client:
+            response = await client.post(endpoint, json=payload, timeout=timeout)
             response.raise_for_status()
             result = response.json()
             if "image" in result and isinstance(result["image"], str):
-                logger.info("Image generation successful.")
                 return result["image"]
-            else:
-                logger.error(f"Image Gen API returned unexpected response format: {result}")
-                return None
-    except httpx.HTTPStatusError as e:
-        logger.error(f"Image Gen API request failed with status {e.response.status_code}: {e.response.text}")
-        return None
-    except httpx.RequestError as e:
-        logger.error(f"Error connecting to Image Gen API at {endpoint}: {e}")
-        return None
+            return None
     except Exception as e:
-        logger.error(f"An unexpected error occurred during image generation call: {e}", exc_info=True)
+        logger.error(f"Image Gen failed: {e}", exc_info=True)
         return None
-
-
-# --- Universal Post-Processing Function ---
-
-def _post_process_polisher_response(
-    raw_text: str,
-    json_key: Optional[str] = None
-) -> Optional[str]:
-    """
-    Consolidated post-processing for all polisher responses.
-    1. Always separates 'thinking' from 'answer'.
-    2. Logs the 'thinking' part.
-    3. If a 'json_key' is given, attempts to parse the 'answer' as JSON.
-    4. Returns the final, clean answer.
-    """
-    if not raw_text:
-        return None
-
-    # 1. Always run thinking_parser first
-    parsed_output = thinking_parser(raw_text)
-    thinking_part = parsed_output.get("thinking")
-    answer_part = parsed_output.get("answer")
-
-    # Print the thinking/answer to the console
-    print(f"\nThinking:\n{thinking_part}")
-    print(f"\nAnswer:\n{answer_part}")
-
-    # 2. Log the thinking part (with newlines replaced for clean logging)
-    if thinking_part:
-        logger.info(f"Polisher thought: {thinking_part.replace('\n', ' ')}")
-    
-    # 3. Check if we have an answer to process
-    if not answer_part:
-        logger.warning("Polisher returned no answer after parsing </think>.")
-        return None
-
-    # 4. Attempt to parse JSON *if* a key was provided
-    if json_key:
-        final_prompt = json_parser(answer_part, json_key)
-        # json_parser returns the original text on failure, so we check
-        # if it's *still* JSON (which means failure)
-        if final_prompt.strip().startswith('{'):
-            logger.warning(f"JSON key '{json_key}' not found. Returning raw answer.")
-            return answer_part.strip()
-        return final_prompt
-    
-    # 5. If no JSON key, just return the clean answer
-    return answer_part.strip()
-
-
-# --- Consolidated Prompt Polisher Client ---
-
-async def call_prompt_polisher(
-    utterance: str,
-    images: Optional[List[str]] = None,
-    context: Optional[List[str]] = None,
-    previous_prompts: Optional[List[str]] = None,
-    timeout: int = 300
-) -> Optional[str]:
-    """
-    Consolidated function to call the vLLM prompt polisher.
-    
-    It intelligently selects the correct endpoint, system prompt,
-    and payload structure based on the arguments provided.
-    
-    - utterance (str): The user's latest text instruction.
-    - images (List[str], optional): A list of Base64 *without* data:image header.
-    - context (List[str], optional): The conversational context.
-    - previous_prompts (List[str], optional): A history of generated prompts.
-    """
-    
-    messages = []
-    endpoint_path = "/generate"  # Default to text-only endpoint
-    json_key_to_parse = None # Default to expecting plain text
-
-    is_oracle = config["experiment"]["is_oracle"]
-    
-    # --- 1. Determine API Configuration based on inputs ---
-
-    # IF IS ORACLE
-    if is_oracle:
-
-        if images:
-            # --- Case 1: Multimodal Edit (uses /edit endpoint) ---
-            logger.info(f"Polisher Case: Multimodal Edit (Utterance: '{utterance.replace('\n', ' ')}')")
-            endpoint_path = "/edit"
-            json_key_to_parse = "Rewritten" # Expects JSON
-            
-            content: List[Dict[str, Any]] = []
-            for img_b64 in images:
-                content.append({"type": "image", "image": f"data:image/jpeg;base64,{img_b64}"})
-            content.append({"type": "text", "text": utterance})
-            
-            messages = [
-                {"role": "system", "content": final_edit_system_prompt},
-                {"role": "user", "content": content}
-            ]
-
-        elif context and (previous_prompts is not None):
-            # --- Case 2: Initial Edit (Text-only, uses /generate) ---
-            logger.info(f"Polisher Case: Contextual Edit (Utterance: '{utterance.replace('\n', ' ')}')")
-            json_key_to_parse = "Rewritten" # Expects JSON
-            
-            content_str = f"Conversation Context:\n{context}\nTarget Utterance:\n{utterance}\nPrevious Prompts:\n{previous_prompts}\nRewritten:\n"
-            messages = [
-                {"role": "system", "content": initial_edit_oracle_prompt},
-                {"role": "user", "content": content_str}
-            ]
-
-        elif context:
-            # --- Case 3: Initial Start (Text-only, uses /generate) ---
-            logger.info(f"Polisher Case: Contextual Create (Utterance: '{utterance.replace('\n', ' ')}')")
-            # No JSON key, expects plain text
-            
-            content_str = f"Conversation Context:\n{context}\nTarget Utterance:\n{utterance}\nRewritten Prompt:\n"
-            messages = [
-                {"role": "system", "content": initial_start_oracle_prompt},
-                {"role": "user", "content": content_str}
-            ]
-
-        else:
-            # --- Case 4: Simple Text-Only Polish (uses /generate) ---
-            logger.info(f"Polisher Case: Simple Text-Only (Utterance: '{utterance.replace('\n', ' ')}')")
-            # No JSON key, expects plain text
-            
-            messages = [
-                {"role": "system", "content": final_start_system_prompt},
-                {"role": "user", "content": utterance}
-            ]
-    
-    # IF NOT ORACLE (REAL)
-    else:
-        if images:
-            # --- Case 1: Multimodal Edit (uses /edit endpoint) ---
-            logger.info(f"Polisher Case: Multimodal Edit (Utterance: '{utterance.replace('\n', ' ')}')")
-            endpoint_path = "/edit"
-            json_key_to_parse = "Rewritten" # Expects JSON
-            
-            content: List[Dict[str, Any]] = []
-            for img_b64 in images:
-                content.append({"type": "image", "image": f"data:image/jpeg;base64,{img_b64}"})
-            content.append({"type": "text", "text": utterance})
-            
-            messages = [
-                {"role": "system", "content": final_edit_system_prompt},
-                {"role": "user", "content": content}
-            ]
-
-        elif context and (previous_prompts is not None):
-            # --- Case 2: Initial Edit Real (Text-only, uses /generate) ---
-            logger.info(f"Polisher Case: Contextual Edit (Utterance: '{utterance.replace('\n', ' ')}')")
-            json_key_to_parse = "Rewritten" # Expects JSON
-            
-            content_str = f"Conversation Context:\n{context}\nTarget Utterance:\n{utterance}\nPrevious Prompts:\n{previous_prompts}\nRewritten:\n"
-            messages = [
-                {"role": "system", "content": initial_edit_real_prompt},
-                {"role": "user", "content": content_str}
-            ]
-
-        elif context:
-            # --- Case 3: Initial Start (Text-only, uses /generate) ---
-            logger.info(f"Polisher Case: Contextual Create (Utterance: '{utterance.replace('\n', ' ')}')")
-            # No JSON key, expects plain text
-            
-            content_str = f"Conversation Context:\n{context}\nTarget Utterance:\n{utterance}\nRewritten Prompt:\n"
-            messages = [
-                {"role": "system", "content": initial_start_real2_prompt},
-                {"role": "user", "content": content_str}
-            ]
-
-        else:
-            # --- Case 4: Simple Text-Only Polish (uses /generate) ---
-            logger.info(f"Polisher Case: Simple Text-Only (Utterance: '{utterance.replace('\n', ' ')}')")
-            # No JSON key, expects plain text
-            
-            content_str = f"Target Utterance: {utterance}\nRewritten Prompt:\n"
-            messages = [
-                {"role": "system", "content": initial_start_real1_prompt},
-                {"role": "user", "content": content_str}
-            ]
-
-    # --- 2. Build the Final Payload ---
-    endpoint = f"{polisher_api_base_url}{endpoint_path}"
-    prompt_polisher_client_config = config["vlm_client"]
-    payload = {
-        "messages": messages,
-        "seed": prompt_polisher_client_config.get("seed"),
-        "top_p": prompt_polisher_client_config.get("top_p"),
-        "temperature": prompt_polisher_client_config.get("temperature"),
-        "max_tokens": prompt_polisher_client_config.get("max_tokens"),
-    }
-
-    # --- 3. Make the API Call (Centralized Logic) ---
-    logger.info(f"Sending request to Polisher API: {endpoint}")
-    try:
-        async with httpx.AsyncClient() as client_http:
-            response = await client_http.post(endpoint, json=payload, timeout=timeout)
-            response.raise_for_status()
-            result = response.json()
-            
-            raw_text = result.get("text")
-            if not raw_text or len(raw_text) == 0:
-                logger.error(f"Polisher API at {endpoint} returned empty or invalid text field: {result}")
-                return None
-            
-            # --- 4. Post-process the response ---
-            final_prompt = _post_process_polisher_response(raw_text, json_key_to_parse)
-            
-            if final_prompt:
-                # Log the final, clean prompt
-                logger.info(f"Polisher successful. New prompt: '{final_prompt.replace('\n', ' ')}'")
-                return final_prompt
-            else:
-                logger.warning(f"Polisher at {endpoint} returned empty content after parsing raw text: '{raw_text.replace('\n', ' ')}'")
-                return None
-
-    except httpx.HTTPStatusError as e:
-        logger.error(f"Polisher API at {endpoint} failed with status {e.response.status_code}: {e.response.text}")
-        return None
-    except httpx.RequestError as e:
-        logger.error(f"Error connecting to Polisher API at {endpoint}: {e}")
-        return None
-    except Exception as e:
-        logger.error(f"An unexpected error occurred during polisher call: {e}", exc_info=True)
-        return None
-
-# --- OLD FUNCTIONS REMOVED ---
-# call_text_prompt_polisher, call_edit_prompt_polisher,
-# call_contextual_prompt_polisher, and call_contextual_edit_prompt_polisher
-# are now all replaced by the single 'call_prompt_polisher' function above.

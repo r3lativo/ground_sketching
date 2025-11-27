@@ -179,7 +179,7 @@ async def generate_image(request: ImageEditRequest):
     # 1. Await the lock. This pauses the function if the GPU is busy,
     #    but lets the server keep running to accept other connections.
     async with generation_queue_lock:
-        logger.info(f"Processing request (Queue cleared). Prompt: {request.prompt[:30]}...")
+        logger.info(f"Processing request (Queue cleared). Prompt: {request.prompt}...")
         
         try:
             # 2. Offload blocking to a thread.
