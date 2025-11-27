@@ -66,15 +66,10 @@ class ConversationDataManager:
         """Updates a specific cell in the dataframe."""
         self.df.at[index, column] = value
 
-    def get_context_for_index(self, index: int, user: str, realistic: bool = False) -> List[str]:
-        """
-        Retrieves context and inserts a <moved> where the user's actual visual scene began.
-        """
-        # 1. Prepare formatted strings
-        full_formatted = self.df[['character', 'text']].agg(': '.join, axis=1)
-        
+    def set_start_index(self, index: int, user: str, realistic: bool = False) -> int:
+        """Set start index based on context"""
         start_idx = 0
-        
+
         # 2. Determine Start Index (Shared Ground)
         if realistic:
             context_start_col = f"ctx_start_idx_{user}"
@@ -85,9 +80,38 @@ class ConversationDataManager:
                 except:
                     start_idx = 0
         
+        self.start_idx = max(0, start_idx)
+        return self.start_idx
+
+    def get_start_idx(self) -> int:
+        return self.start_idx
+
+    def get_prev_prompts_for_index(self, index: int, user: str, realistic: bool = False) -> List[str]:
+        
+        full_prev_prompts = self.df['initial_prompt']
+
+        start_idx = self.set_start_index(index, user, realistic)
+
+        end_idx = index
+
+        mask = (full_prev_prompts.index >= start_idx) & (full_prev_prompts.index < end_idx)
+        prev_prompts_list = full_prev_prompts.loc[mask].tolist()
+
+        return prev_prompts_list
+
+
+    def get_context_for_index(self, index: int, user: str, realistic: bool = False) -> List[str]:
+        """
+        Retrieves context and inserts a <moved> where the user's actual visual scene began.
+        """
+        # 1. Prepare formatted strings
+        full_formatted = self.df[['character', 'text']].agg(': '.join, axis=1)
+        
+        # 2. Determine Start Index (Shared Ground)
+        start_idx = self.get_start_index()
+
         # 3. Determine End Index (Exclusive)
-        end_idx = index 
-        start_idx = max(0, start_idx)
+        end_idx = index
         
         # 4. Get the basic context slice
         mask = (full_formatted.index >= start_idx) & (full_formatted.index < end_idx)
@@ -187,9 +211,8 @@ class ConversationDataManager:
                     df[target_col_name] = df[target_col_name].astype(int)
         
         # 4. Initialize columns if missing
-        for col in ['frame_choice', 'initial_prompt', 'final_prompt', 'img_path']:
+        for col in ['frame_choice', 'meta_info', 'imagery_utterance', 'initial_prompt', 'final_prompt', 'img_path']:
             if col not in df.columns:
                 df[col] = pd.NA
-        #TODO add the columns for <meta> and modified_utterance (TO IMPLEMENT)
 
         self.df = df

@@ -11,7 +11,8 @@ from src.strategies import (
     PromptStrategy, 
     TextCreateStrategy, 
     TextEditStrategy, 
-    MultimodalEditStrategy
+    MultimodalEditStrategy,
+    MetaStrategy
 )
 
 try:
@@ -54,7 +55,7 @@ try:
     # 4. Instantiate Strategies with System Prompts
     
     # META EXTRACTION
-    STRATEGIES['meta_extraction'] = TextEditStrategy(
+    STRATEGIES['meta_extraction'] = MetaStrategy(
         env.get_template(config['experiment']['jinja']['new_or_continue']).render()
     )
 
@@ -94,29 +95,29 @@ except Exception as e:
 
 # --- Strategy Factory ---
 
-async def get_strategy_vlm(
+async def get_meta_and_strategy(
     is_oracle: bool,
     utterance: Optional[str] = None,
     context: Optional[List[str]] = None,
     previous_prompts: Optional[List[str]] = None,
     has_images: Optional[bool] = False,
     timeout: int = 300
-) -> (PromptStrategy, str):
+) -> (PromptStrategy, str, Optional[str], Optional[str]):
     """
     Meta Extraction + Strategy selection based on inputs.
     call vlm and send prompt to choose NEW or CONTINUE
     based on CONTEXT and PREVIOUS PROMPTS and UTTERANCE
+
+    Returns:
+        PromptStrategy,
+        Strategy Name,
+        Meta information,
+        Optional modified utterance
     """
 
     # If image, we know it's MM edit
     if has_images:
         return STRATEGIES['multimodal_edit'], 'multimodal_edit'
-    
-    if not context:
-        if is_oracle:
-            return STRATEGIES['oracle_simple'], 'oracle_simple'
-        else:
-            return STRATEGIES['real_simple'], 'real_simple'
 
     choice = None
     strategy = STRATEGIES['meta_extraction']
@@ -144,9 +145,12 @@ async def get_strategy_vlm(
             result = response.json()
                         
             # 3. Process Response
-            choice = strategy.process_response(result.get("text"))
-            # TODO deal with <meta> etc. (TO IMPLEMENT)
-            logger.info(f"CHOICE: {choice}")
+            response_dict = strategy.process_response(result.get("text"))
+            logger.info(f"Meta parsed answer: {response_dict}")
+    
+    choice = response_dict['action']
+    meta_info = response_dict['meta']
+    imagery_utterance = response_dict['imagery_utterance']
 
     except Exception as e:
         logger.error(f"VLM Request failed: {e}", exc_info=True)
@@ -154,20 +158,26 @@ async def get_strategy_vlm(
     # Process the choice
     if is_oracle:
         if choice == '[NEW]':
-            return STRATEGIES['oracle_create_context'], 'oracle_create_context'
+            if not context:
+                return STRATEGIES['oracle_simple'], 'oracle_simple', meta_info, imagery_utterance
+            else:
+                return STRATEGIES['oracle_create_context'], 'oracle_create_context', meta_info, imagery_utterance
         elif choice == '[CONTINUE]':
-            return STRATEGIES['oracle_edit_context'], 'oracle_edit_context'
+            return STRATEGIES['oracle_edit_context'], 'oracle_edit_context', meta_info, imagery_utterance
         else:
             print("BAD CHOICE")
-            return None, None
+            return None, None, None, None
     else:
         if choice == '[NEW]':
-            return STRATEGIES['real_create_context'], 'real_create_context'
+            if not context:
+                return STRATEGIES['real_simple'], 'real_simple', meta_info, imagery_utterance
+            else:
+                return STRATEGIES['real_create_context'], 'real_create_context', meta_info, imagery_utterance
         elif choice == '[CONTINUE]':
-            return STRATEGIES['real_edit_context'], 'real_edit_context'
+            return STRATEGIES['real_edit_context'], 'real_edit_context', meta_info, imagery_utterance
         else:
             print("BAD CHOICE")
-            return None, None
+            return None, None, None, None
 
 
 # --- VLM Client (The Strategy Executor) ---

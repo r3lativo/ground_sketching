@@ -3,7 +3,7 @@
 import logging
 from abc import ABC, abstractmethod
 from typing import List, Optional, Dict, Any, Union
-from src.utils import json_parser, thinking_parser
+from src.utils import json_parser, thinking_parser, meta_parser
 
 logger = logging.getLogger(__name__)
 
@@ -197,3 +197,15 @@ class MultimodalEditStrategy(PromptStrategy):
         # Attempt to parse JSON
         json_key = "Rewritten"
         return json_parser(answer_text, json_key)
+
+
+class MetaStrategy(TextEditStrategy):
+    """
+    Strategy for Text-Based Prompt Refinement.
+    - Endpoint: /generate
+    - Format: Expects JSON output with key 'Rewritten'.
+    """
+
+    def _parse_answer(self, answer_text: str) -> str:
+        
+        return meta_parser(answer_text)

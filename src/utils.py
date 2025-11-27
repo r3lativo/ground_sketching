@@ -251,6 +251,20 @@ def json_parser(input_text, key_term):
         logger.debug("Text is not JSON. Using raw text.")
         return input_text
 
+def meta_parser(input_text):
+    try:
+        meta_match = re.search(r'<meta>(.*?)</meta>', text, re.DOTALL)
+        action_match = re.search(r'<action>(.*?)</action>', text, re.DOTALL)
+        imagery_utterance = re.search(r'<imagery>(.*?)</imagery>', text, re.DOTALL)
+        return {
+            "meta": meta_match.group(1).strip() if meta_match else None,
+            "action": action_match.group(1).strip() if action_match else None,
+            "imagery_utterance": x_match.group(1).strip() if x_match else None
+        }
+    except:
+        logger.debug("Unable to parse meta answer. Using raw text.")
+        return input_text
+
 def thinking_parser(text: str, delimiter: str = "</think>") -> dict:
     """
     Separates text into thinking and answer parts using </think> as the delimiter.

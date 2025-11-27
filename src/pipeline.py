@@ -13,7 +13,7 @@ from src.utils import pil_to_base64, base64_to_pil, clean_image_artifacts, add_p
 from src.data_manager import ConversationDataManager
 from src.api_clients import (
     execute_vlm_strategy,
-    get_strategy_vlm,
+    get_meta_and_strategy,
     call_image_gen
 )
 
@@ -100,7 +100,7 @@ class AugmentationPipeline:
             
             # Sort indices to process dialogue in order
             sorted_indices = sorted(indices)
-            previous_prompts = []
+            previous_prompts = self.dm.get_prev_prompts_for_index(sorted_indices[0], user, realistic)
             updates_made = False
 
             for index in sorted_indices:
@@ -130,7 +130,7 @@ class AugmentationPipeline:
                 logger.info(f"Previous prompts: {previous_prompts}")
 
                 # Strategy Selection
-                strategy, strategy_name = await get_strategy_vlm(
+                strategy, strategy_name, meta_info, imagery_utterance = await get_meta_and_strategy(
                     is_oracle=self.mock_mode,
                     utterance=utterance,
                     context=context,
@@ -151,7 +151,14 @@ class AugmentationPipeline:
                 if 'create' in strategy_name:
                     previous_prompts = []
                 
+                # Update dataframe
                 self.dm.update_cell(index, 'frame_choice', choice)
+                self.dm.update_cell(index, 'meta_info', meta_info)
+                self.dm.update_cell(index, 'imagery_utterance', imagery_utterance)
+
+                # Update the utterance to the new utterance subtracted of the meta information.
+                if meta_info is not None:
+                    utterance = imagery_utterance
 
                 # Execute
                 if self.mock_mode:
@@ -225,7 +232,7 @@ class AugmentationPipeline:
                      final_prompt = f"[Refined] {initial_prompt}"
                 else:
                     # Stage 2 Strategy: Multimodal Edit
-                    strategy, _ = await get_strategy_vlm(
+                    strategy, strategy_name = await get_meta_and_strategy(
                         is_oracle=False,
                         has_images=True
                     )
