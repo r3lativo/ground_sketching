@@ -80,6 +80,8 @@ class AugmentationPipeline:
                 self._run_user_pipeline(user, create, render, realistic_context, output_dir)
             )
         await asyncio.gather(*tasks)
+        
+        # Final save to ensure everything is flushed at the end of the run
         await self.dm.save()
 
     async def _run_user_pipeline(self, user, create, render, realistic, output_dir):
@@ -96,6 +98,10 @@ class AugmentationPipeline:
         sorted_indices = sorted(self.dm.df.index.tolist())
         current_image_b64 = None 
         
+        # Batch Saving Configuration
+        SAVE_INTERVAL = 5
+        unsaved_changes = 0
+
         for index in sorted_indices:
             try: row = self.dm.df.loc[index]
             except KeyError: continue 
@@ -104,6 +110,8 @@ class AugmentationPipeline:
             if current_image_b64 is None and self._is_not_empty_val(row.get('img_path')):
                 img_p = str(row['img_path'])
                 current_image_b64 = await loop.run_in_executor(None, _io_load_existing_image, img_p)
+
+            updates_made = False
 
             # --- PHASE 1: CREATE ---
             if create:
@@ -184,6 +192,7 @@ class AugmentationPipeline:
                             final_prompt = refined
 
                 self.dm.update_cell(index, 'final_prompt', final_prompt)
+                updates_made = True
 
                 # B. Image Generation Loop
                 sub_prompts = [p.strip() for p in final_prompt.split("$$$") if p.strip()]
@@ -210,7 +219,6 @@ class AugmentationPipeline:
                     if self.mock_mode:
                         new_b64_raw = self._mock_gen_logic(sub_prompt)
                     else:
-                        # CALL VIA CLIENT INSTANCE
                         new_b64_raw = await self.client.call_image_gen(sub_prompt, imgs_payload)
 
                     if new_b64_raw:
@@ -223,7 +231,20 @@ class AugmentationPipeline:
 
                 if last_saved_path:
                     self.dm.update_cell(index, 'img_path', last_saved_path)
-                await self.dm.save()
+                    updates_made = True
+
+            # --- BATCH SAVING LOGIC ---
+            if updates_made:
+                unsaved_changes += 1
+                if unsaved_changes >= SAVE_INTERVAL:
+                    logger.info(f"Saving progress for user {user}...")
+                    await self.dm.save()
+                    unsaved_changes = 0
+
+        # Ensure final changes are saved when user loop finishes
+        if unsaved_changes > 0:
+            await self.dm.save()
+        logger.info(f"--- Finished Pipeline for User: {user} ---")
 
     # --- Helpers & Mocks ---
 
