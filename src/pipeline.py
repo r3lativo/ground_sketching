@@ -11,11 +11,7 @@ from PIL import Image, ImageDraw
 
 from src.utils import pil_to_base64, base64_to_pil, clean_image_artifacts, add_padding_to_image
 from src.data_manager import ConversationDataManager
-from src.api_clients import (
-    get_meta_and_strategy,
-    execute_vlm_strategy,
-    call_image_gen
-)
+from src.api_clients import APIClient
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +42,6 @@ def _io_process_zoom(current_b64: str, save_path: Path) -> Optional[str]:
 def _io_process_generated_image(new_b64: str, save_path: Path) -> Optional[str]:
     """Blocking CPU/IO: Decodes, Cleans Artifacts, and Saves."""
     try:
-        # cleanup is CPU bound (even with numpy), save is IO bound
         img = clean_image_artifacts(base64_to_pil(new_b64))
         img.save(save_path)
         return pil_to_base64(img)
@@ -58,16 +53,14 @@ def _io_process_generated_image(new_b64: str, save_path: Path) -> Optional[str]:
 
 class AugmentationPipeline:
     """
-    Orchestrates the augmentation process.
-    Handles parallel execution of users, but sequential processing of utterances per user.
+    Orchestrates the augmentation process using APIClient.
     """
 
-    def __init__(self, data_manager: ConversationDataManager, mock_mode: bool = False):
+    def __init__(self, data_manager: ConversationDataManager, api_client: APIClient, mock_mode: bool = False):
         self.dm = data_manager
+        self.client = api_client
         self.mock_mode = mock_mode
-        self.vlm_semaphore = asyncio.Semaphore(1) # Limit concurrent VLM calls
-
-    # --- Entry Points ---
+        self.vlm_semaphore = asyncio.Semaphore(1)
 
     async def run_full_pipeline(
         self, 
@@ -86,11 +79,7 @@ class AugmentationPipeline:
             tasks.append(
                 self._run_user_pipeline(user, create, render, realistic_context, output_dir)
             )
-        
-        # Run all users in parallel
         await asyncio.gather(*tasks)
-        
-        # Final save to ensure everything is flushed
         await self.dm.save()
 
     async def _run_user_pipeline(self, user, create, render, realistic, output_dir):
@@ -104,45 +93,27 @@ class AugmentationPipeline:
             user_out_path = Path(output_dir) / user
             user_out_path.mkdir(parents=True, exist_ok=True)
 
-        # Sequential processing for each line
         sorted_indices = sorted(self.dm.df.index.tolist())
-
-        # Local state for the sequential run
         current_image_b64 = None 
         
         for index in sorted_indices:
-            
-            # 1. Fetch Row & Validation
-            try: 
-                row = self.dm.df.loc[index]
-            except KeyError: 
-                continue 
+            try: row = self.dm.df.loc[index]
+            except KeyError: continue 
+            if row['character'] != user: continue
 
-            if row['character'] != user: 
-                continue
-
-            # Load image from disk if we are resuming and local cache is empty
-            # [NON-BLOCKING CHANGE]
             if current_image_b64 is None and self._is_not_empty_val(row.get('img_path')):
                 img_p = str(row['img_path'])
-                current_image_b64 = await loop.run_in_executor(
-                    None, _io_load_existing_image, img_p
-                )
+                current_image_b64 = await loop.run_in_executor(None, _io_load_existing_image, img_p)
 
-            ###########################################
-            # PHASE 1: META DECISION & PROMPT CREATE  #
-            ###########################################
-            
+            # --- PHASE 1: CREATE ---
             if create:
                 utterance = f"{row['character']}: {row['text']}"
                 context = self.dm.get_context_for_index(index, user, realistic)
                 previous_prompts = self.dm.get_prev_prompts_for_index(index, user, realistic)
-                
-                logger.info(f"Processing {index} | User: {user}")
 
                 # A. Get Meta & Strategy
                 async with self.vlm_semaphore:
-                    strategy, strategy_name, meta_info, imagery_utterance = await get_meta_and_strategy(
+                    strategy, strategy_name, meta_info, imagery_utterance = await self.client.get_meta_and_strategy(
                         is_oracle=self.mock_mode,
                         utterance=utterance,
                         context=context,
@@ -151,24 +122,18 @@ class AugmentationPipeline:
                     )
 
                 if strategy is None:
-                    logger.error(f"Failed to get strategy for index {index}")
                     continue
 
                 # B. Handle Choices (NEW vs CONTINUE)
                 choice = '[CONTINUE]'
-                
-                # If strategy implies creation (New Context) OR explicit [NEW] action
                 if 'create' in strategy_name or 'simple' in strategy_name:
                     choice = '[NEW]'
-                    # Logic: Create new frame -> Empty history, Remove image context
                     previous_prompts = []
                     current_image_b64 = None 
 
                 # C. Handle Meta Substitution
-                # If meta exists, we use the imagery utterance for the prompt generation
                 if meta_info and imagery_utterance:
                     utterance = imagery_utterance
-                    logger.info(f"Meta detected: {meta_info}. Using imagery: {imagery_utterance}")
 
                 # D. Update DataFrame with Meta Decisions
                 self.dm.update_cell(index, 'frame_choice', choice)
@@ -180,7 +145,7 @@ class AugmentationPipeline:
                     new_prompt = self._mock_creation_logic(utterance)
                 else:
                     async with self.vlm_semaphore:
-                        new_prompt = await execute_vlm_strategy(
+                        new_prompt = await self.client.execute_vlm_strategy(
                             strategy, utterance, context, previous_prompts
                         )
 
@@ -191,45 +156,30 @@ class AugmentationPipeline:
                 else:
                     self.dm.update_cell(index, 'initial_prompt', "")
                 
-                # Save progress after creation
                 await self.dm.save()
 
-            ###########################################
-            # PHASE 2: RENDER (Refine + Gen)          #
-            ###########################################
-
+            # --- PHASE 2: RENDER ---
             if render and user_out_path:
                 # Re-fetch row in case CREATE just updated it
                 row = self.dm.df.loc[index]
                 initial_prompt = str(row.get('initial_prompt', '')).strip()
 
-                if not self._is_not_empty_val(initial_prompt):
-                    continue
-
-                # Handle [NO_CHANGE]
-                if self._is_no_change(initial_prompt):
-                    # If no change, we keep the current image as is for the next step
-                    # We do not generate a new file, effectively holding the frame.
-                    logger.info(f"Index {index}: [NO_CHANGE] detected. Holding frame.")
-                    continue
+                if not self._is_not_empty_val(initial_prompt): continue
+                if self._is_no_change(initial_prompt): continue
 
                 # A. Refine Prompt (Multimodal Edit)
                 final_prompt = initial_prompt
-                
                 if current_image_b64:
                     if self.mock_mode:
                         final_prompt = f"[Refined] {initial_prompt}"
                     else:
-                        # We use the MM edit strategy to align the new prompt with the old image
-                        mm_strategy, _ = await get_meta_and_strategy(
-                            is_oracle=False,
-                            has_images=True
+                        mm_strategy, _ = await self.client.get_meta_and_strategy(
+                            is_oracle=False, has_images=True
                         )
                         async with self.vlm_semaphore:
-                            refined = await execute_vlm_strategy(
+                            refined = await self.client.execute_vlm_strategy(
                                 mm_strategy, initial_prompt, images=[current_image_b64]
                             )
-                        
                         if refined and not self._is_no_change(refined):
                             final_prompt = refined
 
@@ -244,11 +194,8 @@ class AugmentationPipeline:
                     img_filename = f"{user}_{index:05d}{suffix}.png"
                     save_file = user_out_path / img_filename
 
-                    # 1. ZOOM Logic
                     if "[ZOOM_OUT]" in sub_prompt.upper():
                         if current_image_b64:
-                            logger.info(f"Index {index}: Applying Zoom Out...")
-                            # [NON-BLOCKING CHANGE]
                             new_b64 = await loop.run_in_executor(
                                 None, _io_process_zoom, current_image_b64, save_file
                             )
@@ -257,18 +204,16 @@ class AugmentationPipeline:
                                 last_saved_path = str(save_file)
                         continue
                     
-                    # 2. GENERATION Logic
                     imgs_payload = [current_image_b64] if current_image_b64 else None
-                    
                     new_b64_raw = None
+
                     if self.mock_mode:
                         new_b64_raw = self._mock_gen_logic(sub_prompt)
                     else:
-                        new_b64_raw = await call_image_gen(sub_prompt, imgs_payload)
+                        # CALL VIA CLIENT INSTANCE
+                        new_b64_raw = await self.client.call_image_gen(sub_prompt, imgs_payload)
 
-                    # 3. Save & Update Context
                     if new_b64_raw:
-                        # [NON-BLOCKING CHANGE]
                         processed_b64 = await loop.run_in_executor(
                             None, _io_process_generated_image, new_b64_raw, save_file
                         )
@@ -278,7 +223,6 @@ class AugmentationPipeline:
 
                 if last_saved_path:
                     self.dm.update_cell(index, 'img_path', last_saved_path)
-                    
                 await self.dm.save()
 
     # --- Helpers & Mocks ---
