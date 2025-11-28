@@ -14,6 +14,7 @@ from datetime import datetime
 from PIL import Image, ImageFilter
 import socket
 import json
+import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -164,57 +165,37 @@ def update_last_log_comment(log_filepath: str, comment: str):
 
 def clean_image_artifacts(input_image, white_threshold=180, black_threshold=50):
     """
-    Cleans up artifacts in an image by clamping near-white and near-black 
-    pixels to pure white or pure black.
-
-    This is useful for cleaning up images (like masks) after a diffusion 
-    pass, which might introduce "almost" white or "almost" black artifacts.
-
+    Cleans up artifacts in an image using vectorized NumPy operations.
+    Clamps near-white pixels to pure white and near-black pixels to pure black.
+    
     Args:
         input_image (PIL.Image.Image): The input image to clean.
-        white_threshold (int): Any RGB channel value *above* this (and on 
-                               all channels) will be clamped to pure white.
-        black_threshold (int): Any RGB channel value *below* this (and on 
-                               all channels) will be clamped to pure black.
+        white_threshold (int): Threshold above which pixels become pure white.
+        black_threshold (int): Threshold below which pixels become pure black.
 
     Returns:
         PIL.Image.Image: A new image object with artifacts cleaned.
     """
-    
-    WHITE = (255, 255, 255)
-    BLACK = (0, 0, 0)
-    
-    # Ensure the image is in RGB mode for consistent pixel data
-    img_rgb = input_image.convert("RGB")
-    pixels = img_rgb.load() 
+    if input_image is None:
+        return None
 
-    # Iterate over every pixel
-    for i in range(img_rgb.width):
-        for j in range(img_rgb.height):
-            
-            current_color = pixels[i, j]
+    # 1. Convert to RGB to ensure 3 channels (H, W, 3)
+    # Using np.array() on a PIL image creates a read/write copy
+    img_array = np.array(input_image.convert("RGB"))
 
-            # --- Optimization: Skip pixels that are already pure ---
-            if current_color == WHITE or current_color == BLACK:
-                continue
+    # 2. Create Boolean Masks (Vectorized)
+    # Check if ALL channels (axis 2) satisfy the threshold condition
+    # shape of mask: (Height, Width)
+    is_white = np.all(img_array > white_threshold, axis=2)
+    is_black = np.all(img_array < black_threshold, axis=2)
 
-            # --- Clamp "almost white" pixels ---
-            # If all 3 color channels are above the white threshold
-            r, g, b = current_color
-            if r > white_threshold and g > white_threshold and b > white_threshold:
-                pixels[i, j] = WHITE
-                
-            # --- Clamp "almost black" pixels ---
-            # If all 3 color channels are below the black threshold
-            elif r < black_threshold and g < black_threshold and b < black_threshold:
-                pixels[i, j] = BLACK
+    # 3. Apply Clamping
+    # NumPy allows us to assign values to all masked pixels at once
+    img_array[is_white] = [255, 255, 255]
+    img_array[is_black] = [0, 0, 0]
 
-            # --- Note on logic ---
-            # Any pixel that is not pure B/W and not in the ranges above
-            # (e.g., a mid-grey (128, 128, 128) or a color (200, 50, 50))
-            # will be left *unchanged* by this logic.
-            
-    return img_rgb
+    # 4. Convert back to PIL
+    return Image.fromarray(img_array)
 
 def check_server(host: str, port: int, timeout: int = 3) -> bool:
     """
