@@ -3,18 +3,15 @@
 import logging
 from abc import ABC, abstractmethod
 from typing import List, Optional, Dict, Any, Union
-import re
-import json
+
+# Import the centralized parsers
+from src.utils import json_parser, meta_parser, thinking_parser
 
 logger = logging.getLogger(__name__)
 
 class PromptStrategy(ABC):
     """
     Abstract base class for VLM prompt strategies.
-    Encapsulates:
-      1. Which API endpoint to use.
-      2. How to format the input payload (User Message).
-      3. How to parse the output response.
     """
 
     def __init__(self, system_prompt: str):
@@ -34,59 +31,7 @@ class PromptStrategy(ABC):
         previous_prompts: Optional[List[str]] = None,
         images: Optional[List[str]] = None
     ) -> Union[str, List[Dict[str, Any]]]:
-        """Constructs the 'content' part of the user message."""
         pass
-
-    def json_parser(self, input_text, key_term):
-        try:
-            cleaned_text = input_text.strip().replace('```json','').replace('```','')
-            result_json = json.loads(cleaned_text)
-            if isinstance(result_json, dict) and key_term in result_json:
-                return result_json[key_term]
-            else:
-                logger.warning(f"Text parsed as JSON but missing '{key_term}' key. Using raw text.")
-                return input_text
-        except json.JSONDecodeError:
-            logger.debug("Text is not JSON. Using raw text.")
-            return input_text
-
-
-    def meta_parser(self, input_text):
-        try:
-            meta_match = re.search(r'<meta>(.*?)</meta>', text, re.DOTALL)
-            action_match = re.search(r'<action>(.*?)</action>', text, re.DOTALL)
-            imagery_utterance = re.search(r'<imagery>(.*?)</imagery>', text, re.DOTALL)
-            return {
-                "meta": meta_match.group(1).strip() if meta_match else None,
-                "action": action_match.group(1).strip() if action_match else None,
-                "imagery_utterance": x_match.group(1).strip() if x_match else None
-            }
-        except:
-            logger.debug("Unable to parse meta answer. Using raw text.")
-            return input_text
-
-    def thinking_parser(self, text: str, delimiter: str = "</think>") -> dict:
-        """
-        Separates text into thinking and answer parts using </think> as the delimiter.
-
-        Args:
-            text: The input string containing thinking and/or an answer.
-
-        Returns:
-            A dictionary {thinking, answer}.
-        """
-        parts = text.split(delimiter, 1)  # Split only at the first occurrence
-        output = {}
-
-        if len(parts) == 2:
-            output["thinking"] = parts[0].strip().replace("\n", " ")
-            output["answer"] = parts[1].strip().replace("\n", " ")
-        else:
-            # Delimiter not found, assume the entire text is the answer
-            output["thinking"] = ""
-            output["answer"] = parts[0].strip().replace("\n", " ")
-
-        return output
 
     def build_payload(
         self, 
@@ -115,149 +60,82 @@ class PromptStrategy(ABC):
             "max_tokens": config.get("max_tokens"),
         }
 
-    def process_response(self, raw_text: str) -> Optional[str]:
+    def process_response(self, raw_text: str) -> Any:
         """
-        Common post-processing:
-        1. Parse <think> blocks.
-        2. Log thinking.
-        3. Parse JSON if required by the specific strategy.
+        Common post-processing: Separate thoughts from answer, then parse specific format.
         """
         if not raw_text:
             return None
 
-        # 1. Separate Thinking from Answer
-        parsed_output = self.thinking_parser(raw_text)
+        # 1. Separate Thinking from Answer using robust parser
+        parsed_output = thinking_parser(raw_text)
         thinking_part = parsed_output.get("thinking")
         answer_part = parsed_output.get("answer")
 
-        # Log thinking for debugging
         if thinking_part:
-            logger.info(f"VLM Thought: {thinking_part[:200]}..." if len(thinking_part) > 200 else f"VLM Thought: {thinking_part}")
+            # Log thought
+            logger.info(f"VLM Thought: {thinking_part}")
 
         if not answer_part:
             logger.warning("VLM returned no answer after parsing </think>.")
             return None
 
-        # 2. Strategy-specific parsing (JSON vs Raw)
+        # 2. Strategy-specific parsing
         return self._parse_answer(answer_part.strip())
 
     @abstractmethod
-    def _parse_answer(self, answer_text: str) -> str:
-        """Custom parsing logic (e.g., extract JSON)."""
+    def _parse_answer(self, answer_text: str) -> Any:
         pass
 
 
 class TextCreateStrategy(PromptStrategy):
-    """
-    Strategy for Initial Prompt Creation (Text-Only).
-    - Endpoint: /generate
-    - Format: Raw Text output (No JSON expected).
-    """
-
     @property
     def endpoint_suffix(self) -> str:
         return "/generate"
 
-    def build_user_content(
-        self, 
-        utterance: str, 
-        context: Optional[List[str]] = None,
-        previous_prompts: Optional[List[str]] = None, 
-        images: Optional[List[str]] = None
-    ) -> str:
-        
-        # Format the context block
+    def build_user_content(self, utterance, context=None, previous_prompts=None, images=None) -> str:
         ctx_str = f"Conversation Context:\n{context}\n" if context else ""
-        
-        # Format: Context -> Utterance -> Header
         return f"{ctx_str}Target Utterance:\n{utterance}\nRewritten Prompt:\n"
 
     def _parse_answer(self, answer_text: str) -> str:
-        # Expecting raw text, so just return it.
         return answer_text
 
 
 class TextEditStrategy(PromptStrategy):
-    """
-    Strategy for Text-Based Prompt Refinement.
-    - Endpoint: /generate
-    - Format: Expects JSON output with key 'Rewritten'.
-    """
-
     @property
     def endpoint_suffix(self) -> str:
         return "/generate"
 
-    def build_user_content(
-        self, 
-        utterance: str, 
-        context: Optional[List[str]] = None,
-        previous_prompts: Optional[List[str]] = None,
-        images: Optional[List[str]] = None
-    ) -> str:
-        
+    def build_user_content(self, utterance, context=None, previous_prompts=None, images=None) -> str:
         ctx_str = f"Conversation Context:\n{context}\n" if context else ""
         hist_str = f"Previous Prompts:\n{previous_prompts}\n" if previous_prompts else ""
-        
         return f"{ctx_str}Target Utterance:\n{utterance}\n{hist_str}Rewritten:\n"
 
     def _parse_answer(self, answer_text: str) -> str:
-        # Attempt to parse JSON
-        json_key = "Rewritten"
-        return self.json_parser(answer_text, json_key)
+        # Uses robust utils parser
+        return json_parser(answer_text, "Rewritten")
 
 
 class MultimodalEditStrategy(PromptStrategy):
-    """
-    Strategy for Image+Text Based Refinement.
-    - Endpoint: /edit
-    - Format: Expects JSON output with key 'Rewritten'.
-    - Payload: List of dictionaries (Multimodal).
-    """
-
     @property
     def endpoint_suffix(self) -> str:
         return "/edit"
 
-    def build_user_content(
-        self, 
-        utterance: str, 
-        context: Optional[List[str]] = None,
-        previous_prompts: Optional[List[str]] = None,
-        images: Optional[List[str]] = None
-    ) -> List[Dict[str, Any]]:
-        
+    def build_user_content(self, utterance, context=None, previous_prompts=None, images=None) -> List[Dict[str, Any]]:
         content = []
-        
-        # Add Images
         if images:
             for img_b64 in images:
-                # Ensure we don't double-prefix if logic elsewhere adds headers
-                if "data:image" in img_b64:
-                    img_str = img_b64
-                else:
-                    img_str = f"data:image/jpeg;base64,{img_b64}"
-                
+                img_str = img_b64 if "data:image" in img_b64 else f"data:image/jpeg;base64,{img_b64}"
                 content.append({"type": "image", "image": img_str})
         
-        # Add Text
         content.append({"type": "text", "text": utterance})
-        
         return content
 
     def _parse_answer(self, answer_text: str) -> str:
-        # Attempt to parse JSON
-        json_key = "Rewritten"
-        return self.json_parser(answer_text, json_key)
+        return json_parser(answer_text, "Rewritten")
 
 
 class MetaStrategy(TextEditStrategy):
-    """
-    Strategy for Text-Based Prompt Refinement.
-    - Endpoint: /generate
-    - Format: Expects JSON output with key 'Rewritten'.
-    """
-
-    def _parse_answer(self, answer_text: str) -> str:
-        
-        return self.meta_parser(answer_text)
+    def _parse_answer(self, answer_text: str) -> Dict[str, Optional[str]]:
+        # Uses robust utils parser
+        return meta_parser(answer_text)

@@ -1,11 +1,10 @@
-# src/helpers/utils.py
+# src/utils.py
 
 import base64
 import io
 import logging
 from PIL import Image
 import yaml
-import pdb
 import csv
 import os
 import re
@@ -18,6 +17,15 @@ import numpy as np
 
 logger = logging.getLogger(__name__)
 
+# --- Constants & Magic Strings ---
+class ProjectSymbols:
+    NEW = "[NEW]"
+    CONTINUE = "[CONTINUE]"
+    NO_CHANGE = "[NO_CHANGE]"
+    ZOOM_OUT = "[ZOOM_OUT]"
+    SEPARATOR = "$$$"
+    MOVED = "<moved>"
+
 LOG_HEADER = [
     "timestamp", "status", "initial_prompt", "final_prompt",
     "negative_prompt", "VLseed", "IMGseed", "true_cfg_scale",
@@ -25,281 +33,189 @@ LOG_HEADER = [
     "comment",
 ]
 
-
+# --- Logging ---
 def setup_logging(log_file='logs/app.log', level=logging.INFO, log_to_console=True):
     """
-    Sets up basic logging to a file and optionally to the console.
+    Sets up logging. Safe version that respects existing config if needed.
     """
-    # Ensure the directory for the log file exists
     log_dir = os.path.dirname(log_file)
     if log_dir and not os.path.exists(log_dir):
         os.makedirs(log_dir)
 
-    # Define the logging format
-    log_format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    
-    # Create a list of handlers
     handlers = [logging.FileHandler(log_file)]
-
     if log_to_console:
         handlers.append(logging.StreamHandler(sys.stdout))
 
-    # Remove all existing handlers from the root logger.
-    # Without this, you might get duplicate log messages.
-    for handler in logging.root.handlers[:]:
-        logging.root.removeHandler(handler)
-
-    # Configure the root logger
+    # Configure root logger without forcefully removing external handlers
+    # unless strictly necessary.
     logging.basicConfig(
         level=level,
-        format=log_format,
-        handlers=handlers
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        handlers=handlers,
+        force=True 
     )
 
-def pil_to_base64(pil_image: Image.Image, format="PNG") -> str:
-    """Converts a PIL Image to a Base64 encoded string."""
-    try:
-        with io.BytesIO() as buffer:
-            pil_image.save(buffer, format=format)
-            img_bytes = buffer.getvalue()
-        return base64.b64encode(img_bytes).decode("utf-8")
-    except Exception as e:
-        logging.error(f"Error encoding PIL image to Base64: {e}", exc_info=True)
-        raise
-
-def base64_to_pil(base64_string: str) -> Image.Image:
-    """Converts a Base64 encoded string to a PIL Image."""
-    try:
-        img_bytes = base64.b64decode(base64_string)
-        pil_image = Image.open(io.BytesIO(img_bytes)).convert("RGB")
-        return pil_image
-    except Exception as e:
-        logging.error(f"Error decoding Base64 string to PIL image: {e}", exc_info=True)
-        # Don't include raw base64 string in log for security/length reasons
-        raise ValueError(f"Could not decode base64 string to image: {e}") from e
-
-# --- Configuration Loading ---
+# --- Config & IO ---
 def load_config(config_path):
     try:
         with open(config_path, 'r') as f:
             return yaml.safe_load(f)
     except Exception as e:
+        logger.error(f"Config load error: {e}")
         raise
 
+def pil_to_base64(pil_image: Image.Image, format="PNG") -> str:
+    try:
+        with io.BytesIO() as buffer:
+            pil_image.save(buffer, format=format)
+            return base64.b64encode(buffer.getvalue()).decode("utf-8")
+    except Exception as e:
+        logger.error(f"Encoding error: {e}")
+        raise
 
-def log_experiment_step(log_filepath: str, data: dict):
+def base64_to_pil(base64_string: str) -> Image.Image:
+    try:
+        img_bytes = base64.b64decode(base64_string)
+        return Image.open(io.BytesIO(img_bytes)).convert("RGB")
+    except Exception as e:
+        raise ValueError(f"Could not decode base64: {e}")
+
+# --- Logging Helpers ---
+
+def log_experiment_step(log_filepath, data):
     """Appends a row to a CSV log file."""
     try:
-        file_exists = os.path.isfile(log_filepath)
-        # Ensure logs directory exists
         os.makedirs(os.path.dirname(log_filepath), exist_ok=True)
-
-        with open(log_filepath, 'a', newline='', encoding='utf-8') as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=LOG_HEADER)
-
+        file_exists = os.path.isfile(log_filepath)
+        
+        with open(log_filepath, 'a', newline='', encoding='utf-8') as f:
+            writer = csv.DictWriter(f, fieldnames=LOG_HEADER)
             if not file_exists or os.path.getsize(log_filepath) == 0:
-                writer.writeheader() # Write header only if file is new/empty
-
-            # Ensure all keys exist, default to empty string if missing
-            row_data = {key: data.get(key, "") for key in LOG_HEADER}
-            # Format timestamp
-            row_data["timestamp"] = datetime.now().isoformat()
-
-            writer.writerow(row_data)
-
+                writer.writeheader()
+            
+            row = {k: data.get(k, "") for k in LOG_HEADER}
+            row["timestamp"] = datetime.now().isoformat()
+            writer.writerow(row)
     except Exception as e:
-        logger.error(f"Failed to write to log file {log_filepath}: {e}", exc_info=True)
-
+        logger.error(f"Log write failed: {e}")
 
 def update_last_log_comment(log_filepath: str, comment: str):
-    """
-    Updates the 'comment' field of the last row in the CSV log file.
-    
-    This is done by reading the whole file, modifying the last entry in memory,
-    and rewriting the entire file.
-    """
-    if not comment: # Do nothing if comment is empty
+    """Updates the 'comment' field of the last row in the CSV."""
+    if not comment or not os.path.isfile(log_filepath):
         return
     
     try:
-        if not os.path.isfile(log_filepath):
-            logger.warning(f"Log file {log_filepath} not found. Cannot update comment.")
-            return
-        
         rows = []
-        fieldnames = LOG_HEADER # Default to our known header
+        fieldnames = LOG_HEADER
         
-        # Read all rows into memory
-        with open(log_filepath, 'r', newline='', encoding='utf-8') as csvfile:
-            reader = csv.DictReader(csvfile)
-            if reader.fieldnames: # Get fieldnames from file if it exists
+        with open(log_filepath, 'r', newline='', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            if reader.fieldnames:
                 fieldnames = reader.fieldnames
-                # Ensure 'comment' is a known fieldname
-                if 'comment' not in fieldnames:
-                    logger.warning("'comment' field not in log header. File may be from old version.")
-                    # We will proceed, but DictWriter will add it as a new column
-                    # which might be messy. It's better that LOG_HEADER is correct.
-                    fieldnames.append('comment')
-                    
-            for row in reader:
-                rows.append(row)
+            rows = list(reader)
         
-        if not rows:
-            logger.warning(f"Log file {log_filepath} is empty. Cannot update comment.")
-            return
-        
-        # Modify the last row
-        rows[-1]['comment'] = comment
-        
-        # Rewrite the entire file
-        with open(log_filepath, 'w', newline='', encoding='utf-8') as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-            writer.writeheader()
-            writer.writerows(rows)
-        
-        logger.info(f"Successfully updated comment for last entry in {log_filepath}")
-
+        if rows:
+            rows[-1]['comment'] = comment
+            
+            with open(log_filepath, 'w', newline='', encoding='utf-8') as f:
+                writer = csv.DictWriter(f, fieldnames=fieldnames)
+                writer.writeheader()
+                writer.writerows(rows)
+                
+        logger.info(f"Updated comment in {log_filepath}")
     except Exception as e:
-        logger.error(f"Failed to update log file {log_filepath} with comment: {e}", exc_info=True)
+        logger.error(f"Failed to update log comment: {e}")
 
+# --- Optimized Image Processing (NumPy) ---
 
 def clean_image_artifacts(input_image, white_threshold=180, black_threshold=50):
-    """
-    Cleans up artifacts in an image using vectorized NumPy operations.
-    Clamps near-white pixels to pure white and near-black pixels to pure black.
+    if input_image is None: return None
     
-    Args:
-        input_image (PIL.Image.Image): The input image to clean.
-        white_threshold (int): Threshold above which pixels become pure white.
-        black_threshold (int): Threshold below which pixels become pure black.
-
-    Returns:
-        PIL.Image.Image: A new image object with artifacts cleaned.
-    """
-    if input_image is None:
-        return None
-
-    # 1. Convert to RGB to ensure 3 channels (H, W, 3)
-    # Using np.array() on a PIL image creates a read/write copy
+    # Vectorized NumPy operation (Step 1 Optimization)
     img_array = np.array(input_image.convert("RGB"))
-
-    # 2. Create Boolean Masks (Vectorized)
-    # Check if ALL channels (axis 2) satisfy the threshold condition
-    # shape of mask: (Height, Width)
     is_white = np.all(img_array > white_threshold, axis=2)
     is_black = np.all(img_array < black_threshold, axis=2)
-
-    # 3. Apply Clamping
-    # NumPy allows us to assign values to all masked pixels at once
     img_array[is_white] = [255, 255, 255]
     img_array[is_black] = [0, 0, 0]
-
-    # 4. Convert back to PIL
+    
     return Image.fromarray(img_array)
 
-def check_server(host: str, port: int, timeout: int = 3) -> bool:
-    """
-    Checks if a server is reachable at a given host and port.
-    """
-    check_host = "127.0.0.1" if host == "0.0.0.0" else host
-    
-    print(f"{check_host}:{port}...", end="", flush=True)
-    
+def add_padding_to_image(img_pil, scale_factor=0.8, fill_color="white"):
+    if not (0 < scale_factor <= 1.0): return img_pil
     try:
-        # Create a socket, set timeout, and try to connect
+        w, h = img_pil.size
+        new_w, new_h = int(w * scale_factor), int(h * scale_factor)
+        resized = img_pil.resize((new_w, new_h), Image.LANCZOS)
+        final = Image.new("RGB", (w, h), fill_color)
+        final.paste(resized, ((w - new_w) // 2, (h - new_h) // 2))
+        return final
+    except Exception as e:
+        logger.error(f"Padding error: {e}")
+        return img_pil
+
+# --- Network Checks ---
+
+def check_server(host: str, port: int, timeout: int = 3) -> bool:
+    """Checks if a server is reachable."""
+    check_host = "127.0.0.1" if host == "0.0.0.0" else host
+    print(f"Checking {check_host}:{port}...", end="", flush=True)
+    try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.settimeout(timeout)
             s.connect((check_host, port))
-        
-        # 'with' statement auto-closes the socket.
         print(" [OK]")
         return True
     except Exception as e:
-        # Catches timeout, connection refused, etc.
         print(f" [FAILED] ({e})")
         return False
 
-def json_parser(input_text, key_term):
-    try:
-        cleaned_text = input_text.strip().replace('```json','').replace('```','')
-        result_json = json.loads(cleaned_text)
-        if isinstance(result_json, dict) and key_term in result_json:
-            return result_json[key_term]
-        else:
-            logger.warning(f"Text parsed as JSON but missing '{key_term}' key. Using raw text.")
-            return input_text
-    except json.JSONDecodeError:
-        logger.debug("Text is not JSON. Using raw text.")
+# --- Robust Parsers ---
+
+def json_parser(input_text: str, key_term: str):
+    """Robustly extracts JSON from Markdown blocks or raw text."""
+    if not input_text:
         return input_text
 
-def meta_parser(input_text):
+    # Remove markdown code blocks if present
+    cleaned = input_text.replace('```json', '').replace('```', '').strip()
+    
     try:
-        meta_match = re.search(r'<meta>(.*?)</meta>', text, re.DOTALL)
-        action_match = re.search(r'<action>(.*?)</action>', text, re.DOTALL)
-        imagery_utterance = re.search(r'<imagery>(.*?)</imagery>', text, re.DOTALL)
-        return {
-            "meta": meta_match.group(1).strip() if meta_match else None,
-            "action": action_match.group(1).strip() if action_match else None,
-            "imagery_utterance": x_match.group(1).strip() if x_match else None
-        }
-    except:
-        logger.debug("Unable to parse meta answer. Using raw text.")
+        data = json.loads(cleaned)
+        if isinstance(data, dict):
+            return data.get(key_term, input_text)
         return input_text
+    except json.JSONDecodeError:
+        logger.debug(f"JSON decode failed for {key_term}, returning raw.")
+        return input_text
+
+def meta_parser(input_text: str):
+    """
+    Parses custom XML-style tags: <meta>, <action>, <imagery>.
+    Robust against missing tags.
+    """
+    if not input_text:
+        return {"meta": None, "action": None, "imagery_utterance": None}
+
+    def extract(tag, text):
+        pattern = f"<{tag}>(.*?)</{tag}>"
+        match = re.search(pattern, text, re.DOTALL | re.IGNORECASE)
+        return match.group(1).strip() if match else None
+
+    return {
+        "meta": extract("meta", input_text),
+        "action": extract("action", input_text),
+        "imagery_utterance": extract("imagery", input_text) 
+    }
 
 def thinking_parser(text: str, delimiter: str = "</think>") -> dict:
-    """
-    Separates text into thinking and answer parts using </think> as the delimiter.
-
-    Args:
-        text: The input string containing thinking and/or an answer.
-
-    Returns:
-        A dictionary {thinking, answer}.
-    """
-    parts = text.split(delimiter, 1)  # Split only at the first occurrence
-    output = {}
-
+    """Separates <think> blocks from the final answer."""
+    if not text:
+        return {"thinking": "", "answer": ""}
+        
+    parts = text.split(delimiter, 1)
     if len(parts) == 2:
-        output["thinking"] = parts[0].strip().replace("\n", " ")
-        output["answer"] = parts[1].strip().replace("\n", " ")
-    else:
-        # Delimiter not found, assume the entire text is the answer
-        output["thinking"] = ""
-        output["answer"] = parts[0].strip().replace("\n", " ")
-
-    return output
-
-def add_padding_to_image(img_pil, scale_factor=0.8, fill_color="white"):
-    """
-    Scales down an image and adds padding to maintain the original size.
-    """
-    if not (0 < scale_factor <= 1.0):
-        raise ValueError("Scale factor must be between 0 and 1.")
-
-    try:
-        # 1. Take the sizes
-        original_width, original_height = img_pil.size
-
-        # 2. Calculate new dimensions
-        new_width = int(original_width * scale_factor)
-        new_height = int(original_height * scale_factor)
-
-        # 3. Resize the image
-        # Use Image.LANCZOS (or Image.ANTIALIAS) for high-quality downscaling
-        resized_image = img_pil.resize((new_width, new_height), Image.LANCZOS)
-
-        # 4. & 5. Create and fill the new canvas
-        final_image = Image.new("RGB", (original_width, original_height), fill_color)
-
-        # 6. Calculate paste position
-        paste_x = (original_width - new_width) // 2
-        paste_y = (original_height - new_height) // 2
-
-        # 7. Paste the resized image
-        final_image.paste(resized_image, (paste_x, paste_y))
-
-        # Return the padded image
-        return final_image
-
-    except Exception as e:
-        print(f"An error occurred: {e}")
+        return {
+            "thinking": parts[0].strip().replace("<think>", "").strip(),
+            "answer": parts[1].strip()
+        }
+    return {"thinking": "", "answer": text.strip()}
