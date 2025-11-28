@@ -3,7 +3,8 @@
 import logging
 from abc import ABC, abstractmethod
 from typing import List, Optional, Dict, Any, Union
-from src.utils import json_parser, thinking_parser, meta_parser
+import re
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +36,57 @@ class PromptStrategy(ABC):
     ) -> Union[str, List[Dict[str, Any]]]:
         """Constructs the 'content' part of the user message."""
         pass
+
+    def json_parser(self, input_text, key_term):
+        try:
+            cleaned_text = input_text.strip().replace('```json','').replace('```','')
+            result_json = json.loads(cleaned_text)
+            if isinstance(result_json, dict) and key_term in result_json:
+                return result_json[key_term]
+            else:
+                logger.warning(f"Text parsed as JSON but missing '{key_term}' key. Using raw text.")
+                return input_text
+        except json.JSONDecodeError:
+            logger.debug("Text is not JSON. Using raw text.")
+            return input_text
+
+
+    def meta_parser(self, input_text):
+        try:
+            meta_match = re.search(r'<meta>(.*?)</meta>', text, re.DOTALL)
+            action_match = re.search(r'<action>(.*?)</action>', text, re.DOTALL)
+            imagery_utterance = re.search(r'<imagery>(.*?)</imagery>', text, re.DOTALL)
+            return {
+                "meta": meta_match.group(1).strip() if meta_match else None,
+                "action": action_match.group(1).strip() if action_match else None,
+                "imagery_utterance": x_match.group(1).strip() if x_match else None
+            }
+        except:
+            logger.debug("Unable to parse meta answer. Using raw text.")
+            return input_text
+
+    def thinking_parser(self, text: str, delimiter: str = "</think>") -> dict:
+        """
+        Separates text into thinking and answer parts using </think> as the delimiter.
+
+        Args:
+            text: The input string containing thinking and/or an answer.
+
+        Returns:
+            A dictionary {thinking, answer}.
+        """
+        parts = text.split(delimiter, 1)  # Split only at the first occurrence
+        output = {}
+
+        if len(parts) == 2:
+            output["thinking"] = parts[0].strip().replace("\n", " ")
+            output["answer"] = parts[1].strip().replace("\n", " ")
+        else:
+            # Delimiter not found, assume the entire text is the answer
+            output["thinking"] = ""
+            output["answer"] = parts[0].strip().replace("\n", " ")
+
+        return output
 
     def build_payload(
         self, 
@@ -74,7 +126,7 @@ class PromptStrategy(ABC):
             return None
 
         # 1. Separate Thinking from Answer
-        parsed_output = thinking_parser(raw_text)
+        parsed_output = self.thinking_parser(raw_text)
         thinking_part = parsed_output.get("thinking")
         answer_part = parsed_output.get("answer")
 
@@ -152,7 +204,7 @@ class TextEditStrategy(PromptStrategy):
     def _parse_answer(self, answer_text: str) -> str:
         # Attempt to parse JSON
         json_key = "Rewritten"
-        return json_parser(answer_text, json_key)
+        return self.json_parser(answer_text, json_key)
 
 
 class MultimodalEditStrategy(PromptStrategy):
@@ -196,7 +248,7 @@ class MultimodalEditStrategy(PromptStrategy):
     def _parse_answer(self, answer_text: str) -> str:
         # Attempt to parse JSON
         json_key = "Rewritten"
-        return json_parser(answer_text, json_key)
+        return self.json_parser(answer_text, json_key)
 
 
 class MetaStrategy(TextEditStrategy):
@@ -208,4 +260,4 @@ class MetaStrategy(TextEditStrategy):
 
     def _parse_answer(self, answer_text: str) -> str:
         
-        return meta_parser(answer_text)
+        return self.meta_parser(answer_text)
