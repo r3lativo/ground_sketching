@@ -19,6 +19,43 @@ from src.api_clients import (
 
 logger = logging.getLogger(__name__)
 
+# --- Helper Functions for ThreadPoolExecutor ---
+# These run in a separate thread to prevent blocking the async event loop.
+
+def _io_load_existing_image(path: str) -> Optional[str]:
+    """Blocking IO: Opens image from disk and converts to base64."""
+    if os.path.exists(path):
+        try:
+            with Image.open(path) as img:
+                return pil_to_base64(img)
+        except Exception as e:
+            logger.warning(f"Could not load existing image at {path}: {e}")
+    return None
+
+def _io_process_zoom(current_b64: str, save_path: Path) -> Optional[str]:
+    """Blocking CPU/IO: Decodes, Zooms (Resizes), and Saves."""
+    try:
+        pil_img = base64_to_pil(current_b64)
+        zoomed = add_padding_to_image(pil_img, scale_factor=0.8)
+        zoomed.save(save_path)
+        return pil_to_base64(zoomed)
+    except Exception as e:
+        logger.error(f"Zoom error: {e}")
+        return None
+
+def _io_process_generated_image(new_b64: str, save_path: Path) -> Optional[str]:
+    """Blocking CPU/IO: Decodes, Cleans Artifacts, and Saves."""
+    try:
+        # cleanup is CPU bound (even with numpy), save is IO bound
+        img = clean_image_artifacts(base64_to_pil(new_b64))
+        img.save(save_path)
+        return pil_to_base64(img)
+    except Exception as e:
+        logger.error(f"Save error: {e}")
+        return None
+
+# -----------------------------------------------
+
 class AugmentationPipeline:
     """
     Orchestrates the augmentation process.
@@ -59,22 +96,20 @@ class AugmentationPipeline:
     async def _run_user_pipeline(self, user, create, render, realistic, output_dir):
         logger.info(f"--- Starting Pipeline for User: {user} ---")
         
+        # Get the running loop for executor calls
+        loop = asyncio.get_running_loop()
+
         user_out_path = None
         if render and output_dir:
             user_out_path = Path(output_dir) / user
             user_out_path.mkdir(parents=True, exist_ok=True)
 
         # Sequential processing for each line
-        # We sort by index to ensure linear time progression
         sorted_indices = sorted(self.dm.df.index.tolist())
 
         # Local state for the sequential run
         current_image_b64 = None 
         
-        # Note: 'previous_prompts' are retrieved from the DM based on what was saved, 
-        # but we need to know when to force a wipe (on [NEW]).
-        force_new_context = True 
-
         for index in sorted_indices:
             
             # 1. Fetch Row & Validation
@@ -83,19 +118,16 @@ class AugmentationPipeline:
             except KeyError: 
                 continue 
 
-            # Skip if not the current user being processed
             if row['character'] != user: 
                 continue
 
             # Load image from disk if we are resuming and local cache is empty
+            # [NON-BLOCKING CHANGE]
             if current_image_b64 is None and self._is_not_empty_val(row.get('img_path')):
-                img_p = row['img_path']
-                if os.path.exists(img_p):
-                    try:
-                        with Image.open(img_p) as img:
-                            current_image_b64 = pil_to_base64(img)
-                    except Exception as e:
-                        logger.warning(f"Could not load existing image at {img_p}: {e}")
+                img_p = str(row['img_path'])
+                current_image_b64 = await loop.run_in_executor(
+                    None, _io_load_existing_image, img_p
+                )
 
             ###########################################
             # PHASE 1: META DECISION & PROMPT CREATE  #
@@ -104,15 +136,8 @@ class AugmentationPipeline:
             if create:
                 utterance = f"{row['character']}: {row['text']}"
                 context = self.dm.get_context_for_index(index, user, realistic)
-                
-                # If we forced a new context previously, or it's the start, we might pass empty prev_prompts
-                # However, DM handles logic based on columns. We need to respect the Meta decision below.
                 previous_prompts = self.dm.get_prev_prompts_for_index(index, user, realistic)
                 
-                # If we just switched scenes in the previous step, `get_prev_prompts` might still return 
-                # prompts if the "frame_choice" column wasn't updated yet or if logic allows.
-                # But here we rely on the VLM to decide [NEW] vs [CONTINUE] based on context.
-
                 logger.info(f"Processing {index} | User: {user}")
 
                 # A. Get Meta & Strategy
@@ -138,9 +163,6 @@ class AugmentationPipeline:
                     # Logic: Create new frame -> Empty history, Remove image context
                     previous_prompts = []
                     current_image_b64 = None 
-                    force_new_context = True
-                else:
-                    force_new_context = False
 
                 # C. Handle Meta Substitution
                 # If meta exists, we use the imagery utterance for the prompt generation
@@ -181,7 +203,6 @@ class AugmentationPipeline:
                 row = self.dm.df.loc[index]
                 initial_prompt = str(row.get('initial_prompt', '')).strip()
 
-                # Skip if empty
                 if not self._is_not_empty_val(initial_prompt):
                     continue
 
@@ -193,8 +214,6 @@ class AugmentationPipeline:
                     continue
 
                 # A. Refine Prompt (Multimodal Edit)
-                # Only if we have an existing image and we aren't in a [NEW] state
-                # (Though if we are [NEW], current_image_b64 was set to None above)
                 final_prompt = initial_prompt
                 
                 if current_image_b64:
@@ -217,54 +236,46 @@ class AugmentationPipeline:
                 self.dm.update_cell(index, 'final_prompt', final_prompt)
 
                 # B. Image Generation Loop
-                # Handle $$$ separators
                 sub_prompts = [p.strip() for p in final_prompt.split("$$$") if p.strip()]
                 last_saved_path = None
 
                 for step_i, sub_prompt in enumerate(sub_prompts):
-                    # Construct Filename
                     suffix = f"_seq{step_i}" if len(sub_prompts) > 1 else ""
-                    # Use index as unique ID
                     img_filename = f"{user}_{index:05d}{suffix}.png"
                     save_file = user_out_path / img_filename
 
                     # 1. ZOOM Logic
                     if "[ZOOM_OUT]" in sub_prompt.upper():
                         if current_image_b64:
-                            try:
-                                pil_img = base64_to_pil(current_image_b64)
-                                zoomed = add_padding_to_image(pil_img, scale_factor=0.8)
-                                zoomed.save(save_file)
-                                current_image_b64 = pil_to_base64(zoomed)
+                            logger.info(f"Index {index}: Applying Zoom Out...")
+                            # [NON-BLOCKING CHANGE]
+                            new_b64 = await loop.run_in_executor(
+                                None, _io_process_zoom, current_image_b64, save_file
+                            )
+                            if new_b64:
+                                current_image_b64 = new_b64
                                 last_saved_path = str(save_file)
-                                logger.info(f"Index {index}: Applied Zoom Out.")
-                            except Exception as e:
-                                logger.error(f"Zoom error at {index}: {e}")
                         continue
                     
                     # 2. GENERATION Logic
-                    # If we have a context image, send it (i2i), otherwise t2i
                     imgs_payload = [current_image_b64] if current_image_b64 else None
                     
-                    new_b64 = None
+                    new_b64_raw = None
                     if self.mock_mode:
-                        new_b64 = self._mock_gen_logic(sub_prompt)
+                        new_b64_raw = self._mock_gen_logic(sub_prompt)
                     else:
-                        new_b64 = await call_image_gen(sub_prompt, imgs_payload)
+                        new_b64_raw = await call_image_gen(sub_prompt, imgs_payload)
 
                     # 3. Save & Update Context
-                    if new_b64:
-                        try:
-                            img = clean_image_artifacts(base64_to_pil(new_b64))
-                            img.save(save_file)
-                            
-                            # Update the context image for the NEXT iteration
-                            current_image_b64 = pil_to_base64(img)
+                    if new_b64_raw:
+                        # [NON-BLOCKING CHANGE]
+                        processed_b64 = await loop.run_in_executor(
+                            None, _io_process_generated_image, new_b64_raw, save_file
+                        )
+                        if processed_b64:
+                            current_image_b64 = processed_b64
                             last_saved_path = str(save_file)
-                        except Exception as e:
-                            logger.error(f"Save error at {index}: {e}")
 
-                # Update DB with path to final image
                 if last_saved_path:
                     self.dm.update_cell(index, 'img_path', last_saved_path)
                     
@@ -272,31 +283,15 @@ class AugmentationPipeline:
 
     # --- Helpers & Mocks ---
 
-    def _safe_value_changed(self, old_val, new_val):
-        """Safely checks if a value has changed, handling pd.NA/NaN."""
-        is_old_missing = pd.isna(old_val)
-        is_new_missing = pd.isna(new_val)
-
-        if is_old_missing and is_new_missing:
-            return False
-        if is_old_missing != is_new_missing:
-            return True
-        return str(old_val) != str(new_val)
-
     def _is_not_empty_val(self, val):
-        """Safe check for non-empty, non-NA prompt strings."""
-        if pd.isna(val):
-            return False
+        if pd.isna(val): return False
         return str(val).strip() != ""
 
     def _is_no_change(self, val):
-        """Safe check for NO_CHANGE token."""
-        if pd.isna(val):
-            return False
+        if pd.isna(val): return False
         return str(val).strip().upper() in ("[NO_CHANGE]", "NO_CHANGE", "[NO CHANGE]")
 
     def _mock_creation_logic(self, utterance):
-        """Generates a mock prompt based on random logic."""
         val = random.random()
         if val < 0.1: return "[NO_CHANGE]"
         elif val < 0.3: return f"Close up of {utterance} $$$ [ZOOM_OUT] $$$ Wide of {utterance}"
@@ -304,7 +299,6 @@ class AugmentationPipeline:
         return f"[Mock Prompt] {utterance}"
 
     def _mock_gen_logic(self, prompt):
-        """Generates a random colored square."""
         color = (random.randint(0,255), random.randint(0,255), random.randint(0,255))
         img = Image.new('RGB', (128, 128), color=color)
         d = ImageDraw.Draw(img)
