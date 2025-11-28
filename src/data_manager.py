@@ -5,6 +5,7 @@ import numpy as np
 import asyncio
 import logging
 from pathlib import Path
+import os
 from typing import List, Optional, Tuple, Any
 
 logger = logging.getLogger(__name__)
@@ -87,18 +88,39 @@ class ConversationDataManager:
         return self.start_idx
 
     def get_prev_prompts_for_index(self, index: int, user: str, realistic: bool = False) -> List[str]:
-        
+        """Get all previous prompts related to a index"""
+
+        # Load the relevant Series
         full_prev_prompts = self.df['initial_prompt']
 
+        # Define the start and end index given the context
         start_idx = self.set_start_index(index, user, realistic)
-
         end_idx = index
 
+        # Prepare list
         mask = (full_prev_prompts.index >= start_idx) & (full_prev_prompts.index < end_idx)
-        prev_prompts_list = full_prev_prompts.loc[mask].tolist()
+        raw_prev_prompts_list = full_prev_prompts.loc[mask].tolist()
+
+        prev_prompts_list = []
+
+        # remove invalid prompts (empty and NO_CHANGE)
+        for p in raw_prev_prompts_list:
+            if self._is_not_empty_val(p):
+                if not self._is_no_change(p):
+                    prev_prompts_list.append(p)
 
         return prev_prompts_list
 
+    def get_img_for_index(self, index: int) -> str:
+        """Get the image path if it exists"""
+        full_imgs = self.df['img_path']
+
+        if self._is_not_empty_val(full_imgs.index):
+            if os.path.exists(full_imgs.index):
+                return full_imgs.index
+            else:
+                logger.warning(f"'{full_imgs.index}' file does not exist.")
+        return None
 
     def get_context_for_index(self, index: int, user: str, realistic: bool = False) -> List[str]:
         """
@@ -216,3 +238,15 @@ class ConversationDataManager:
                 df[col] = pd.NA
 
         self.df = df
+
+    def _is_not_empty_val(self, val):
+        """Safe check for non-empty, non-NA prompt strings."""
+        if pd.isna(val):
+            return False
+        return str(val).strip() != ""
+
+    def _is_no_change(self, val):
+        """Safe check for NO_CHANGE token."""
+        if pd.isna(val):
+            return False
+        return str(val).strip().upper() in ("[NO_CHANGE]", "NO_CHANGE", "[NO CHANGE]")
