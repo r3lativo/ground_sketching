@@ -63,11 +63,11 @@ class ConversationDataManager:
             
         return self.df.groupby(chunk_col)
 
-    def update_cell(self, index: int, column: str, value: Any):
+    async def update_cell(self, index: int, column: str, value: Any):
         """Updates a specific cell in the dataframe."""
         self.df.at[index, column] = value
 
-    def set_start_index(self, index: int, user: str, realistic: bool = False) -> int:
+    def set_start_idx(self, index: int, user: str, realistic: bool = False) -> int:
         """Set start index based on context"""
         start_idx = 0
 
@@ -94,7 +94,7 @@ class ConversationDataManager:
         full_prev_prompts = self.df['initial_prompt']
 
         # Define the start and end index given the context
-        start_idx = self.set_start_index(index, user, realistic)
+        start_idx = self.set_start_idx(index, user, realistic)
         end_idx = index
 
         # Prepare list
@@ -130,7 +130,7 @@ class ConversationDataManager:
         full_formatted = self.df[['character', 'text']].agg(': '.join, axis=1)
         
         # 2. Determine Start Index (Shared Ground)
-        start_idx = self.get_start_index()
+        start_idx = self.get_start_idx()
 
         # 3. Determine End Index (Exclusive)
         end_idx = index

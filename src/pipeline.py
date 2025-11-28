@@ -16,8 +16,6 @@ from src.api_clients import APIClient
 logger = logging.getLogger(__name__)
 
 # --- Helper Functions for ThreadPoolExecutor ---
-# These run in a separate thread to prevent blocking the async event loop.
-
 def _io_load_existing_image(path: str) -> Optional[str]:
     """Blocking IO: Opens image from disk and converts to base64."""
     if os.path.exists(path):
@@ -69,25 +67,27 @@ class AugmentationPipeline:
         render: bool, 
         realistic_context: bool, 
         output_dir: str,
-        chunk_col_resolver: callable = None # Unused now, kept for signature comp
+        chunk_col_resolver: callable = None
     ):
         """
         Runs the pipeline for all users in parallel.
+        Initializes the API Client session here.
         """
-        tasks = []
-        for user in users:
-            tasks.append(
-                self._run_user_pipeline(user, create, render, realistic_context, output_dir)
-            )
-        await asyncio.gather(*tasks)
-        
-        # Final save to ensure everything is flushed at the end of the run
-        await self.dm.save()
+        # --- Initialize API Client Session ---
+        async with self.client:
+            tasks = []
+            for user in users:
+                tasks.append(
+                    self._run_user_pipeline(user, create, render, realistic_context, output_dir)
+                )
+            await asyncio.gather(*tasks)
+            
+            # Final save to ensure everything is flushed at the end of the run
+            await self.dm.save()
 
     async def _run_user_pipeline(self, user, create, render, realistic, output_dir):
         logger.info(f"--- Starting Pipeline for User: {user} ---")
         
-        # Get the running loop for executor calls
         loop = asyncio.get_running_loop()
 
         user_out_path = None
@@ -96,10 +96,13 @@ class AugmentationPipeline:
             user_out_path.mkdir(parents=True, exist_ok=True)
 
         sorted_indices = sorted(self.dm.df.index.tolist())
-        current_image_b64 = None 
+        current_image_b64 = None
         
+        frame_idx = 0
+        seq_idx = 1
+
         # Batch Saving Configuration
-        SAVE_INTERVAL = 5
+        SAVE_INTERVAL = 1
         unsaved_changes = 0
 
         for index in sorted_indices:
@@ -113,58 +116,78 @@ class AugmentationPipeline:
 
             updates_made = False
 
+            # Get initial index
+            self.dm.set_start_idx(index, user, realistic)
+
             # --- PHASE 1: CREATE ---
             if create:
                 utterance = f"{row['character']}: {row['text']}"
                 context = self.dm.get_context_for_index(index, user, realistic)
                 previous_prompts = self.dm.get_prev_prompts_for_index(index, user, realistic)
 
+                # DEBUG LOGGING
+                logger.info(f"User and Index: {user}, {index}")
+                logger.info(f"Context: {context}")
+                logger.info(f"Utterance: '{utterance}'")
+                logger.info(f"Previous prompts: {previous_prompts}")
+
                 # A. Get Meta & Strategy
                 async with self.vlm_semaphore:
+                    # Client is now active because we are inside the `async with self.client` block in run_full_pipeline
+                    logger.info("CREATE - Get Meta and Strategy...")
                     strategy, strategy_name, meta_info, imagery_utterance = await self.client.get_meta_and_strategy(
                         is_oracle=self.mock_mode,
                         utterance=utterance,
                         context=context,
                         previous_prompts=previous_prompts,
-                        has_images=(current_image_b64 is not None)
+                        has_images=False
                     )
 
                 if strategy is None:
                     continue
 
-                # B. Handle Choices (NEW vs CONTINUE)
+                # B. Handle Choices
                 choice = '[CONTINUE]'
                 if 'create' in strategy_name or 'simple' in strategy_name:
                     choice = '[NEW]'
                     previous_prompts = []
-                    current_image_b64 = None 
+                    current_image_b64 = None
 
                 # C. Handle Meta Substitution
                 if meta_info and imagery_utterance:
                     utterance = imagery_utterance
+                    await self.dm.update_cell(index, 'meta_info', meta_info)
+                    await self.dm.update_cell(index, 'imagery_utterance', imagery_utterance)
 
-                # D. Update DataFrame with Meta Decisions
-                self.dm.update_cell(index, 'frame_choice', choice)
-                self.dm.update_cell(index, 'meta_info', meta_info)
-                self.dm.update_cell(index, 'imagery_utterance', imagery_utterance)
+                # D. Update DataFrame Safely
+                await self.dm.update_cell(index, 'frame_choice', choice)
 
-                # E. Execute Creation Strategy (Generate Initial Prompt)
+                # DEBUG LOGGING
+                logger.info(f"User and Index: {user}, {index}")
+                logger.info(f"Frame Choice: {choice}")
+                logger.info(f"Meta Info: '{meta_info}'")
+                logger.info(f"Imagery Utterance: '{imagery_utterance}'")
+
+                # E. Execute Creation Strategy
                 if self.mock_mode:
                     new_prompt = self._mock_creation_logic(utterance)
                 else:
                     async with self.vlm_semaphore:
+                        logger.info(f"CREATE - Execute Strategy {strategy}...")
                         new_prompt = await self.client.execute_vlm_strategy(
                             strategy, utterance, context, previous_prompts
                         )
 
-                # F. Save Initial Prompt
+                # F. Save Initial Prompt (AWAIT ADDED)
                 if new_prompt:
                     clean_p = "[NO_CHANGE]" if self._is_no_change(new_prompt) else new_prompt
-                    self.dm.update_cell(index, 'initial_prompt', clean_p)
+                    await self.dm.update_cell(index, 'initial_prompt', clean_p)
                 else:
-                    self.dm.update_cell(index, 'initial_prompt', "")
+                    await self.dm.update_cell(index, 'initial_prompt', "")
                 
-                await self.dm.save()
+                # Note: This might be heavy on lock contention; rely on batch saving logic mostly
+                # await self.dm.save() 
+                updates_made = True
 
             # --- PHASE 2: RENDER ---
             if render and user_out_path:
@@ -175,33 +198,41 @@ class AugmentationPipeline:
                 if not self._is_not_empty_val(initial_prompt): continue
                 if self._is_no_change(initial_prompt): continue
 
-                # A. Refine Prompt (Multimodal Edit)
+                # A. Refine Prompt
                 final_prompt = initial_prompt
                 if current_image_b64:
                     if self.mock_mode:
                         final_prompt = f"[Refined] {initial_prompt}"
                     else:
-                        mm_strategy, _ = await self.client.get_meta_and_strategy(
+                        logger.info("RENDER - Get Strategy...")
+                        mm_strategy, _, _, _ = await self.client.get_meta_and_strategy(
                             is_oracle=False, has_images=True
                         )
                         async with self.vlm_semaphore:
+                            logger.info(f"RENDER - Execute Strategy {mm_strategy}...")
                             refined = await self.client.execute_vlm_strategy(
                                 mm_strategy, initial_prompt, images=[current_image_b64]
                             )
                         if refined and not self._is_no_change(refined):
                             final_prompt = refined
-
-                self.dm.update_cell(index, 'final_prompt', final_prompt)
+                else:
+                    # If NO CURRENT IMG then update frame and reset sequence
+                    # If seq_idx is greater than 1 it means we have generated an image with the current frame_idx
+                    if seq_idx > 1:
+                        frame_idx += 1
+                    seq_idx = 1
+                    
+                await self.dm.update_cell(index, 'final_prompt', final_prompt)
                 updates_made = True
 
                 # B. Image Generation Loop
                 sub_prompts = [p.strip() for p in final_prompt.split("$$$") if p.strip()]
                 last_saved_path = None
 
-                for step_i, sub_prompt in enumerate(sub_prompts):
-                    suffix = f"_seq{step_i}" if len(sub_prompts) > 1 else ""
-                    img_filename = f"{user}_{index:05d}{suffix}.png"
+                for sub_prompt in sub_prompts:
+                    img_filename = f"{user}_{frame_idx}_seq{seq_idx}.png"
                     save_file = user_out_path / img_filename
+                    seq_idx += 1
 
                     if "[ZOOM_OUT]" in sub_prompt.upper():
                         if current_image_b64:
@@ -230,7 +261,7 @@ class AugmentationPipeline:
                             last_saved_path = str(save_file)
 
                 if last_saved_path:
-                    self.dm.update_cell(index, 'img_path', last_saved_path)
+                    await self.dm.update_cell(index, 'img_path', last_saved_path)
                     updates_made = True
 
             # --- BATCH SAVING LOGIC ---

@@ -10,6 +10,7 @@ from pathlib import Path
 from src.utils import setup_logging, check_server, load_config
 from src.data_manager import ConversationDataManager
 from src.pipeline import AugmentationPipeline
+from src.api_clients import APIClient
 
 logger = logging.getLogger(__name__)
 
@@ -112,7 +113,8 @@ async def main():
     data_manager.load_and_prepare()
 
     # 3. Initialize Pipeline
-    pipeline = AugmentationPipeline(data_manager, mock_mode=args.mock)
+    api_client = APIClient("config/server_config.yaml", "config/experiment_config.yaml")
+    pipeline = AugmentationPipeline(data_manager, mock_mode=args.mock, api_client=api_client)
 
     # 4. Determine Users to Process
     users = []

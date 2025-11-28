@@ -74,11 +74,13 @@ class PromptStrategy(ABC):
 
         if thinking_part:
             # Log thought
-            logger.info(f"VLM Thought: {thinking_part}")
+            logger.info(f"VLM Thought: {thinking_part.replace("\n", " ")}")
 
         if not answer_part:
             logger.warning("VLM returned no answer after parsing </think>.")
             return None
+        
+        logger.info(f"VLM Answer: {answer_part.replace("\n", " ")}")
 
         # 2. Strategy-specific parsing
         return self._parse_answer(answer_part.strip())
@@ -136,6 +138,12 @@ class MultimodalEditStrategy(PromptStrategy):
 
 
 class MetaStrategy(TextEditStrategy):
+    def build_user_content(self, utterance, context=None, previous_prompts=None, images=None) -> str:
+        ctx_str = f"Conversation Context <context>:\n{context if context else 'None'}"
+        hist_str = f"Previous Prompts <previous>:\n{previous_prompts if previous_prompts else 'None'}"
+        target_str = f"Target Utterance <target>:\n{utterance}"
+        return f"{ctx_str}\n{hist_str}\n{target_str}"
+
     def _parse_answer(self, answer_text: str) -> Dict[str, Optional[str]]:
         # Uses robust utils parser
         return meta_parser(answer_text)

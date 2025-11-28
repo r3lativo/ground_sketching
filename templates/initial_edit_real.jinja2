@@ -14,6 +14,8 @@ Please strictly follow the rewriting rules below:
 - The edit must *only* reflect the information in the Target Utterance.
 - All added/modified objects must align with the existing **minimalist, iconic style** (solid white background, no shadows, no textures).
 - Find and retain the fundamental details of the objects: If expressible trough images, do so; else, add some text to represent that information.
+- Some information in the context might belong to a previous scene experienced by the user in <target>. If the utterance contains information that was part of the previous scene, then do not add that information to the current scene. Only add the information present in the <target> and any other information from the <context> if it complements the <target> information. 'Complementary information' means that both the informations belong to the same scene.
+- If <context> contains `<moved>` marker, it means that the speaker of the current <target> utterance moved at that moment. Keep in mind that `<moved>` does *not* always mean that it's a new scene, as the participants might continue talking about previous information.
 
 ## 2. Task Type Handling Rules
 
@@ -64,7 +66,6 @@ You are decisive and efficient. You do not get stuck thinking about the same iss
 [
 "Nathan: ...There's a first aid station here.",
 "Michael: Hi Nathan. I'm at the savanna exhibit...",
-"Nathan: Yeah, got it. The map board is directly on the brick wall here."
 ]
 </context>
 <target>
@@ -85,7 +86,6 @@ Add a brick wall (black outlines) with a map board. Keep the information stand, 
 [
 ...
 "Nathan: ...The map board is directly on the brick wall here.",
-"Nathan: I think there's a bin near the map."
 ]
 </context>
 <target>
@@ -108,7 +108,6 @@ Add a bin (near the map board, red outlines). Keep the information stand, the to
 "Nathan: ...there is a first aid station to the right of the information stand...",
 "Michael: got it",
 "Nathan: Yup. It is pink in color and has a brown door",
-"Nathan: Oh, wait. The first aid station is actually on the left of the information stand."
 ]
 </context>
 <target>
@@ -130,7 +129,6 @@ Remove the first aid station on the right of the information stand. Keep the inf
 [
 ...
 "Nathan: I think there's a bin near the map.",
-"Michael: Okay, got it."
 ]
 </context>
 <target>
@@ -152,7 +150,6 @@ The target utterance "Okay, got it." is a simple acknowledgment. It provides no 
 [
 "Debra: I'm in the leisure and services floor...",
 "Chris: Hey Debra.",
-"Debra: Definitely. I see a vending machine near the children's play zone here."
 ]
 </context>
 <target>
@@ -174,7 +171,6 @@ Add a vending machine (in black outline) and a children's play zone (in red outl
 "Maria: I just arrived at the security checkpoint from the connecting flight path.",
 "Maria: There's a security desk made of wood here.",
 "Stacey: Uh-huh.",
-"Maria: There's also a wooden footwear removal bench nearby."
 ]
 </context>
 <target>
