@@ -110,9 +110,9 @@ async def get_meta_and_strategy(
 
     Returns:
         PromptStrategy,
-        Strategy Name,
-        Meta information,
-        Optional modified utterance
+        Strategy_Name,
+        OPT[Meta_information],
+        OPT[Modified_utterance]
     """
 
     # If image, we know it's MM edit
@@ -149,8 +149,8 @@ async def get_meta_and_strategy(
             logger.info(f"Meta parsed answer: {response_dict}")
     
     choice = response_dict['action']
-    meta_info = response_dict['meta']
-    imagery_utterance = response_dict['imagery_utterance']
+    meta_info = response_dict['meta'] if not "" else None
+    imagery_utterance = response_dict['imagery_utterance'] if not "" else None
 
     except Exception as e:
         logger.error(f"VLM Request failed: {e}", exc_info=True)

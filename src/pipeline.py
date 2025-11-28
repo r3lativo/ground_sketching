@@ -6,14 +6,14 @@ import random
 import os
 import pandas as pd
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 from PIL import Image, ImageDraw
 
 from src.utils import pil_to_base64, base64_to_pil, clean_image_artifacts, add_padding_to_image
 from src.data_manager import ConversationDataManager
 from src.api_clients import (
-    execute_vlm_strategy,
     get_meta_and_strategy,
+    execute_vlm_strategy,
     call_image_gen
 )
 
@@ -22,14 +22,13 @@ logger = logging.getLogger(__name__)
 class AugmentationPipeline:
     """
     Orchestrates the augmentation process.
-    Handles parallel execution of users and pipelining of Create -> Render stages.
+    Handles parallel execution of users, but sequential processing of utterances per user.
     """
 
     def __init__(self, data_manager: ConversationDataManager, mock_mode: bool = False):
         self.dm = data_manager
         self.mock_mode = mock_mode
         self.vlm_semaphore = asyncio.Semaphore(1) # Limit concurrent VLM calls
-        # TODO think about re implementing parallelization
 
     # --- Entry Points ---
 
@@ -40,17 +39,15 @@ class AugmentationPipeline:
         render: bool, 
         realistic_context: bool, 
         output_dir: str,
-        chunk_col_resolver: callable
+        chunk_col_resolver: callable = None # Unused now, kept for signature comp
     ):
         """
         Runs the pipeline for all users in parallel.
-        Pipelines the Creation -> Rendering stages for each chunk.
         """
         tasks = []
         for user in users:
-            chunk_col = chunk_col_resolver(user)
             tasks.append(
-                self._run_user_pipeline(user, chunk_col, create, render, realistic_context, output_dir)
+                self._run_user_pipeline(user, create, render, realistic_context, output_dir)
             )
         
         # Run all users in parallel
@@ -59,7 +56,7 @@ class AugmentationPipeline:
         # Final save to ensure everything is flushed
         await self.dm.save()
 
-    async def _run_user_pipeline(self, user, chunk_col, create, render, realistic, output_dir):
+    async def _run_user_pipeline(self, user, create, render, realistic, output_dir):
         logger.info(f"--- Starting Pipeline for User: {user} ---")
         
         user_out_path = None
@@ -67,243 +64,216 @@ class AugmentationPipeline:
             user_out_path = Path(output_dir) / user
             user_out_path.mkdir(parents=True, exist_ok=True)
 
-        chunk_tasks = []
+        # Sequential processing for each line
+        # We sort by index to ensure linear time progression
+        sorted_indices = sorted(self.dm.df.index.tolist())
+
+        # Local state for the sequential run
+        current_image_b64 = None 
         
-        # Group by chunk and launch a chain for each
-        for chunk_id, chunk_df in self.dm.get_user_groups(user, chunk_col):
-            # We pass the INDICES, not the dataframe slice. 
-            # This ensures workers pull fresh data (e.g. Render sees what Create just wrote).
-            chunk_indices = chunk_df.index.tolist()
+        # Note: 'previous_prompts' are retrieved from the DM based on what was saved, 
+        # but we need to know when to force a wipe (on [NEW]).
+        force_new_context = True 
+
+        for index in sorted_indices:
             
-            chunk_tasks.append(
-                self._process_chunk_chain(chunk_id, chunk_indices, user, create, render, realistic, user_out_path)
-            )
+            # 1. Fetch Row & Validation
+            try: 
+                row = self.dm.df.loc[index]
+            except KeyError: 
+                continue 
+
+            # Skip if not the current user being processed
+            if row['character'] != user: 
+                continue
+
+            # Load image from disk if we are resuming and local cache is empty
+            if current_image_b64 is None and self._is_not_empty_val(row.get('img_path')):
+                img_p = row['img_path']
+                if os.path.exists(img_p):
+                    try:
+                        with Image.open(img_p) as img:
+                            current_image_b64 = pil_to_base64(img)
+                    except Exception as e:
+                        logger.warning(f"Could not load existing image at {img_p}: {e}")
+
+            ###########################################
+            # PHASE 1: META DECISION & PROMPT CREATE  #
+            ###########################################
             
-        await asyncio.gather(*chunk_tasks)
-
-    async def _process_chunk_chain(self, chunk_id, indices, user, create, render, realistic, output_path):
-        """Sequential chain for a single chunk: Create -> Render"""
-        
-        # 1. Creation Stage
-        if create:
-            await self._process_chunk_create(chunk_id, indices, user, realistic)
-        
-        # 2. Rendering Stage (Runs immediately after Create finishes for this chunk)
-        if render and output_path:
-            await self._process_chunk_render(chunk_id, indices, user, output_path)
-
-    # --- Worker Logic: Creation ---
-
-    async def _process_chunk_create(self, chunk_id, indices, user, realistic):
-        async with self.vlm_semaphore:
-            logger.info(f"Processing Chunk {chunk_id} (Create) - {user}")
-            
-            # Sort indices to process dialogue in order
-            sorted_indices = sorted(indices)
-            previous_prompts = self.dm.get_prev_prompts_for_index(sorted_indices[0], user, realistic)
-            updates_made = False
-
-            for index in sorted_indices:
-                # Fetch fresh row
-                try:
-                    row = self.dm.df.loc[index]
-                except KeyError:
-                    continue # Row might have been dropped (unlikely)
-
-                if row['character'] != user:
-                    continue
-                
-                # Check for existing valid prompt
-                current_val = row.get('initial_prompt')
-                if self._is_valid_prompt(current_val):
-                    if not self._is_no_change(current_val):
-                        previous_prompts.append(str(current_val).strip())
-                    continue
-
-                # Prepare Inputs
+            if create:
                 utterance = f"{row['character']}: {row['text']}"
                 context = self.dm.get_context_for_index(index, user, realistic)
-
-                # Debug Logging
-                logger.info(f"Index: {index} - Utterance: '{utterance}'")
-                logger.info(f"Context: {context}")
-                logger.info(f"Previous prompts: {previous_prompts}")
-
-                # Strategy Selection
-                strategy, strategy_name, meta_info, imagery_utterance = await get_meta_and_strategy(
-                    is_oracle=self.mock_mode,
-                    utterance=utterance,
-                    context=context,
-                    previous_prompts=previous_prompts
-                )
                 
+                # If we forced a new context previously, or it's the start, we might pass empty prev_prompts
+                # However, DM handles logic based on columns. We need to respect the Meta decision below.
+                previous_prompts = self.dm.get_prev_prompts_for_index(index, user, realistic)
+                
+                # If we just switched scenes in the previous step, `get_prev_prompts` might still return 
+                # prompts if the "frame_choice" column wasn't updated yet or if logic allows.
+                # But here we rely on the VLM to decide [NEW] vs [CONTINUE] based on context.
+
+                logger.info(f"Processing {index} | User: {user}")
+
+                # A. Get Meta & Strategy
+                async with self.vlm_semaphore:
+                    strategy, strategy_name, meta_info, imagery_utterance = await get_meta_and_strategy(
+                        is_oracle=self.mock_mode,
+                        utterance=utterance,
+                        context=context,
+                        previous_prompts=previous_prompts,
+                        has_images=(current_image_b64 is not None)
+                    )
+
                 if strategy is None:
-                    print("NO STRATEGY??")
-                    return
+                    logger.error(f"Failed to get strategy for index {index}")
+                    continue
 
-                # Base: it's a new frame
-                choice = '[NEW]'
-
-                if 'edit' in strategy_name:
-                    choice = '[CONTINUE]'
-
-                # Wipe p_p if create (so, new frame)
-                if 'create' in strategy_name:
-                    previous_prompts = []
+                # B. Handle Choices (NEW vs CONTINUE)
+                choice = '[CONTINUE]'
                 
-                # Update dataframe
+                # If strategy implies creation (New Context) OR explicit [NEW] action
+                if 'create' in strategy_name or 'simple' in strategy_name:
+                    choice = '[NEW]'
+                    # Logic: Create new frame -> Empty history, Remove image context
+                    previous_prompts = []
+                    current_image_b64 = None 
+                    force_new_context = True
+                else:
+                    force_new_context = False
+
+                # C. Handle Meta Substitution
+                # If meta exists, we use the imagery utterance for the prompt generation
+                if meta_info and imagery_utterance:
+                    utterance = imagery_utterance
+                    logger.info(f"Meta detected: {meta_info}. Using imagery: {imagery_utterance}")
+
+                # D. Update DataFrame with Meta Decisions
                 self.dm.update_cell(index, 'frame_choice', choice)
                 self.dm.update_cell(index, 'meta_info', meta_info)
                 self.dm.update_cell(index, 'imagery_utterance', imagery_utterance)
 
-                # Update the utterance to the new utterance subtracted of the meta information.
-                if meta_info is not None:
-                    utterance = imagery_utterance
-
-                # Execute
+                # E. Execute Creation Strategy (Generate Initial Prompt)
                 if self.mock_mode:
                     new_prompt = self._mock_creation_logic(utterance)
                 else:
-                    new_prompt = await execute_vlm_strategy(
-                        strategy, utterance, context, previous_prompts
-                    )
+                    async with self.vlm_semaphore:
+                        new_prompt = await execute_vlm_strategy(
+                            strategy, utterance, context, previous_prompts
+                        )
 
-                # Update Data
+                # F. Save Initial Prompt
                 if new_prompt:
                     clean_p = "[NO_CHANGE]" if self._is_no_change(new_prompt) else new_prompt
                     self.dm.update_cell(index, 'initial_prompt', clean_p)
-                    updates_made = True
-                    
-                    if not self._is_no_change(clean_p):
-                        previous_prompts.append(clean_p)
                 else:
                     self.dm.update_cell(index, 'initial_prompt', "")
-                    updates_made = True
-
-            if updates_made:
+                
+                # Save progress after creation
                 await self.dm.save()
 
-    # --- Worker Logic: Rendering ---
+            ###########################################
+            # PHASE 2: RENDER (Refine + Gen)          #
+            ###########################################
 
-    async def _process_chunk_render(self, chunk_id, indices, user, output_path: Path):
-        logger.info(f"Processing Chunk {chunk_id} (Render) - {user}")
-        
-        current_image_b64 = None
-        sorted_indices = sorted(indices)
-        updates_made = False
-
-        for index in sorted_indices:
-            # Fetch fresh row (Crucial: Create might have just updated 'initial_prompt')
-            try:
+            if render and user_out_path:
+                # Re-fetch row in case CREATE just updated it
                 row = self.dm.df.loc[index]
-            except KeyError:
-                continue
+                initial_prompt = str(row.get('initial_prompt', '')).strip()
 
-            if row['character'] != user or not self._is_valid_prompt(row.get('initial_prompt')):
-                continue
-
-            # Load existing image if available (continuity)
-            if self._is_valid_prompt(row.get('img_path')) and os.path.exists(row['img_path']):
-                try:
-                    with Image.open(row['img_path']) as img:
-                        current_image_b64 = pil_to_base64(img)
+                # Skip if empty
+                if not self._is_not_empty_val(initial_prompt):
                     continue
-                except:
-                    pass
 
-            initial_prompt = str(row['initial_prompt']).strip()
-            choice = str(row['frame_choice'])
+                # Handle [NO_CHANGE]
+                if self._is_no_change(initial_prompt):
+                    # If no change, we keep the current image as is for the next step
+                    # We do not generate a new file, effectively holding the frame.
+                    logger.info(f"Index {index}: [NO_CHANGE] detected. Holding frame.")
+                    continue
 
-            # If NEW, wipe out current image
-            if choice == '[NEW]':
-                current_image_b64 = None
-            
-            if self._is_no_change(initial_prompt):
-                # Ensure marker is set if missing
-                if row.get('initial_prompt') != "[NO_CHANGE]":
-                    self.dm.update_cell(index, 'initial_prompt', "[NO_CHANGE]")
-                    updates_made = True
-                continue
-
-            # 1. Refine Prompt
-            final_prompt = initial_prompt
-            if current_image_b64:
-                if self.mock_mode:
-                     final_prompt = f"[Refined] {initial_prompt}"
-                else:
-                    # Stage 2 Strategy: Multimodal Edit
-                    strategy, strategy_name = await get_meta_and_strategy(
-                        is_oracle=False,
-                        has_images=True
-                    )
-                    try:
+                # A. Refine Prompt (Multimodal Edit)
+                # Only if we have an existing image and we aren't in a [NEW] state
+                # (Though if we are [NEW], current_image_b64 was set to None above)
+                final_prompt = initial_prompt
+                
+                if current_image_b64:
+                    if self.mock_mode:
+                        final_prompt = f"[Refined] {initial_prompt}"
+                    else:
+                        # We use the MM edit strategy to align the new prompt with the old image
+                        mm_strategy, _ = await get_meta_and_strategy(
+                            is_oracle=False,
+                            has_images=True
+                        )
                         async with self.vlm_semaphore:
                             refined = await execute_vlm_strategy(
-                                strategy, initial_prompt, images=[current_image_b64]
+                                mm_strategy, initial_prompt, images=[current_image_b64]
                             )
+                        
                         if refined and not self._is_no_change(refined):
                             final_prompt = refined
-                    except Exception as e:
-                        logger.error(f"Refine failed at {index}: {e}")
 
-            # SAFE CHECK FOR PD.NA
-            if self._safe_value_changed(row.get('final_prompt'), final_prompt):
                 self.dm.update_cell(index, 'final_prompt', final_prompt)
-                updates_made = True
 
-            # 2. Render
-            sub_prompts = [p.strip() for p in final_prompt.split("$$$") if p.strip()]
-            last_saved_path = None
+                # B. Image Generation Loop
+                # Handle $$$ separators
+                sub_prompts = [p.strip() for p in final_prompt.split("$$$") if p.strip()]
+                last_saved_path = None
 
-            for step_i, sub_prompt in enumerate(sub_prompts):
-                suffix = f"_seq{step_i}" if len(sub_prompts) > 1 else ""
-                img_filename = f"chunk_{chunk_id}_{user}_{index}{suffix}.png"
-                save_file = output_path / img_filename
+                for step_i, sub_prompt in enumerate(sub_prompts):
+                    # Construct Filename
+                    suffix = f"_seq{step_i}" if len(sub_prompts) > 1 else ""
+                    # Use index as unique ID
+                    img_filename = f"{user}_{index:05d}{suffix}.png"
+                    save_file = user_out_path / img_filename
 
-                # ZOOM Logic
-                if "[ZOOM_OUT]" in sub_prompt.upper():
-                    if current_image_b64:
+                    # 1. ZOOM Logic
+                    if "[ZOOM_OUT]" in sub_prompt.upper():
+                        if current_image_b64:
+                            try:
+                                pil_img = base64_to_pil(current_image_b64)
+                                zoomed = add_padding_to_image(pil_img, scale_factor=0.8)
+                                zoomed.save(save_file)
+                                current_image_b64 = pil_to_base64(zoomed)
+                                last_saved_path = str(save_file)
+                                logger.info(f"Index {index}: Applied Zoom Out.")
+                            except Exception as e:
+                                logger.error(f"Zoom error at {index}: {e}")
+                        continue
+                    
+                    # 2. GENERATION Logic
+                    # If we have a context image, send it (i2i), otherwise t2i
+                    imgs_payload = [current_image_b64] if current_image_b64 else None
+                    
+                    new_b64 = None
+                    if self.mock_mode:
+                        new_b64 = self._mock_gen_logic(sub_prompt)
+                    else:
+                        new_b64 = await call_image_gen(sub_prompt, imgs_payload)
+
+                    # 3. Save & Update Context
+                    if new_b64:
                         try:
-                            pil_img = base64_to_pil(current_image_b64)
-                            zoomed = add_padding_to_image(pil_img, scale_factor=0.8)
-                            zoomed.save(save_file)
-                            current_image_b64 = pil_to_base64(zoomed)
+                            img = clean_image_artifacts(base64_to_pil(new_b64))
+                            img.save(save_file)
+                            
+                            # Update the context image for the NEXT iteration
+                            current_image_b64 = pil_to_base64(img)
                             last_saved_path = str(save_file)
                         except Exception as e:
-                            logger.error(f"Zoom error: {e}")
-                    continue
-                
-                # GEN Logic
-                if self.mock_mode:
-                    new_b64 = self._mock_gen_logic(sub_prompt)
-                else:
-                    new_b64 = await call_image_gen(
-                        sub_prompt, 
-                        [current_image_b64] if current_image_b64 else None
-                    )
+                            logger.error(f"Save error at {index}: {e}")
 
-                if new_b64:
-                    try:
-                        img = clean_image_artifacts(base64_to_pil(new_b64))
-                        img.save(save_file)
-                        current_image_b64 = pil_to_base64(img)
-                        last_saved_path = str(save_file)
-                    except Exception as e:
-                        logger.error(f"Save error: {e}")
-
-            # SAFE CHECK FOR PD.NA
-            if last_saved_path and self._safe_value_changed(row.get('img_path'), last_saved_path):
-                self.dm.update_cell(index, 'img_path', last_saved_path)
-                updates_made = True
-        
-        if updates_made:
-            await self.dm.save()
+                # Update DB with path to final image
+                if last_saved_path:
+                    self.dm.update_cell(index, 'img_path', last_saved_path)
+                    
+                await self.dm.save()
 
     # --- Helpers & Mocks ---
 
     def _safe_value_changed(self, old_val, new_val):
         """Safely checks if a value has changed, handling pd.NA/NaN."""
-        # Treat pd.NA / np.nan / None as effectively the same "missing" state
         is_old_missing = pd.isna(old_val)
         is_new_missing = pd.isna(new_val)
 
@@ -313,7 +283,7 @@ class AugmentationPipeline:
             return True
         return str(old_val) != str(new_val)
 
-    def _is_valid_prompt(self, val):
+    def _is_not_empty_val(self, val):
         """Safe check for non-empty, non-NA prompt strings."""
         if pd.isna(val):
             return False
