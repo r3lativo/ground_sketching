@@ -18,8 +18,8 @@ experiment:
 
     ## FOR AUGMENTER
     # For chunk + utterance to prompt for img generation
-    initial_start_o: 'initial_start_oracle.jinja2'
-    initial_edit_o: 'initial_edit_oracle.jinja2'
+    initial_start_o: 'oracle/initial_start_oracle.jinja2'
+    initial_edit_o: 'oracle/initial_edit_oracle.jinja2'
 
     initial_start_r1: 'initial_start_real_1.jinja2'
     initial_start_r2: 'initial_start_real_2.jinja2'

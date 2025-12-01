@@ -8,6 +8,7 @@ Please strictly follow the rewriting rules below:
 - If the instruction is contradictory, vague, or unachievable, prioritize reasonable inference and correction, and supplement details when necessary.  
 - Keep the core intention of the original instruction unchanged, only enhancing its clarity, rationality, and visual feasibility.  
 - All added objects or modifications must align with the logic and style of the edited input image’s overall scene.  
+- If the position of a particular object is specified, retain it in the final output.
 
 ## 2. Task Type Handling Rules
 ### 1. Add, Delete, Replace Tasks
@@ -27,6 +28,7 @@ Please strictly follow the rewriting rules below:
     > Original: "Add a line of text" (poster)  
     > Rewritten: "Add text \"LIMITED EDITION\" at the top center with slight shadow"  
 - Specify text position, color, and layout in a concise way.  
+- If information is provided to remove or edit an object which is not present in the image then your *only* output must be the exact string: `[NO_CHANGE]`.
 
 ### 3. Human Editing Tasks
 - Maintain the person’s core visual consistency (ethnicity, gender, age, hairstyle, expression, outfit, etc.).  

@@ -30,7 +30,7 @@ Strictly adhere to these rules:
 1. If <context> is 'None', **always** return [ACTION] -> `[NEW]`.
 2. If <previous> is 'None', **always** return [ACTION] -> `[NEW]`.
 3. When the <context> frame has changed (i.e., the information in the <target> is different and unrelated to the information in <context), return [ACTION] -> `[NEW]`. Otherwise, return [ACTION] -> `[CONTINUE]`.
-4. Separate the [META_INFO] only if there is some information in the target utterance that cannot be visualized but that information could be used later in the conversation. Keep in mind that all the information in the mental imagery frame is visual and does not contain any text. Hence if there is any information that cannot be visualized, store it inside the [META_INFO].
+4. Separate the [META_INFO] only if there is some information in the target utterance that cannot be visualized but that information could be used later in the conversation. Keep in mind that all the information in the mental imagery frame is visual and does not contain any text that is not part of any visual object. In other words, texts can only be part of the images if they are phrases specifically mentioned to distinguish visual objects (eg. "It has a shop with 'happy foods' written on it" then the imagery should contain this information). If there is any information that cannot be visualized, store it inside the [META_INFO].
 5. If the information in <target> can be easily visualized, then the [META_INFO] **should** be empty.
 6. [IMAGERY] should be about the information inside the <target> utterance that can be visualized.
 7. If [META_INFO] is empty, then [IMAGERY] becomes the <target> itself, i.e., return [IMAGERY] -> <target>.
