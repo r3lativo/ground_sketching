@@ -155,12 +155,13 @@ class AugmentationPipeline:
 
                 # C. Handle Meta Substitution
                 if meta_info and imagery_utterance:
+                    logger.info(f"Both META and IMAGERY, so we update the utterance to be the imagery!")
                     utterance = imagery_utterance
-                    await self.dm.update_cell(index, 'meta_info', meta_info)
-                    await self.dm.update_cell(index, 'imagery_utterance', imagery_utterance)
 
                 # D. Update DataFrame Safely
                 await self.dm.update_cell(index, 'frame_choice', choice)
+                await self.dm.update_cell(index, 'meta_info', meta_info)
+                await self.dm.update_cell(index, 'imagery_utterance', imagery_utterance)
 
                 # DEBUG LOGGING
                 logger.info(f"User and Index: {user}, {index}")

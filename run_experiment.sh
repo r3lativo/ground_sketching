@@ -85,8 +85,8 @@ echo "All systems operational. Starting Experiments."
 
 # --- 4. Run Experiment Loop ---
 
-INPUT_DIR="data/indiref_test"
-OUTPUT_DIR="output/indiref_test"
+INPUT_DIR="data/indiref_2_test"
+OUTPUT_DIR="output/indiref_2_test"
 mkdir -p "$OUTPUT_DIR"
 
 MAX_JOBS=4 

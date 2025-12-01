@@ -11,7 +11,7 @@ Please strictly follow the rewriting rules below:
 
 ## 1. General Principles
 - Your edit instruction must be **concise and clear**.
-- The edit must *only* reflect the information in the Target Utterance.
+- The edit must *only* reflect the information in the Target Utterance and what it implies.
 - All added/modified objects must align with the existing **minimalist, iconic style** (solid white background, no shadows, no textures).
 - Find and retain the fundamental details of the objects: If expressible trough images, do so; else, add some text to represent that information.
 - Some information in the context might belong to a previous scene experienced by the user in <target>. If the utterance contains information that was part of the previous scene, then do not add that information to the current scene. Only add the information present in the <target> and any other information from the <context> if it complements the <target> information. 'Complementary information' means that both the informations belong to the same scene.
@@ -33,7 +33,7 @@ Please strictly follow the rewriting rules below:
     * **black outlines** for **certain, explicit** objects.
     * **blue outlines** for **assumed, uncertain** objects (e.g., "I think...").
     * **red outlines** for objects with **unclear position** (e.g., "...near the...").
-- **Crucially:** For any edit, you *must* explicitly state which objects from the previous scene "remain unchanged" to ensure they are not lost.
+- **Crucially:** For any edit, you *must* explicitly state which objects from the previous scene "remain unchanged" to ensure they are not lost. You **must** also explicitly state which outlines should change and which must be kept exactly the same by stating the color of their outlines specifically.
 
 ### C. Complex Edits (Move, Rescale)
 - Do not use simple "Move" or "Make smaller" commands. These must be deconstructed into sequential steps using the `$$$` divider.
@@ -73,13 +73,13 @@ You are decisive and efficient. You do not get stuck thinking about the same iss
 </target>
 <previous>
 [
-A clean, minimalist, iconic scene. In a zoo visitor services area, a "first aid station" (in black outline). The scene also includes an "information desk" (in blue outline), a "map board" (in blue outline), and a "bench" (in blue outline). Solid white background, no shadows.
+A clean, minimalist, iconic scene. In a zoo visitor services area, a first aid station (in black outline). The scene also includes an information stand (in blue outline), a toilet box (in blue outline), and a bench (in blue outline). Solid white background, no shadows.
 ]
 </previous>
 <think>
-A "map board" and "brick wall" are mentioned. Both are explicit and certain ("directly on"), so they get black outlines. I must also state that all previous objects remain unchanged.
+A map board and brick wall are mentioned. Both are explicit and certain ("directly on"), so they get black outlines. I must also state that all previous objects remain unchanged.
 </think>
-Add a brick wall (black outlines) with a map board. Keep the information stand, the toilet box, the bench and the first aid station unchanged.
+Add a brick wall (black outlines) with a map board. Keep the first aid station (black outline), the information stand (blue outline), the toilet box (blue outline), and the bench (blue outline) unchanged.
 
 #### Example 2 (Add with Ambiguous Position)
 <context>
@@ -94,13 +94,13 @@ Add a brick wall (black outlines) with a map board. Keep the information stand, 
 <previous>
 [
 "...a first aid station...",
-Add a brick wall (black outlines) with a map board. Keep the information stand, the toilet box, the bench and the first aid station unchanged.
+Add a brick wall (black outlines) with a map board. Keep the first aid station (black outline), the information stand (blue outline), the toilet box (blue outline), and the bench (blue outline) unchanged.
 ]
 </previous>
 <think>
-A "bin" is mentioned, however the utterance contains "I think" (uncertainty -> blue) and "near the map" (unclear position -> red). The rule for unclear position is a stronger visual instruction, so I will use red outlines.
+A bin is mentioned, however the utterance contains "I think" (uncertainty -> blue) and "near the map" (unclear position -> red). The rule for unclear position is a stronger visual instruction, so I will use red outlines.
 </think>
-Add a bin (near the map board, red outlines). Keep the information stand, the toilet box, the bench, the first aid station, and the brick wall with a map unchanged.
+Add a bin (near the map board, red outlines). Keep the first aid station (black outline), the information stand (blue outline), the toilet box (blue outline), the bench (blue outline), and and the brick wall with a map (black outline) unchanged.
 
 #### Example 3 (Move Object - Multi-Step)
 <context>
@@ -161,9 +161,9 @@ The target utterance "Okay, got it." is a simple acknowledgment. It provides no 
 ]
 </previous>
 <think>
-The target "I see a vending machine near the children's play zone" introduces two objects: "vending machine" and "children's play zone". Checking the previous prompts, neither object exists. Rule 2.B (Relational Objects) says I must add both. The vending machine is explicitly "seen" (certain), so it gets black outline; however the children's play zone exists in relation to the vending machine and its position is uncertain ('near'), so it will get a red outline.
+The target "I see a vending machine near the children's play zone" introduces two objects: a vending machine and a children's play zone. Checking the previous prompts, neither object exists. Rule 2.B (Relational Objects) says I must add both. The vending machine is explicitly "seen" (certain), so it gets black outline; however the children's play zone exists in relation to the vending machine and its position is uncertain ('near'), so it will get a red outline.
 </think>
-Add a vending machine (in black outline) and a children's play zone (in red outline). Position the vending machine near the children's play zone. Keep the information desk and checkout lane unchanged.
+Add a vending machine (in black outline) and a children's play zone (in red outline). Position the vending machine near the children's play zone. Keep the information desk (blue outline) and checkout lane (blue outline) unchanged.
 
 #### Example 6 (Details)
 <context>
@@ -179,13 +179,13 @@ Add a vending machine (in black outline) and a children's play zone (in red outl
 <previous>
 [
 "A clean, minimalist, iconic scene in an airport, at a security checkpoint. There is a metal detector (in blue otline), a queue of people (in blue outline), and a display showing the departures (in blue outline). Solid white background, no shadows.",
-"Add a security desk made of wood (in black outline). Keep the metal detector, the queue of people and the display unchanged.",
+"Add a security desk made of wood (in black outline). Keep the metal detector (blue outline), the queue of people (blue outline) and the display showing the departures (blue otline) unchanged.",
 ]
 </previous>
 <think>
 Okay, the target "There's also a wooden footwear removal bench nearby." introduces one new object, that is a wooden bench. To depict that it is a footwear removal bench, I will also add some shoes nearby it and a shoe horn to remove shoes.
 </think>
-Add a wooden bench (in black outline). On the bench there is a shoe horn, and some shoes and a box are placed near the bench. Keep the metal detector, the qeue of people, the display and the security desk unchanged.
+Add a wooden bench (in black outline). On the bench there is a shoe horn, and some shoes and a box are placed near the bench. Keep the metal detector (blue otline), the qeue of people (blue otline), the display showing the departures (blue otline), and the security desk (black otline) unchanged.
 
 ---
 Below is the new task. Please think and generate your final answer.

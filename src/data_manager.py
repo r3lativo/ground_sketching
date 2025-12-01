@@ -40,6 +40,12 @@ class ConversationDataManager:
             self._adapt_to_standard_format()
             # Save immediately to establish schema
             self.df.to_csv(self.output_path, index=False)
+
+        # Keep for later rows where 'm-type' is NOT 'text'
+        self.for_later = self.df[self.df['m-type'] != 'text'].copy()
+
+        # Only work with the rows where 'm-type' is 'text'
+        self.df = self.df[self.df['m-type'] == 'text'].copy()
         
         # Ensure we have a working index
         if 'index' not in self.df.columns:
@@ -48,7 +54,8 @@ class ConversationDataManager:
     async def save(self) -> None:
         """Thread-safe save to CSV."""
         async with self._write_lock:
-            self.df.to_csv(self.output_path, index=False)
+            df_to_save = pd.concat([self.df, self.for_later])
+            df_to_save.to_csv(self.output_path, index=False)
 
     # --- Data Retrieval & Updates ---
 

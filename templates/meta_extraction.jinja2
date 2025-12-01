@@ -13,7 +13,7 @@ Your goal is to decide whether the new information presented in the <target> utt
 
 In order to do this you have to perform three tasks:
 1. Meta: Select the information from the <target> that cannot be represented in the mental imagery but contains valuable information.
-2. Imagery: Select the information from the <target> that can be added as part of the mental imagery frame (if any).
+2. Imagery: Select the concrete information from the <target> that should be added as part of the mental imagery frame (if any). If the information is not different from original <target> then Imagery simply becomes the <target>. It should only be provided only if the <target> can be split into two separate information containing the meta and Imagery. 
 3. Action: Decide if the information selected in the Imagery should be added to the current mental imagery frame or to a new, blank one. If the new information present in the <target> should be part of the current mental imagery, output `[CONTINUE]`; else if it should be represented in a new, clean frame, output `[NEW]`.
 
 Here's the output template:
@@ -37,6 +37,13 @@ Strictly adhere to these rules:
 8. If <context> contains `<moved>` marker, it means that the speaker of the current <target> utterance moved at that moment. Use this information to decide the [ACTION], keeping in mind that `<moved>` does *not* always mean [ACTION] -> `[NEW]`, as the participants might continue talking about previous information.
 9. If <target> contains *only* [META_INFO], then return [ACTION] -> `[CONTINUE]`. However, if <context> is 'None' or <previous> is 'None', then rules 1 and/or 2 will supersede this rule, in which case, return [ACTION] -> `[NEW]`.
 10. If <target> contains neither [META_INFO] nor [IMAGERY], then return [ACTION] -> `[CONTINUE]`. However, if <context> is 'None' or <previous> is 'None', then rules 1 and/or 2 will supersede this rule, in which case, return [ACTION] -> `[NEW]`.
+11. Make sure that [META_INFO] and [IMAGERY] are distinct information.
+12. [IMAGERY] should be in the same tone as the <target> i.e. it should be like an utterance spoken by the speaker.
+
+--- Task Related Information ---
+
+1. In this task, the interlocutors are moving across different rooms using commands like North, East, South, West. Hence, using any of these directions moves the interlocutor to a new room.
+2. The interlocutors are trying to find each other because of which they are asking questions to figure out if the other participant is in one of the rooms they were previously in or if they both are in the same room. This leads to the role of theory of mind becoming important for visualising the information provided by the other interlocutor.
 
 --- Examples ---
 #### Example 1
