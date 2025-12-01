@@ -116,8 +116,7 @@ for csv_file in "$INPUT_DIR"/*.csv; do
             --create_aug \
             --gen_images_from_aug \
             --aug_output_path "$OUTPUT_DIR/${filename%.*}_augmented.csv" \
-            --images_output_path "$OUTPUT_DIR/${filename%.*}_images" \
-            --realistic_chunk
+            --images_output_path "$OUTPUT_DIR/${filename%.*}_images"
         echo "<<< Finished File: $filename"
     ) &
 

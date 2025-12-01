@@ -26,7 +26,7 @@ def parse_arguments():
     parser.add_argument("--aug_output_path", type=str, default="output/", help="Directory or file path for the augmented CSV")
     parser.add_argument("--images_output_path", type=str, default="output/", help="Directory for generated images")
     
-    parser.add_argument("--realistic_chunk", action='store_true', help="Limit context strictly to previous utterances (no future context)")
+    parser.add_argument("--oracle", action='store_true', help="Set everything as context (even future)")
     parser.add_argument("--mock", action='store_true', help="Run in mock mode (No GPU/API required)")
     
     return parser.parse_args()
@@ -137,7 +137,7 @@ async def main():
         users=users,
         create=args.create_aug,
         render=args.gen_images_from_aug,
-        realistic_context=args.realistic_chunk,
+        oracle=args.oracle,
         output_dir=str(img_output_dir),
         chunk_col_resolver=chunk_resolver
     )

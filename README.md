@@ -141,5 +141,5 @@ python3 augmenter.py --file "data/mini.csv" --user "Debra" --create_aug --gen_im
 
 Here a way to run the mock version to test the pipeline without running servers:
 ```bash
-python3 augmenter.py --automatic_users --create_aug --gen_images_from_aug --mock --file "data/mini.csv" #[OPTIONAL --realistic_chunk]
+python3 augmenter.py --automatic_users --create_aug --gen_images_from_aug --mock --file "data/mini.csv" #[OPTIONAL --oracle]
 ```

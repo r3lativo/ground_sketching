@@ -65,7 +65,7 @@ class AugmentationPipeline:
         users: List[str], 
         create: bool, 
         render: bool, 
-        realistic_context: bool, 
+        oracle: bool, 
         output_dir: str,
         chunk_col_resolver: callable = None
     ):
@@ -78,14 +78,15 @@ class AugmentationPipeline:
             tasks = []
             for user in users:
                 tasks.append(
-                    self._run_user_pipeline(user, create, render, realistic_context, output_dir)
+                    self._run_user_pipeline(user, create, render, oracle, output_dir)
                 )
             await asyncio.gather(*tasks)
             
+
             # Final save to ensure everything is flushed at the end of the run
             await self.dm.save()
 
-    async def _run_user_pipeline(self, user, create, render, realistic, output_dir):
+    async def _run_user_pipeline(self, user, create, render, oracle, output_dir):
         logger.info(f"--- Starting Pipeline for User: {user} ---")
         
         loop = asyncio.get_running_loop()
@@ -117,13 +118,13 @@ class AugmentationPipeline:
             updates_made = False
 
             # Get initial index
-            self.dm.set_start_idx(index, user, realistic)
+            self.dm.set_start_idx(index, user, oracle)
 
             # --- PHASE 1: CREATE ---
             if create:
                 utterance = f"{row['character']}: {row['text']}"
-                context = self.dm.get_context_for_index(index, user, realistic)
-                previous_prompts = self.dm.get_prev_prompts_for_index(index, user, realistic)
+                context = self.dm.get_context_for_index(index, user)
+                previous_prompts = self.dm.get_prev_prompts_for_index(index, user, oracle)
 
                 # DEBUG LOGGING
                 logger.info(f"User and Index: {user}, {index}")
@@ -136,7 +137,7 @@ class AugmentationPipeline:
                     # Client is now active because we are inside the `async with self.client` block in run_full_pipeline
                     logger.info("CREATE - Get Meta and Strategy...")
                     strategy, strategy_name, meta_info, imagery_utterance = await self.client.get_meta_and_strategy(
-                        is_oracle=self.mock_mode,
+                        is_oracle=oracle,
                         utterance=utterance,
                         context=context,
                         previous_prompts=previous_prompts,
@@ -207,7 +208,7 @@ class AugmentationPipeline:
                     else:
                         logger.info("RENDER - Get Strategy...")
                         mm_strategy, _, _, _ = await self.client.get_meta_and_strategy(
-                            is_oracle=False, has_images=True
+                            is_oracle=oracle, has_images=True
                         )
                         async with self.vlm_semaphore:
                             logger.info(f"RENDER - Execute Strategy {mm_strategy}...")

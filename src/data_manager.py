@@ -21,6 +21,7 @@ class ConversationDataManager:
         self.output_path = Path(output_file)
         self.df = pd.DataFrame()
         self._write_lock = asyncio.Lock()
+        self.for_later = pd.DataFrame
         
         # Ensure output directory exists
         self.output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -41,11 +42,13 @@ class ConversationDataManager:
             # Save immediately to establish schema
             self.df.to_csv(self.output_path, index=False)
 
-        # Keep for later rows where 'm-type' is NOT 'text'
-        self.for_later = self.df[self.df['m-type'] != 'text'].copy()
+        if 'm-type' in self.df.columns:
 
-        # Only work with the rows where 'm-type' is 'text'
-        self.df = self.df[self.df['m-type'] == 'text'].copy()
+            # Keep for later rows where 'm-type' is NOT 'text'
+            self.for_later = self.df[self.df['m-type'] != 'text'].copy()
+
+            # Only work with the rows where 'm-type' is 'text'
+            self.df = self.df[self.df['m-type'] == 'text'].copy()
         
         # Ensure we have a working index
         if 'index' not in self.df.columns:
@@ -54,8 +57,11 @@ class ConversationDataManager:
     async def save(self) -> None:
         """Thread-safe save to CSV."""
         async with self._write_lock:
-            df_to_save = pd.concat([self.df, self.for_later])
-            df_to_save.to_csv(self.output_path, index=False)
+            if not self.for_later.empty:
+                df_to_save = pd.concat([self.df, self.for_later])
+                df_to_save.to_csv(self.output_path, index=False)
+            else:
+                self.df.to_csv(self.output_path, index=False)
 
     # --- Data Retrieval & Updates ---
 
@@ -74,12 +80,12 @@ class ConversationDataManager:
         """Updates a specific cell in the dataframe."""
         self.df.at[index, column] = value
 
-    def set_start_idx(self, index: int, user: str, realistic: bool = False) -> int:
+    def set_start_idx(self, index: int, user: str, oracle: bool = False) -> int:
         """Set start index based on context"""
         start_idx = 0
 
         # 2. Determine Start Index (Shared Ground)
-        if realistic:
+        if not oracle:
             context_start_col = f"ctx_start_idx_{user}"
             if context_start_col in self.df.columns:
                 try:
@@ -94,14 +100,14 @@ class ConversationDataManager:
     def get_start_idx(self) -> int:
         return self.start_idx
 
-    def get_prev_prompts_for_index(self, index: int, user: str, realistic: bool = False) -> List[str]:
+    def get_prev_prompts_for_index(self, index: int, user: str, oracle: bool = False) -> List[str]:
         """Get all previous prompts related to a index"""
 
         # Load the relevant Series
         full_prev_prompts = self.df['initial_prompt']
 
         # Define the start and end index given the context
-        start_idx = self.set_start_idx(index, user, realistic)
+        start_idx = self.set_start_idx(index, user, oracle)
         end_idx = index
 
         # Prepare list
@@ -129,7 +135,7 @@ class ConversationDataManager:
                 logger.warning(f"'{full_imgs.index}' file does not exist.")
         return None
 
-    def get_context_for_index(self, index: int, user: str, realistic: bool = False) -> List[str]:
+    def get_context_for_index(self, index: int, user: str) -> List[str]:
         """
         Retrieves context and inserts a <moved> where the user's actual visual scene began.
         """
