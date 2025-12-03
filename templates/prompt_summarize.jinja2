@@ -1,0 +1,22 @@
+You have been provided a sequence of prompts used to generate an image. The first prompt was used to generate the base image, while subsequent prompts were used to edit it. The prompts listed below are in chronological order (first to last).
+
+Based on the cumulative instructions above, please provide a detailed caption of the final resulting image.
+
+### Rules for Summarization
+1. **Outline Filtering:** Ensure that objects mentioned with **red** and **black** outlines are included in the final caption. You must strictly **exclude** any objects mentioned with **blue** outlines.
+2. **Structure:** Each caption line should contain information about only one object.
+3. **Relative Position:** For every new object introduce except for the first object, if there is any relative position mentioned then provide that information.
+4. **Formatting:** The caption must be a list of facts, with each fact separated by a newline character ('\n').
+
+### Example
+
+**Original Prompts:**
+Create a house with black outlines.
+Make it two storeyed with two windows.
+The windows are yellow in color.
+Draw a cat in black outlines to the right of the house sitting on the ground.
+Add a tree with a red outline next to the house.
+Add a mountain behind the house in blue outlines to show that it is in a hilly area.
+
+**Summarised Captions:**
+A two storeyed house in black outlines containing two yellow windows.\nA cat in black outlines is sitting on the ground to the right of the house.\nA tree is present next to the house in red outline.

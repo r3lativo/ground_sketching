@@ -93,6 +93,10 @@ The system is composed of two main services that must be run in separate termina
 # This script reads the config, sets CUDA_VISIBLE_DEVICES
 # based on tensor_parallel_size (e.g., "0,1"), and launches
 # the vLLM server and its FastAPI gateway.
+source /miniconda3/bin/activate 
+export HF_HOME="/huggingface"
+module load arch/a100
+module load cuda/12.4.1
 ./scripts/start_vlm_service.sh
 ```
 

@@ -219,3 +219,202 @@ class APIClient:
         except Exception as e:
             logger.error(f"Image Gen failed: {e}", exc_info=True)
             return None
+
+    async def call_prompt_summarizer(
+        context: List[str],
+        timeout: int = 300,
+    ) -> Optional[str]:
+        """
+        Calls the vLLM API to summarize a list of prompts. It should tell us what important objects are there by the end of the prompt(Text-in, Text-out)
+        """
+        endpoint = f"{polisher_api_base_url}/generate"
+        logger.info(f"Sending request to Contextual Polisher (Summarize): {endpoint}")
+
+        context_str = "\n".join(context) if isinstance(context, list) else str(context)
+        content = f"Here are the prompts:\n{context_str}\n Please summarize the prompts into a list separated by newlines:\n"
+        messages = [
+            {"role": "system", "content": summarize_prompt},
+            {"role": "user", "content": content}
+        ]
+        
+        prompt_polisher_client_config = config["prompt_polisher_client"]
+
+        payload = {
+            "messages": messages,
+            "seed": prompt_polisher_client_config["seed"],
+            "top_p": prompt_polisher_client_config["top_p"],
+            "temperature": prompt_polisher_client_config["temperature"],
+            "max_tokens": prompt_polisher_client_config["max_tokens"],
+        }
+
+        try:
+            async with httpx.AsyncClient() as client_http:
+                response = await client_http.post(endpoint, json=payload, timeout=timeout)
+                response.raise_for_status()
+                result = response.json()
+
+                if result.get("text") and len(result["text"]) > 0:
+                    enhanced_prompt_raw = result.get("text")
+                    
+                    if enhanced_prompt_raw and isinstance(enhanced_prompt_raw, str):
+                        # polished_text = None
+                        # polished_text = json_parser(enhanced_prompt_raw, 'Rewritten')
+
+                        # if enhanced_prompt_raw:
+                        polished_text = enhanced_prompt_raw.strip().replace("\n", " ")
+                        logger.info(f"Summarization successful. New prompt: '{polished_text[:50]}...'")
+                        return polished_text
+                        # else:
+                        #     logger.warning("Summarization returned empty or invalid response.")
+                        #     return None
+                    else:
+                        logger.warning("Summarization returned empty content.")
+                        return None
+                else:
+                    logger.error(f"Summarization API returned unexpected format: {result}")
+                    return None
+
+        except httpx.HTTPStatusError as e:
+            logger.error(f"Summarization API request failed with status {e.response.status_code}: {e.response.text}")
+            return None
+        except httpx.RequestError as e:
+            logger.error(f"Error connecting to Summarization API at {endpoint}: {e}")
+            return None
+        except Exception as e:
+            logger.error(f"An unexpected error occurred during summarization call: {e}", exc_info=True)
+            return None
+
+    async def call_image_captioner(
+        base64_images: List[str],
+        timeout: int = 300,
+    ) -> Optional[str]:
+        """
+        Calls the vLLM API to caption the image. It should tell us what important objects are there in the image(Image-in, Text-out)
+        """
+        endpoint = f"{polisher_api_base_url}/edit"
+        logger.info(f"Sending request to Image Captioner: {endpoint}")
+
+        # Construct multimodal message content
+        content: List[Dict[str, Any]] = []
+        for img_b64 in base64_images:
+            content.append({
+                "type": "image",
+                "image": f"data:image/jpeg;base64,{img_b64}"
+            })
+        content.append({"type": "text", "text": "Now describe this image in detail."})
+
+        messages = [
+            {"role": "system", "content": caption_prompt},
+            {"role": "user", "content": content}
+        ]
+        
+        prompt_polisher_client_config = config["prompt_polisher_client"]
+
+        payload = {
+            "messages": messages,
+            "seed": prompt_polisher_client_config["seed"],
+            "top_p": prompt_polisher_client_config["top_p"],
+            "temperature": prompt_polisher_client_config["temperature"],
+            "max_tokens": prompt_polisher_client_config["max_tokens"],
+        }
+
+        try:
+            async with httpx.AsyncClient() as client_http:
+                response = await client_http.post(endpoint, json=payload, timeout=timeout)
+                response.raise_for_status()
+                result = response.json()
+
+                if result.get("text") and len(result["text"]) > 0:
+                    enhanced_prompt_raw = result.get("text")
+                    
+                    if enhanced_prompt_raw and isinstance(enhanced_prompt_raw, str):
+                        # polished_text = None
+                        # polished_text = json_parser(enhanced_prompt_raw, 'Rewritten')
+
+                        # if polished_text:
+                        polished_text = enhanced_prompt_raw.strip().replace("\n", " ")
+                        logger.info(f"Captioning successful. New prompt: '{polished_text[:100]}...'")
+                        return polished_text
+                        # else:
+                        #     logger.warning("Captioning returned empty or invalid response.")
+                        #     return None
+                    else:
+                        logger.warning("Captioning returned empty content.")
+                        return None
+                else:
+                    logger.error(f"Captioning API returned unexpected format: {result}")
+                    return None
+
+        except httpx.HTTPStatusError as e:
+            logger.error(f"Captioning API request failed with status {e.response.status_code}: {e.response.text}")
+            return None
+        except httpx.RequestError as e:
+            logger.error(f"Error connecting to Captioning API at {endpoint}: {e}")
+            return None
+        except Exception as e:
+            logger.error(f"An unexpected error occurred during captioning call: {e}", exc_info=True)
+            return None
+
+    async def call_fact_checker(
+        fact: str,
+        caption: str,
+        timeout: int = 360
+    ) -> str:
+        """
+        Calls the vLLM API to check if the fact is contained in the caption (Image-in, Text-out)
+        """
+        endpoint = f"{polisher_api_base_url}/generate"
+        logger.info(f"Sending request to Fact checker: {endpoint}")
+
+        content = f"Here is the Caption:\n{caption}\nhere is the Fact:{fact}\n. Answer strictly with 'True' or 'False'. Here is your answer:"
+        messages = [
+            {"role": "system", "content": fact_prompt},
+            {"role": "user", "content": content}
+        ]
+        
+        prompt_polisher_client_config = config["prompt_polisher_client"]
+
+        payload = {
+            "messages": messages,
+            "seed": prompt_polisher_client_config["seed"],
+            "top_p": prompt_polisher_client_config["top_p"],
+            "temperature": prompt_polisher_client_config["temperature"],
+            "max_tokens": prompt_polisher_client_config["max_tokens"],
+        }
+
+        try:
+            async with httpx.AsyncClient() as client_http:
+                response = await client_http.post(endpoint, json=payload, timeout=timeout)
+                response.raise_for_status()
+                result = response.json()
+
+                if result.get("text") and len(result["text"]) > 0:
+                    enhanced_prompt_raw = result.get("text")
+                    
+                    if enhanced_prompt_raw and isinstance(enhanced_prompt_raw, str):
+                        # polished_text = None
+                        # polished_text = json_parser(enhanced_prompt_raw, 'Rewritten')
+
+                        # if polished_text:
+                        polished_text = enhanced_prompt_raw.strip().replace("\n", " ")
+                        logger.info(f"Fact check successful.")
+                        return polished_text
+                        # else:
+                        #     logger.warning("SFact check returned empty or invalid response.")
+                        #     return None
+                    else:
+                        logger.warning("Fact check returned empty content.")
+                        return None
+                else:
+                    logger.error(f"Fact check API returned unexpected format: {result}")
+                    return None
+
+        except httpx.HTTPStatusError as e:
+            logger.error(f"Fact check API request failed with status {e.response.status_code}: {e.response.text}")
+            return None
+        except httpx.RequestError as e:
+            logger.error(f"Error connecting to Fact check API at {endpoint}: {e}")
+            return None
+        except Exception as e:
+            logger.error(f"An unexpected error occurred during fsct check call: {e}", exc_info=True)
+            return None

@@ -28,6 +28,18 @@ experiment:
     final_start_t: 'final_start.jinja2'
     final_edit_t: 'final_edit.jinja2'
 
+    caption_t: 'image_caption.jinja2'
+    summarize_t: 'prompt_summarize.jinja2'
+    fact_t: 'fact_checker.jinja2'
+
   meetup:
     datapath:  "/lustre/fswork/projects/rech/bgp/ucm29gh/code/jeanzay-rl/data/IndiRef/meetup_final"
     test_case: "/lustre/fswork/projects/rech/bgp/ucm29gh/code/jeanzay-rl/data/IndiRef/meetup_final/Attributive/101_215_367_399.csv"
+
+
+
+prompt_polisher_client:
+  seed: 0
+  top_p: 0.9
+  temperature: 0.7
+  max_tokens: 5000
