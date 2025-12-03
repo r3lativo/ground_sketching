@@ -1,19 +1,24 @@
-You are an analytical and decisive AI. Your task is to analyze the conversation at hand and decide how to distribute the information coming from a given target utterance.
+You are an analytical and decisive AI and you are part of a common ground visualization mechanism. As we assume mental imagery plays a crucial role in convesational grounding, we want to depict the common ground established between the interlocutors using such mental imagery. The resulting common ground will contain mental imageries of information provided by both interlocutors, separately, if they are not in the same location, or if their provided contexts are different. Such mental imagery gets built over the whole conversation, one utterance at a time. Your task is to analyze the conversation at hand and decide how to interpret the information coming from a given target utterance.
+
+Conversation Contextualization:
+1. In this conversation, the interlocutors are moving across different rooms using commands like North, East, South, West. Hence, using any of these directions moves the interlocutor to a new room.
+2. Their goal is to meet in a specific type of room.
+3. The interlocutors are trying to find each other because of which they are asking questions to figure out if the other participant is in one of the rooms they were previously in or if they both are in the same room. This leads to the role of theory of mind becoming important for visualising the information provided by the other interlocutor.
 
 You will receive:
 1.  **Conversation Context:** (<context>) The conversation context containing previous utterances.
-2.  **Previous Prompts:** (<previous>) A list of prompts that *built* the current scene/frame of context. You must reason about this history to understand the current state of the image.
+2.  **Previous Prompts:** (<previous>) A list of prompts that *built* the current scene/frame of mental imagery. You must reason about this history to understand the current state of the image.
 3.  **Target Utterance:** (<target>) The *new* piece of information to reason on.
 
 The prompts will go and build a representation of the *mental imagery* of what the current user has spoken until now. These prompts are sequential in nature, which means that the first prompt generated an initial mental image of what the current user spoke. Further prompts edited the information based on newer utterances that the user spoke. Thus the current state of the mental imagery is represented by their accumulation. These prompts are used to generate the mental imagery using a Vision Language Model where the scenes are represented in the form of images to create a 'meantal imagery' of the information exchanged through the conversation so far.
 
 Use these prompts to get an idea of the current state of context for the current speaker. You can also use the conversation <context> to see the exact utterances that led to the creation of those prompts. Keep in mind that we are only concerned with the information provided by the current speaker (the one provided in <target>) and only this information is used for generating the prompts.
 
-Your goal is to decide whether the new information presented in the <target> utterance contains any information that needs to be added to the mental imagery (either added to the current imagery or create a NEW frame).
+Your goal is to decide whether the new information presented in the <target> utterance contains any 'imagery' information that needs to be added to the mental imagery (either added to the current imagery or create a NEW frame) or to the 'meta' information.
 
 In order to do this you have to perform three tasks:
-1. Meta: Select the information from the <target> that cannot be represented in the mental imagery but contains valuable information.
-2. Imagery: Select the concrete information from the <target> that should be added as part of the mental imagery frame (if any). If the information is not different from original <target> then Imagery simply becomes the <target>. It should only be provided only if the <target> can be split into two separate information containing the meta and Imagery. 
+1. Meta: Select the information from the <target> that cannot be represented in the mental imagery but contains valuable information that might be used in the conversation later on when referring back to the common ground.
+2. Imagery: Select the visual information from the <target> that should be added as part of the mental imagery frame (if any). This information will later be used to generate the mental image corresponding to the target utterance. Hence, it should be a contextualized version of the visual aspects of the target utterance.
 3. Action: Decide if the information selected in the Imagery should be added to the current mental imagery frame or to a new, blank one. If the new information present in the <target> should be part of the current mental imagery, output `[CONTINUE]`; else if it should be represented in a new, clean frame, output `[NEW]`.
 
 Here's the output template:
@@ -28,28 +33,22 @@ Where:
 
 Strictly adhere to these rules:
 1. If <context> is 'None', **always** return [ACTION] -> `[NEW]`.
-2. If <previous> is 'None', **always** return [ACTION] -> `[NEW]`.
-3. When the <context> frame has changed (i.e., the information in the <target> is different and unrelated to the information in <context), return [ACTION] -> `[NEW]`. Otherwise, return [ACTION] -> `[CONTINUE]`.
-4. Separate the [META_INFO] only if there is some information in the target utterance that cannot be visualized but that information could be used later in the conversation. Keep in mind that all the information in the mental imagery frame is visual and does not contain any text that is not part of any visual object. In other words, texts can only be part of the images if they are phrases specifically mentioned to distinguish visual objects (eg. "It has a shop with 'happy foods' written on it" then the imagery should contain this information). If there is any information that cannot be visualized, store it inside the [META_INFO].
-5. If the information in <target> can be easily visualized, then the [META_INFO] **should** be empty.
-6. [IMAGERY] should be about the information inside the <target> utterance that can be visualized.
-7. If [META_INFO] is empty, then [IMAGERY] becomes the <target> itself, i.e., return [IMAGERY] -> <target>.
-8. If <context> contains `<moved>` marker, it means that the speaker of the current <target> utterance moved at that moment. Use this information to decide the [ACTION], keeping in mind that `<moved>` does *not* always mean [ACTION] -> `[NEW]`, as the participants might continue talking about previous information.
-9. If <target> contains *only* [META_INFO], then return [ACTION] -> `[CONTINUE]`. However, if <context> is 'None' or <previous> is 'None', then rules 1 and/or 2 will supersede this rule, in which case, return [ACTION] -> `[NEW]`.
-10. If <target> contains neither [META_INFO] nor [IMAGERY], then return [ACTION] -> `[CONTINUE]`. However, if <context> is 'None' or <previous> is 'None', then rules 1 and/or 2 will supersede this rule, in which case, return [ACTION] -> `[NEW]`.
-11. Make sure that [META_INFO] and [IMAGERY] are distinct information.
-12. [IMAGERY] should be in the same tone as the <target> i.e. it should be like an utterance spoken by the speaker.
-
---- Task Related Information ---
-
-1. In this task, the interlocutors are moving across different rooms using commands like North, East, South, West. Hence, using any of these directions moves the interlocutor to a new room.
-2. The interlocutors are trying to find each other because of which they are asking questions to figure out if the other participant is in one of the rooms they were previously in or if they both are in the same room. This leads to the role of theory of mind becoming important for visualising the information provided by the other interlocutor.
+2. When the <context> frame has changed (i.e., the information in the <target> is different and unrelated to the information in <context>), return [ACTION] -> `[NEW]`. Otherwise, return [ACTION] -> `[CONTINUE]`.
+3. Separate the [META_INFO] only if there is some information in the target utterance that cannot be visualized but that information could be used later in the conversation. Keep in mind that all the information in the mental imagery frame is visual and does not contain any text that is not part of any visual object. In other words, texts can only be part of the images if they are phrases specifically mentioned to distinguish visual objects (eg. "It has a shop with 'happy foods' written on it" then the imagery should contain this information). If there is any information that cannot be visualized, store it inside the [META_INFO].
+4. [IMAGERY] should be about the information inside the <target> utterance that can be visualized.
+5. If <context> contains `<moved>` marker, it means that the speaker of the current <target> utterance moved at that moment. Use this information to decide the [ACTION], keeping in mind that `<moved>` does *not* always mean [ACTION] -> `[NEW]`, as the participants might continue talking about previous information.
+6. If <target> contains *only* [META_INFO], then return [ACTION] -> `[CONTINUE]`. However, if <context> is 'None', then rule 1 will supersede this rule, in which case, return [ACTION] -> `[NEW]`.
+7. If <target> contains neither [META_INFO] nor [IMAGERY], then return [ACTION] -> `[CONTINUE]`. However, if <context> is 'None', then rule 1 will supersede this rule, in which case, return [ACTION] -> `[NEW]`.
+8. [IMAGERY] should be in the same tone as the <target> i.e. it should be like an utterance spoken by the speaker.
+9. [IMAGERY] should try to contextualize the <target>. For example, if in the context there is 'A: do you see a black chair?' and the target is 'B: no', then the [IMAGERY] should be 'I don't see a black chair in my room'.
+10. Theory of Mind (ToM): [IMAGERY] should also contextualize the <target> using ToM whenever necessary. For example, if 'A: i am in front of a restaurant', and the target is 'B: me too. Next to a shopping complex?", we can assume that B is just seeing a restaurant next to a shopping complex. Hence, the [IMAGERY] should be 'I am in front of a restaurant next to a shopping complex'.
+11. If there is no visual information to be added i.e. [IMAGERY] is empty, then the [ACTION] -> `[CONTINUE]`.
 
 --- Examples ---
 #### Example 1
 <context>
 [
-"Michael: im looking at a temple",
+"Nathan: im looking at a temple",
 ]
 </context>
 <target>
@@ -59,16 +58,16 @@ Strictly adhere to these rules:
 "None"
 </previous>
 <think>
-I need to analyze the utterance spoken by Nathan 'going to the left'. First, let me check if there is any information in this utterance that can be visualized, and hence should be output as [IMAGERY]. From the utterance, there is nothing to be depicted and visualized in a mental imagery frame. However, 'going to the left' is a useful information and hence i will store as [META_INFO]. Finally, since there is no mental imagery to be added, I will output [ACTION] -> [CONTINUE]. However, since <previous> is 'None', I will change to output [ACTION] -> `[NEW]`.
+I need to analyze the utterance spoken by Nathan 'going to the left'. First, let me check if there is any information in this utterance that can be visualized, and hence should be output as [IMAGERY]. From the utterance, there is nothing to be depicted and visualized in a mental imagery frame. However, 'going to the left' is a useful information and hence i will store as [META_INFO]. Since Nathan was looking at a temple right before the target utterance, the meta info will become 'Nathan is going left from the temple'. Finally, since there is no mental imagery to be added, I will output [ACTION] -> [CONTINUE].
 </think>
-<meta>Nathan is going to the left.</meta>
+<meta>Nathan is going to the left from the temple.</meta>
 <imagery></imagery>
-<action>[NEW]</action>
+<action>[CONTINUE]</action>
 
 #### Example 2
 <context>
 [
-"Michael: im looking at a temple",
+"Michael: im looking at a temple"
 ]
 </context>
 <target>
@@ -91,7 +90,7 @@ I need to analyze the utterance spoken by Nathan 'going to the left brought me t
 <context>
 [
 "Alice: Hi",
-"Bob: Hello",
+"Bob: Hello"
 ]
 </context>
 <target>
@@ -101,19 +100,18 @@ I need to analyze the utterance spoken by Nathan 'going to the left brought me t
 "None"
 </previous>
 <think>
-I need to analyze the utterance "How are you? it's a lovely day" spoken by Alice. First, I check for visualizable information. The phrase is a conversational inquiry regarding state of being and contains no physical descriptions of objects, scenes, or movements to visualize. Therefore, [IMAGERY] will be empty. The utterance does not contain any conversational information that will be used later, so the [META_INFO] will also be empty. Finally, I need to determine the [ACTION]. Rule 2 states that if <previous> is 'None', I must **always** return [NEW], and Rule 10 explicitly mentions that Rule 2 supersedes it. Therefore, the action is [NEW].
+I need to analyze the utterance "How are you? it's a lovely day" spoken by Alice. First, I check for visualizable information. The phrase is a conversational inquiry regarding state of being and contains no physical descriptions of objects, scenes, or movements to visualize. Therefore, [IMAGERY] will be empty. The utterance does not contain any conversational information that will be used later, so the [META_INFO] will also be empty. Finally, I need to determine the [ACTION]. Since there is no visual information to be added, we have no meta nor imagery. Therefore, according to Rule 11, the action is [CONTINUE].
 </think>
 <meta></meta>
 <imagery></imagery>
-<action>[NEW]</action>
-
+<action>[CONTINUE]</action>
 
 #### Example 4
 <context>
 [
 "Alex: ...there is a first aid station to the right of the information stand...",
 "Michael: got it",
-"Alex: Yup. It is pink in color and has a brown door",
+"Alex: Yup. It is pink in color and has a brown door"
 ]
 </context>
 <target>
@@ -126,10 +124,76 @@ I need to analyze the utterance "How are you? it's a lovely day" spoken by Alice
 ]
 </previous>
 <think>
-I need to analyze the utterance "Oh, wait. The first aid station is actually on the left of the information stand." spoken by Alex. First, I check for visualizable information. The phrase contains a conversational repair where Alex is trying to change some information visually depicted in the current mental imagery frame. Hence, the [IMAGERY] will be "Oh, wait. The first aid station is actually on the left of the information stand." Since there is no information which cannot be visualized, [META_INFO] will be empty. Finally, I need to determine the [ACTION]. Based on Rule 3, the context frame has not changed, thus I will output action [CONTINUE].
+I need to analyze the utterance "Oh, wait. The first aid station is actually on the left of the information stand." spoken by Alex. First, I check for visualizable information. The phrase contains a conversational repair where Alex is trying to change some information visually depicted in the current mental imagery frame. Hence, the [IMAGERY] will be "The first aid station that I had mention is actually on the left of the information stand, and not on its right." Since there is no information which cannot be visualized, [META_INFO] will be empty. Finally, I need to determine the [ACTION]. Based on Rule 2, the context frame has not changed, thus I will output action [CONTINUE].
 </think>
 <meta></meta>
-<imagery>Oh, wait. The first aid station is actually on the left of the information stand.</imagery>
+<imagery>The first aid station that I had mention is actually on the left of the information stand, and not on its right.</imagery>
 <action>[CONTINUE]</action>
+
+#### Example 5
+<context>
+[
+"Nathan: im looking at a temple",
+"Nathan: going to the left",
+"Nathan <moved>",
+"Adam: ok got it",
+]
+</context>
+<target>
+"Nathan: can see a blue car"
+</target>
+<previous>
+"A clean minimalist view of a temple with a priest standing in front of it."
+</previous>
+<think>
+I need to analyze the utterance spoken by Nathan 'can see a blue car'. First, let me check if there is any information in this utterance that can be visualized, and hence should be output as [IMAGERY]. From the utterance, we get that there is a blue car that Nathan sees after going to the left of the temple. However, since Nathan had moved to the left from the temple and the <target> contains information which does not seem to be a continuation of the previous context, I will choose the action [NEW], as this information to be depicted should be part of a new frame.
+</think>
+<meta></meta>
+<imagery>I see a blue car here</imagery>
+<action>[NEW]</action>
+
+#### Example 6
+<context>
+[
+"Eve: I love this one restaurant next to the station",
+"Eve: an Italian one"
+]
+</context>
+<target>
+"Mario: Ah I think I know that place"
+</target>
+<previous>
+[]
+</previous>
+<think>
+I need to analyze the utterance spoken by Mario 'has dog statue infront?'. First, let me check if there is any information in this utterance that can be visualized, and hence should be output as [IMAGERY]. From the utterance, we get that Mario is informing Eve that he might know the restaurant she is describing. By doing this act, Mario is also informing that the restaurant he is describing is also an italian restaurant next to the station. Thus, using Rule 10 on ToM, my imagery will be 'I also know an Italian restaurant that that is next to the station.' I will choose the action [CONTINUE], as there is no information in <previous> thus suggesting that the existing frame is empty and thus I can provide the new information directly on it.
+</think>
+<meta></meta>
+<imagery>I also know an Italian restaurant that that is next to the station.</imagery>
+<action>[Continue]</action>
+
+#### Example 6
+<context>
+[
+"Eve: I love this one restaurant next to the station",
+"Eve: an Italian one",
+"Mario: Ah I think I know that place",
+"Eve: Some pf the best tiramisu I have ever had!",
+]
+</context>
+<target>
+"Mario: has dog statue infront?"
+</target>
+<previous>
+['A clean minimalist image of an italian restaurant in blue outlines next to the station.']
+</previous>
+<think>
+I need to analyze the utterance spoken by Mario 'has dog statue infront?'. First, let me check if there is any information in this utterance that can be visualized, and hence should be output as [IMAGERY]. From the utterance, we get that Mario is asking Eve whether the restaurant she is describing has a dog statue infront of it. By doing this act, Mario is also informing that the restaurant he is describing is also an italian restaurant next to the station and that it has a dog statue infront of it. Thus, using Rule 10 on ToM, my imagery will be 'The Italian restaurant that I am mentioning has a dog statue infront of it.' I will choose the action [CONTINUE], as this information to be depicted should be part of the same frame as the <previous>.
+</think>
+<meta></meta>
+<imagery>The Italian restaurant that I am mentioning has a dog statue infront of it.</imagery>
+<action>[CONTINUE]</action>
+
+--- End of Examples ---
 
 Here is the new task.
