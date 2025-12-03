@@ -78,7 +78,7 @@ class ConversationDataManager:
 
     async def update_cell(self, index: int, column: str, value: Any):
         """Updates a specific cell in the dataframe."""
-        self.df.at[index, column] = value
+        self.df.at[index, column] = value.replace("\n", " ")
 
     def set_start_idx(self, index: int, user: str, oracle: bool = False) -> int:
         """Set start index based on context"""
@@ -173,7 +173,7 @@ class ConversationDataManager:
                 # if continuous.
                 insert_pos = scene_start_idx - start_idx
                 if 0 <= insert_pos < len(ctx_list):
-                    ctx_list.insert(insert_pos, "<moved>")
+                    ctx_list.insert(insert_pos, f"{user} <moved>")
 
         return ctx_list
 

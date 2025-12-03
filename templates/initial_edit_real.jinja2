@@ -12,11 +12,12 @@ Please strictly follow the rewriting rules below:
 ## 1. General Principles
 - Your edit instruction must be **concise and clear**.
 - The edit must *only* reflect the information in the Target Utterance and what it implies.
-- All added/modified objects must align with the existing **minimalist, iconic style** (solid white background, no shadows, no textures).
+- All added/modified objects must align with the existing **minimalist, iconic style** (solid white background, no shadows, no textures, colors in objects only if specified).
 - Find and retain the fundamental details of the objects: If expressible trough images, do so; else, add some text to represent that information.
 - If the position of a particular object is specified, retain it in the final output.
 - Some information in the context might belong to a previous scene experienced by the user in <target>. If the utterance contains information that was part of the previous scene, then do not add that information to the current scene. Only add the information present in the <target> and any other information from the <context> if it complements the <target> information. 'Complementary information' means that both the informations belong to the same scene.
 - If <context> contains `<moved>` marker, it means that the speaker of the current <target> utterance moved at that moment. Keep in mind that `<moved>` does *not* always mean that it's a new scene, as the participants might continue talking about previous information.
+- You **must** make sure that present objects with black outline are *not* edited, unless the <target> utterance explicitly requires an edit on them.
 
 ## 2. Task Type Handling Rules
 
@@ -36,7 +37,7 @@ Please strictly follow the rewriting rules below:
     * **black outlines** for **certain, explicit** objects.
     * **blue outlines** for **assumed, uncertain** objects (e.g., "I think...").
     * **red outlines** for objects with **unclear position** (e.g., "...near the...").
-- **Crucially:** For any edit, you *must* explicitly state which objects from the previous scene "remain unchanged" to ensure they are not lost. You **must** also explicitly state which outlines should change and which must be kept exactly the same by stating the color of their outlines specifically.
+- **Crucially:** For any edit, you *must* explicitly state which objects from the previous scene "remain unchanged" to ensure they are not lost. You **must** also explicitly state which outlines should change and which must be kept exactly the same by stating the color of their outlines specifically. You **must** make sure that present objects with black outline are *not* edited, unless the <target> utterance explicitly requires an edit on them.
 
 ### C. Complex Edits (Move, Rescale)
 - Do not use simple "Move" or "Make smaller" commands. These must be deconstructed into sequential steps using the `$$$` divider.
@@ -77,7 +78,7 @@ You are decisive and efficient. You do not get stuck thinking about the same iss
 ]
 </context>
 <target>
-"Nathan: Yeah, got it. The map board is directly on the brick wall here."
+"Nathan: Yeah, got it. The map board is directly on the brown brick wall here."
 </target>
 <previous>
 [
@@ -85,15 +86,15 @@ A clean, minimalist, iconic scene. In a zoo visitor services area, a first aid s
 ]
 </previous>
 <think>
-A map board and brick wall are mentioned. Both are explicit and certain ("directly on"), so they get black outlines. I must also state that all previous objects remain unchanged.
+A map board and brown brick wall are mentioned. Both are explicit and certain ("directly on"), so they get black outlines. I must also state that all previous objects remain unchanged.
 </think>
-Add a brick wall (black outlines) with a map board. Keep the first aid station (black outline), the information stand (blue outline), the toilet box (blue outline), and the bench (blue outline) unchanged.
+Add a brown brick wall (black outlines) with a map board. Keep the first aid station (black outline), the information stand (blue outline), the toilet box (blue outline), and the bench (blue outline) unchanged.
 
 #### Example 2 (Add with Ambiguous Position)
 <context>
 [
 ...
-"Nathan: ...The map board is directly on the brick wall here.",
+"Nathan: ...The map board is directly on the brown brick wall here.",
 ]
 </context>
 <target>
@@ -102,13 +103,13 @@ Add a brick wall (black outlines) with a map board. Keep the first aid station (
 <previous>
 [
 "...a first aid station...",
-Add a brick wall (black outlines) with a map board. Keep the first aid station (black outline), the information stand (blue outline), the toilet box (blue outline), and the bench (blue outline) unchanged.
+Add a brown brick wall (black outlines) with a map board. Keep the first aid station (black outline), the information stand (blue outline), the toilet box (blue outline), and the bench (blue outline) unchanged.
 ]
 </previous>
 <think>
 A bin is mentioned, however the utterance contains "I think" (uncertainty -> blue) and "near the map" (unclear position -> red). The rule for unclear position is a stronger visual instruction, so I will use red outlines.
 </think>
-Add a bin (near the map board, red outlines). Keep the first aid station (black outline), the information stand (blue outline), the toilet box (blue outline), the bench (blue outline), and and the brick wall with a map (black outline) unchanged.
+Add a bin (near the map board, red outlines). Keep the first aid station (black outline), the information stand (blue outline), the toilet box (blue outline), the bench (blue outline), and and the brown brick wall with a map (black outline) unchanged.
 
 #### Example 3 (Move Object - Multi-Step)
 <context>

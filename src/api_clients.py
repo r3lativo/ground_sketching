@@ -111,14 +111,14 @@ class APIClient:
         previous_prompts: Optional[List[str]] = None,
         has_images: Optional[bool] = False,
         timeout: int = 300
-    ) -> (PromptStrategy, str, Optional[str], Optional[str]):
+    ) -> (str, PromptStrategy, str, Optional[str], Optional[str]):
         
         if not self.client:
             raise RuntimeError("Client not initialized. Use 'async with APIClient(...)'.")
 
         # If image exists, force MM edit
         if has_images:
-            return self.strategies['multimodal_edit'], 'multimodal_edit', None, None
+            return None, self.strategies['multimodal_edit'], 'multimodal_edit', None, None
 
         choice = None
         strategy = self.strategies['meta_extraction']
@@ -144,23 +144,25 @@ class APIClient:
 
         except Exception as e:
             logger.error(f"Meta Extraction Request failed: {e}", exc_info=True)
-            return None, None, None, None
+            return None, None, None, None, None
         
         # Strategy Selection Logic (Remains the same)
         if is_oracle:
             if choice == '[NEW]':
                 target = 'oracle_create_context' if context else 'oracle_simple'
-                return self.strategies[target], target, meta_info, imagery_utterance
+                return choice, self.strategies[target], target, meta_info, imagery_utterance
             elif choice == '[CONTINUE]':
-                return self.strategies['oracle_edit_context'], 'oracle_edit_context', meta_info, imagery_utterance
+                return choice, self.strategies['oracle_edit_context'], 'oracle_edit_context', meta_info, imagery_utterance
         else:
             if choice == '[NEW]':
                 target = 'real_create_context' if context else 'real_simple'
-                return self.strategies[target], target, meta_info, imagery_utterance
+                return choice, self.strategies[target], target, meta_info, imagery_utterance
             elif choice == '[CONTINUE]':
-                return self.strategies['real_edit_context'], 'real_edit_context', meta_info, imagery_utterance
+                if previous_prompts is None:
+                    return choice, self.strategies['real_create_context'], 'real_create_context', meta_info, imagery_utterance
+                return choice, self.strategies['real_edit_context'], 'real_edit_context', meta_info, imagery_utterance
 
-        return None, None, None, None
+        return None, None, None, None, None
 
     async def execute_vlm_strategy(
         self, strategy: PromptStrategy, utterance: str, 

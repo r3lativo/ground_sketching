@@ -136,7 +136,7 @@ class AugmentationPipeline:
                 async with self.vlm_semaphore:
                     # Client is now active because we are inside the `async with self.client` block in run_full_pipeline
                     logger.info("CREATE - Get Meta and Strategy...")
-                    strategy, strategy_name, meta_info, imagery_utterance = await self.client.get_meta_and_strategy(
+                    choice, strategy, strategy_name, meta_info, imagery_utterance = await self.client.get_meta_and_strategy(
                         is_oracle=oracle,
                         utterance=utterance,
                         context=context,
@@ -148,16 +148,18 @@ class AugmentationPipeline:
                     continue
 
                 # B. Handle Choices
-                choice = '[CONTINUE]'
                 if 'create' in strategy_name or 'simple' in strategy_name:
-                    choice = '[NEW]'
                     previous_prompts = []
                     current_image_b64 = None
 
                 # C. Handle Meta Substitution
-                if meta_info and imagery_utterance:
-                    logger.info(f"Both META and IMAGERY, so we update the utterance to be the imagery!")
+                if imagery_utterance:
+                    logger.info(f"imagery_utterance becomes the utterance passed to generate the image")
                     utterance = imagery_utterance
+                else:
+                    # if NO imagery utterance then directly put NO_CHANGE as initial input
+                    logger.info(f"No imagery_utterance: so the initial prompts will directly be [NO_CHANGE]")
+                    await self.dm.update_cell(index, 'initial_prompt', "[NO_CHANGE]")
 
                 # D. Update DataFrame Safely
                 await self.dm.update_cell(index, 'frame_choice', choice)
@@ -173,19 +175,19 @@ class AugmentationPipeline:
                 # E. Execute Creation Strategy
                 if self.mock_mode:
                     new_prompt = self._mock_creation_logic(utterance)
-                else:
+                elif imagery_utterance:
                     async with self.vlm_semaphore:
                         logger.info(f"CREATE - Execute Strategy {strategy}...")
                         new_prompt = await self.client.execute_vlm_strategy(
                             strategy, utterance, context, previous_prompts
                         )
 
-                # F. Save Initial Prompt (AWAIT ADDED)
-                if new_prompt:
-                    clean_p = "[NO_CHANGE]" if self._is_no_change(new_prompt) else new_prompt
-                    await self.dm.update_cell(index, 'initial_prompt', clean_p)
-                else:
-                    await self.dm.update_cell(index, 'initial_prompt', "")
+                    # F. Save Initial Prompt (AWAIT ADDED)
+                    if new_prompt:
+                        clean_p = "[NO_CHANGE]" if self._is_no_change(new_prompt) else new_prompt
+                        await self.dm.update_cell(index, 'initial_prompt', clean_p)
+                    else:
+                        await self.dm.update_cell(index, 'initial_prompt', "")
                 
                 # Note: This might be heavy on lock contention; rely on batch saving logic mostly
                 # await self.dm.save() 
@@ -194,6 +196,7 @@ class AugmentationPipeline:
             # --- PHASE 2: RENDER ---
             if render and user_out_path:
                 # Re-fetch row in case CREATE just updated it
+                # Again, if NO imagery utterance, we will directly have NO_CHANGE and so this step will skip altogether
                 row = self.dm.df.loc[index]
                 initial_prompt = str(row.get('initial_prompt', '')).strip()
 
@@ -207,7 +210,7 @@ class AugmentationPipeline:
                         final_prompt = f"[Refined] {initial_prompt}"
                     else:
                         logger.info("RENDER - Get Strategy...")
-                        mm_strategy, _, _, _ = await self.client.get_meta_and_strategy(
+                        _, mm_strategy, _, _, _ = await self.client.get_meta_and_strategy(
                             is_oracle=oracle, has_images=True
                         )
                         async with self.vlm_semaphore:
