@@ -114,7 +114,6 @@ class TextEditStrategy(PromptStrategy):
         return f"{ctx_str}Target Utterance:\n{utterance}\n{hist_str}Rewritten:\n"
 
     def _parse_answer(self, answer_text: str) -> str:
-        # Uses robust utils parser
         return json_parser(answer_text, "Rewritten")
 
 
@@ -145,5 +144,53 @@ class MetaStrategy(TextEditStrategy):
         return f"{ctx_str}\n{hist_str}\n{target_str}"
 
     def _parse_answer(self, answer_text: str) -> Dict[str, Optional[str]]:
-        # Uses robust utils parser
         return meta_parser(answer_text)
+
+
+# --- NEW STRATEGIES ---
+
+class SummarizeStrategy(PromptStrategy):
+    """
+    Summarizes a list of prompts.
+    Expects 'context' to contain the list of prompts to summarize.
+    """
+    @property
+    def endpoint_suffix(self) -> str:
+        return "/generate"
+
+    def build_user_content(self, utterance, context=None, previous_prompts=None, images=None) -> str:
+        # Context holds the list of prompts
+        prompts_str = "\n".join(context) if context else str(context)
+        return f"Here are the prompts:\n{prompts_str}\n Please summarize the prompts into a list separated by newlines:\n"
+
+    def _parse_answer(self, answer_text: str) -> str:
+        return answer_text.strip().replace("\n", " ")
+
+
+class CaptionStrategy(MultimodalEditStrategy):
+    """
+    Captions an image.
+    Inherits payload building from MultimodalEditStrategy but parses raw text.
+    """
+    def _parse_answer(self, answer_text: str) -> str:
+        # We don't want JSON parsing for captions, just the raw description
+        return answer_text.strip().replace("\n", " ")
+
+
+class FactCheckStrategy(PromptStrategy):
+    """
+    Checks a fact against a caption.
+    Expects 'utterance' to be the Fact and 'context' to be the Caption.
+    """
+    @property
+    def endpoint_suffix(self) -> str:
+        return "/generate"
+
+    def build_user_content(self, utterance, context=None, previous_prompts=None, images=None) -> str:
+        # utterance = Fact
+        # context = List containing the Caption string
+        caption = context[0] if isinstance(context, list) and context else str(context)
+        return f"Here is the Caption:\n{caption}\nHere is the Fact: {utterance}\nAnswer strictly with 'True' or 'False'. Here is your answer:"
+
+    def _parse_answer(self, answer_text: str) -> str:
+        return answer_text.strip()
