@@ -11,7 +11,7 @@ from PIL import Image, ImageDraw
 
 from src.utils import pil_to_base64, base64_to_pil, clean_image_artifacts, add_padding_to_image
 from src.data_manager import ConversationDataManager
-from src.api_clients import APIClient
+from src.api_clients import APIClient, Action
 
 logger = logging.getLogger(__name__)
 
@@ -82,7 +82,6 @@ class AugmentationPipeline:
                 )
             await asyncio.gather(*tasks)
             
-
             # Final save to ensure everything is flushed at the end of the run
             await self.dm.save()
 
@@ -111,6 +110,7 @@ class AugmentationPipeline:
             except KeyError: continue 
             if row['character'] != user: continue
 
+            # Load previous image if it exists for Context
             if current_image_b64 is None and self._is_not_empty_val(row.get('img_path')):
                 img_p = str(row['img_path'])
                 current_image_b64 = await loop.run_in_executor(None, _io_load_existing_image, img_p)
@@ -132,11 +132,11 @@ class AugmentationPipeline:
                 logger.info(f"Utterance: '{utterance}'")
                 logger.info(f"Previous prompts: {previous_prompts}")
 
-                # A. Get Meta & Strategy
+                # A. Get Meta & Strategy Decision
                 async with self.vlm_semaphore:
-                    # Client is now active because we are inside the `async with self.client` block in run_full_pipeline
                     logger.info("CREATE - Get Meta and Strategy...")
-                    choice, strategy, strategy_name, meta_info, imagery_utterance = await self.client.get_meta_and_strategy(
+                    # Returns StrategyDecision object now
+                    decision = await self.client.get_meta_and_strategy(
                         is_oracle=oracle,
                         utterance=utterance,
                         context=context,
@@ -144,64 +144,58 @@ class AugmentationPipeline:
                         has_images=False
                     )
 
-                if strategy is None:
+                # B. Handle SKIP Logic
+                # If decision object is empty or Action is SKIP
+                if not decision.action or decision.action == Action.SKIP:
+                    logger.info(f"Skipping index {index} based on VLM decision: {decision.action}")
+                    
+                    # We still record that we looked at it and decided to skip
+                    await self.dm.update_cell(index, 'frame_choice', decision.action or Action.SKIP)
+                    await self.dm.update_cell(index, 'meta_info', decision.meta_info)
+                    await self.dm.update_cell(index, 'initial_prompt', decision.imagery_utterance)
                     continue
 
-                # B. Handle Choices
-                if 'create' in strategy_name or 'simple' in strategy_name:
+                # C. Handle Strategy Selection & Meta Substitution
+                if decision.action == Action.NEW:
                     previous_prompts = []
                     current_image_b64 = None
 
-                # C. Handle Meta Substitution
-                if imagery_utterance:
-                    logger.info(f"imagery_utterance becomes the utterance passed to generate the image")
-                    utterance = imagery_utterance
+                if decision.imagery_utterance:
+                    logger.info(f"Using extracted imagery utterance for generation.")
+                    utterance = decision.imagery_utterance
                 else:
-                    # if NO imagery utterance then directly put NO_CHANGE as initial input
-                    logger.info(f"No imagery_utterance: so the initial prompts will directly be [NO_CHANGE]")
-                    await self.dm.update_cell(index, 'initial_prompt', "[NO_CHANGE]")
+                    # If no imagery utterance but NOT skipped, we just use the raw utterance
+                    pass
 
-                # D. Update DataFrame Safely
-                await self.dm.update_cell(index, 'frame_choice', choice)
-                await self.dm.update_cell(index, 'meta_info', meta_info)
-                await self.dm.update_cell(index, 'imagery_utterance', imagery_utterance)
-
-                # DEBUG LOGGING
-                logger.info(f"User and Index: {user}, {index}")
-                logger.info(f"Frame Choice: {choice}")
-                logger.info(f"Meta Info: '{meta_info}'")
-                logger.info(f"Imagery Utterance: '{imagery_utterance}'")
+                # D. Update DataFrame with Decision Data
+                await self.dm.update_cell(index, 'frame_choice', decision.action)
+                await self.dm.update_cell(index, 'meta_info', decision.meta_info)
+                await self.dm.update_cell(index, 'imagery_utterance', decision.imagery_utterance)
 
                 # E. Execute Creation Strategy
+                new_prompt = ""
                 if self.mock_mode:
                     new_prompt = self._mock_creation_logic(utterance)
-                elif imagery_utterance:
+                elif decision.strategy:
                     async with self.vlm_semaphore:
-                        logger.info(f"CREATE - Execute Strategy {strategy}...")
+                        logger.info(f"CREATE - Execute Strategy {decision.strategy_name}...")
                         new_prompt = await self.client.execute_vlm_strategy(
-                            strategy, utterance, context, previous_prompts
+                            decision.strategy, utterance, context, previous_prompts
                         )
 
-                    # F. Save Initial Prompt (AWAIT ADDED)
-                    if new_prompt:
-                        clean_p = "[NO_CHANGE]" if self._is_no_change(new_prompt) else new_prompt
-                        await self.dm.update_cell(index, 'initial_prompt', clean_p)
-                    else:
-                        await self.dm.update_cell(index, 'initial_prompt', "")
+                # F. Save Initial Prompt
+                await self.dm.update_cell(index, 'initial_prompt', new_prompt)
                 
-                # Note: This might be heavy on lock contention; rely on batch saving logic mostly
-                # await self.dm.save() 
                 updates_made = True
 
             # --- PHASE 2: RENDER ---
             if render and user_out_path:
                 # Re-fetch row in case CREATE just updated it
-                # Again, if NO imagery utterance, we will directly have NO_CHANGE and so this step will skip altogether
                 row = self.dm.df.loc[index]
                 initial_prompt = str(row.get('initial_prompt', '')).strip()
 
+                # Basic validation: If empty, we can't render
                 if not self._is_not_empty_val(initial_prompt): continue
-                if self._is_no_change(initial_prompt): continue
 
                 # A. Refine Prompt
                 final_prompt = initial_prompt
@@ -209,20 +203,23 @@ class AugmentationPipeline:
                     if self.mock_mode:
                         final_prompt = f"[Refined] {initial_prompt}"
                     else:
-                        logger.info("RENDER - Get Strategy...")
-                        _, mm_strategy, _, _, _ = await self.client.get_meta_and_strategy(
+                        # 1. Get MM Strategy (Forces MultimodalEditStrategy)
+                        mm_decision = await self.client.get_meta_and_strategy(
                             is_oracle=oracle, has_images=True
                         )
-                        async with self.vlm_semaphore:
-                            logger.info(f"RENDER - Execute Strategy {mm_strategy}...")
-                            refined = await self.client.execute_vlm_strategy(
-                                mm_strategy, initial_prompt, images=[current_image_b64]
-                            )
-                        if refined and not self._is_no_change(refined):
-                            final_prompt = refined
+                        
+                        # 2. Execute Refinement
+                        if mm_decision.strategy:
+                            async with self.vlm_semaphore:
+                                logger.info(f"RENDER - Execute Multimodal Edit...")
+                                refined = await self.client.execute_vlm_strategy(
+                                    mm_decision.strategy, initial_prompt, images=[current_image_b64]
+                                )
+                            
+                            if refined:
+                                final_prompt = refined
                 else:
                     # If NO CURRENT IMG then update frame and reset sequence
-                    # If seq_idx is greater than 1 it means we have generated an image with the current frame_idx
                     if seq_idx > 1:
                         frame_idx += 1
                     seq_idx = 1
@@ -239,6 +236,7 @@ class AugmentationPipeline:
                     save_file = user_out_path / img_filename
                     seq_idx += 1
 
+                    # Handle ZOOM_OUT logic
                     if "[ZOOM_OUT]" in sub_prompt.upper():
                         if current_image_b64:
                             new_b64 = await loop.run_in_executor(
@@ -249,6 +247,7 @@ class AugmentationPipeline:
                                 last_saved_path = str(save_file)
                         continue
                     
+                    # Generate New Image
                     imgs_payload = [current_image_b64] if current_image_b64 else None
                     new_b64_raw = None
 
@@ -288,15 +287,10 @@ class AugmentationPipeline:
         if pd.isna(val): return False
         return str(val).strip() != ""
 
-    def _is_no_change(self, val):
-        if pd.isna(val): return False
-        return str(val).strip().upper() in ("[NO_CHANGE]", "NO_CHANGE", "[NO CHANGE]")
-
     def _mock_creation_logic(self, utterance):
         val = random.random()
-        if val < 0.1: return "[NO_CHANGE]"
-        elif val < 0.3: return f"Close up of {utterance} $$$ [ZOOM_OUT] $$$ Wide of {utterance}"
-        elif val < 0.5: return f"First angle {utterance} $$$ Second angle {utterance}"
+        if val < 0.3: return f"Close up of {utterance} $$$ [ZOOM_OUT] $$$ Wide of {utterance}"
+        elif val < 0.6: return f"First angle {utterance} $$$ Second angle {utterance}"
         return f"[Mock Prompt] {utterance}"
 
     def _mock_gen_logic(self, prompt):

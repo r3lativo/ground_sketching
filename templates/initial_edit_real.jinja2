@@ -21,11 +21,7 @@ Please strictly follow the rewriting rules below:
 
 ## 2. Task Type Handling Rules
 
-### A. Handling Non-Visual Information
-- If the <target> utterance provides **no new visual information** (e.g., acknowledgments like "Okay," "Got it," "I see," or conversational filler), or if it's a question that doesn't add/change an object, your *only* output must be the exact string: `[NO_CHANGE]`.
-- If the <target> contains information (like asking questions or providing answers to a question) which often require previous context to get the bigger picture, then it should be looked in context of the related previous utterances and if together they provide an information which should be added to the mental imagery then add them.
-
-### B. Simple Edits (Add, Delete, Replace)
+### A. Simple Edits (Add, Delete, Replace)
 - If the Target Utterance adds information, use "Add..." and specify its position relative to existing objects (e.g., "Add a black outline of 'X' to the right of 'Y'").
 - If the Target Utterance removes something, use "Remove..."
 - If the Target Utterance replaces something, use "Replace 'Y' with 'X'".
@@ -133,28 +129,7 @@ This is a MOVE task. The first aid station is moving from the "right" to the "le
 </think>
 Remove the first aid station on the right of the information stand. Keep the information stand, toilet box, and bench unchanged. $$$ Add a pink colored first aid station with a brown door (in black outline) to the left of the information stand. Keep the information stand, toilet box, and bench unchanged.
 
-#### Example 4 (No Change)
-<context>
-[
-...
-"Nathan: I think there's a bin near the map.",
-]
-</context>
-<target>
-"Michael: Okay, got it."
-</target>
-<previous>
-[
-"...a first aid station...",
-"Add a bin (near the map board, red outlines). Keep ... unchanged."
-]
-</previous>
-<think>
-The target utterance "Okay, got it." is a simple acknowledgment. It provides no new visual information, does not add, delete, move, or modify any object. According to Rule 2.A, the correct output is [NO_CHANGE].
-</think>
-[NO_CHANGE]
-
-#### Example 5 (Add Two New Relational Objects)
+#### Example 4 (Add Two New Relational Objects)
 <context>
 [
 "Debra: I'm in the leisure and services floor...",
@@ -174,7 +149,7 @@ The target "I see a vending machine near the children's play zone" introduces tw
 </think>
 Add a vending machine (in black outline) and a children's play zone (in red outline). Position the vending machine near the children's play zone. Keep the information desk (blue outline) and checkout lane (blue outline) unchanged.
 
-#### Example 6 (Details)
+#### Example 5 (Details)
 <context>
 [
 "Maria: I just arrived at the security checkpoint from the connecting flight path.",
@@ -187,14 +162,14 @@ Add a vending machine (in black outline) and a children's play zone (in red outl
 </target>
 <previous>
 [
-"A clean, minimalist, iconic scene in an airport, at a security checkpoint. There is a metal detector (in blue otline), a queue of people (in blue outline), and a display showing the departures (in blue outline). Solid white background, no shadows.",
-"Add a security desk made of wood (in black outline). Keep the metal detector (blue outline), the queue of people (blue outline) and the display showing the departures (blue otline) unchanged.",
+"A clean, minimalist, iconic scene in an airport, at a security checkpoint. There is a metal detector (in blue outline), a queue of people (in blue outline), and a display showing the departures (in blue outline). Solid white background, no shadows.",
+"Add a security desk made of wood (in black outline). Keep the metal detector (blue outline), the queue of people (blue outline) and the display showing the departures (blue outline) unchanged.",
 ]
 </previous>
 <think>
 Okay, the target "There's also a wooden footwear removal bench nearby." introduces one new object, that is a wooden bench. To depict that it is a footwear removal bench, I will also add some shoes nearby it and a shoe horn to remove shoes.
 </think>
-Add a wooden bench (in black outline). On the bench there is a shoe horn, and some shoes and a box are placed near the bench. Keep the metal detector (blue otline), the qeue of people (blue otline), the display showing the departures (blue otline), and the security desk (black otline) unchanged.
+Add a wooden bench (in black outline). On the bench there is a shoe horn, and some shoes and a box are placed near the bench. Keep the metal detector (blue outline), the queue of people (blue outline), the display showing the departures (blue outline), and the security desk (black outline) unchanged.
 
 ---
 Below is the new task. Please think and generate your final answer.

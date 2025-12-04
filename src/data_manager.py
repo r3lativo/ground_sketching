@@ -78,7 +78,10 @@ class ConversationDataManager:
 
     async def update_cell(self, index: int, column: str, value: Any):
         """Updates a specific cell in the dataframe."""
-        self.df.at[index, column] = value.replace("\n", " ")
+        if isinstance(value, str):
+            self.df.at[index, column] = value.replace("\n", " ")
+        else:
+            self.df.at[index, column] = value
 
     def set_start_idx(self, index: int, user: str, oracle: bool = False) -> int:
         """Set start index based on context"""
