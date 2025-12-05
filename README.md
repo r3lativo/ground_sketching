@@ -137,13 +137,8 @@ There is also an interactive editor to create and edit images on the spot:
 python3 interactive_edit.py -i IMAGE_PATH_TO_START_FROM -d --no-cleanup # -d bypasses the polisher, --no-cleanup skips the artifact cleaner
 ```
 
-Finally, there is an augmenter, that takes a conversation and `--creates_prompts` to "render" to images via the diffusion model. The images can be generated calling `--render_prompts`.
+Finally, there is an augmenter, that takes a conversation and creates prompts to "render" to images via the diffusion model.
 
 ```bash
-python3 augmenter.py --file "data/mini.csv" --user "Debra" --create_aug --gen_images_from_aug
-```
-
-Here a way to run the mock version to test the pipeline without running servers:
-```bash
-python3 augmenter.py --automatic_users --create_aug --gen_images_from_aug --mock --file "data/indiref_2_test/35_143_115_365.csv" #[OPTIONAL --oracle]
+python3 augmenter.py --input_dir "data/indiref_2_test/" --output_dir "output/indiref_2_test_new/" --create_aug --gen_images_from_aug --concurrency 12 --mock #[OPTIONAL --oracle]
 ```

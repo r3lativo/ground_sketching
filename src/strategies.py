@@ -97,10 +97,10 @@ class TextCreateStrategy(PromptStrategy):
 
     def build_user_content(self, utterance, context=None, previous_prompts=None, images=None) -> str:
         ctx_str = f"Conversation Context:\n{context}\n" if context else ""
-        return f"{ctx_str}Target Utterance:\n{utterance}\nRewritten Prompt:\n"
+        return f"{ctx_str}Target Utterance:\n{utterance}\n"
 
     def _parse_answer(self, answer_text: str) -> str:
-        return answer_text
+        return answer_text.strip().replace("\n", " ")
 
 
 class TextEditStrategy(PromptStrategy):
@@ -111,10 +111,10 @@ class TextEditStrategy(PromptStrategy):
     def build_user_content(self, utterance, context=None, previous_prompts=None, images=None) -> str:
         ctx_str = f"Conversation Context:\n{context}\n" if context else ""
         hist_str = f"Previous Prompts:\n{previous_prompts}\n" if previous_prompts else ""
-        return f"{ctx_str}Target Utterance:\n{utterance}\n{hist_str}Rewritten:\n"
+        return f"{ctx_str}Target Utterance:\n{utterance}\n{hist_str}"
 
     def _parse_answer(self, answer_text: str) -> str:
-        return json_parser(answer_text, "Rewritten")
+        return answer_text.strip().replace("\n", " ")
 
 
 class MultimodalEditStrategy(PromptStrategy):
@@ -133,7 +133,7 @@ class MultimodalEditStrategy(PromptStrategy):
         return content
 
     def _parse_answer(self, answer_text: str) -> str:
-        return json_parser(answer_text, "Rewritten")
+        return answer_text.strip().replace("\n", " ")
 
 
 class MetaStrategy(TextEditStrategy):
@@ -164,17 +164,15 @@ class SummarizeStrategy(PromptStrategy):
         return f"Here are the prompts:\n{prompts_str}\n Please summarize the prompts into a list separated by newlines:\n"
 
     def _parse_answer(self, answer_text: str) -> str:
-        return answer_text.strip().replace("\n", " ")
+        return answer_text.strip()
 
 
 class CaptionStrategy(MultimodalEditStrategy):
     """
     Captions an image.
-    Inherits payload building from MultimodalEditStrategy but parses raw text.
+    Inherits from MultimodalEditStrategy.
     """
-    def _parse_answer(self, answer_text: str) -> str:
-        # We don't want JSON parsing for captions, just the raw description
-        return answer_text.strip().replace("\n", " ")
+    pass
 
 
 class FactCheckStrategy(PromptStrategy):
@@ -190,7 +188,7 @@ class FactCheckStrategy(PromptStrategy):
         # utterance = Fact
         # context = List containing the Caption string
         caption = context[0] if isinstance(context, list) and context else str(context)
-        return f"Here is the Caption:\n{caption}\nHere is the Fact: {utterance}\nAnswer strictly with 'True' or 'False'. Here is your answer:"
+        return f"Here is the Caption:\n{caption}\nHere is the Fact: {utterance}\nAnswer strictly with 'True' or 'False'."
 
     def _parse_answer(self, answer_text: str) -> str:
         return answer_text.strip()

@@ -10,10 +10,14 @@ import os
 import re
 import sys
 from datetime import datetime
-from PIL import Image, ImageFilter
+from PIL import Image, ImageFilter, ImageDraw
 import socket
 import json
 import numpy as np
+from typing import List, Optional
+from pathlib import Path
+import pandas as pd
+import random
 
 logger = logging.getLogger(__name__)
 
@@ -219,3 +223,57 @@ def thinking_parser(text: str, delimiter: str = "</think>") -> dict:
             "answer": parts[1].strip()
         }
     return {"thinking": "", "answer": text.strip()}
+
+# --- Helper Functions for ThreadPoolExecutor ---
+
+def load_existing_image(path: str) -> Optional[str]:
+    """Opens image from disk and converts to base64."""
+    if os.path.exists(path):
+        try:
+            with Image.open(path) as img:
+                return pil_to_base64(img)
+        except Exception as e:
+            logger.warning(f"Could not load existing image at {path}: {e}")
+    return None
+
+def process_zoom(current_b64: str, save_path: Path) -> Optional[str]:
+    """Decodes, Zooms (Resizes), and Saves."""
+    try:
+        pil_img = base64_to_pil(current_b64)
+        zoomed = add_padding_to_image(pil_img, scale_factor=0.8)
+        zoomed.save(save_path)
+        return pil_to_base64(zoomed)
+    except Exception as e:
+        logger.error(f"Zoom error: {e}")
+        return None
+
+def process_generated_image(new_b64: str, save_path: Path) -> Optional[str]:
+    """Decodes, Cleans Artifacts, and Saves."""
+    try:
+        img = clean_image_artifacts(base64_to_pil(new_b64))
+        img.save(save_path)
+        return pil_to_base64(img)
+    except Exception as e:
+        logger.error(f"Save error: {e}")
+        return None
+
+def is_not_empty_val(val):
+    if pd.isna(val): return False
+    return str(val).strip() != ""
+
+def mock_creation_logic(utterance):
+    val = random.random()
+    if val < 0.3: return f"Close up of {utterance} $$$ [ZOOM_OUT] $$$ Wide of {utterance}"
+    elif val < 0.6: return f"First angle {utterance} $$$ Second angle {utterance}"
+    return f"[Mock Prompt] {utterance}"
+
+def mock_gen_logic(prompt):
+    color = (random.randint(0,255), random.randint(0,255), random.randint(0,255))
+    img = Image.new('RGB', (128, 128), color=color)
+    d = ImageDraw.Draw(img)
+    d.rectangle([10,10,40,40], fill="white")
+    if "[ZOOM_OUT]" in str(prompt): d.text((10,50), "ZOOM", fill="white")
+    return pil_to_base64(img)
+
+
+# -----------------------------------------------

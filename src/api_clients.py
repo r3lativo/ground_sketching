@@ -38,6 +38,17 @@ class StrategyDecision:
     meta_info: Optional[Dict[str, Any]] = None
     imagery_utterance: Optional[str] = None
 
+    def to_dict(self):
+        """
+        Converts the decision to a dictionary for logging.
+        """
+        return {
+            "action": self.action,
+            "strategy_name": self.strategy_name,
+            "meta_info": self.meta_info,
+            "imagery_utterance": self.imagery_utterance
+        }
+
 # --- Main Client ---
 
 class APIClient:
