@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 class ProjectSymbols:
     NEW = "[NEW]"
     CONTINUE = "[CONTINUE]"
-    NO_CHANGE = "[NO_CHANGE]"
+    SKIP = "[SKIP]"
     ZOOM_OUT = "[ZOOM_OUT]"
     SEPARATOR = "$$$"
     MOVED = "<moved>"
@@ -65,7 +65,7 @@ def load_config(config_path):
         with open(config_path, 'r') as f:
             return yaml.safe_load(f)
     except Exception as e:
-        logger.error(f"Config load error: {e}")
+        logger.error(f"[UTILS] Config load error: {e}")
         raise
 
 def pil_to_base64(pil_image: Image.Image, format="PNG") -> str:
@@ -74,7 +74,7 @@ def pil_to_base64(pil_image: Image.Image, format="PNG") -> str:
             pil_image.save(buffer, format=format)
             return base64.b64encode(buffer.getvalue()).decode("utf-8")
     except Exception as e:
-        logger.error(f"Encoding error: {e}")
+        logger.error(f"[UTILS] Encoding error: {e}")
         raise
 
 def base64_to_pil(base64_string: str) -> Image.Image:
@@ -101,7 +101,7 @@ def log_experiment_step(log_filepath, data):
             row["timestamp"] = datetime.now().isoformat()
             writer.writerow(row)
     except Exception as e:
-        logger.error(f"Log write failed: {e}")
+        logger.error(f"[UTILS] Log write failed: {e}")
 
 def update_last_log_comment(log_filepath: str, comment: str):
     """Updates the 'comment' field of the last row in the CSV."""
@@ -126,9 +126,9 @@ def update_last_log_comment(log_filepath: str, comment: str):
                 writer.writeheader()
                 writer.writerows(rows)
                 
-        logger.info(f"Updated comment in {log_filepath}")
+        logger.info(f"[UTILS] Updated comment in {log_filepath}")
     except Exception as e:
-        logger.error(f"Failed to update log comment: {e}")
+        logger.error(f"[UTILS] Failed to update log comment: {e}")
 
 # --- Optimized Image Processing (NumPy) ---
 
@@ -154,7 +154,7 @@ def add_padding_to_image(img_pil, scale_factor=0.8, fill_color="white"):
         final.paste(resized, ((w - new_w) // 2, (h - new_h) // 2))
         return final
     except Exception as e:
-        logger.error(f"Padding error: {e}")
+        logger.error(f"[UTILS] Padding error: {e}")
         return img_pil
 
 # --- Network Checks ---
@@ -189,7 +189,7 @@ def json_parser(input_text: str, key_term: str):
             return data.get(key_term, input_text)
         return input_text
     except json.JSONDecodeError:
-        logger.debug(f"JSON decode failed for {key_term}, returning raw.")
+        logger.debug(f"[UTILS] JSON decode failed for {key_term}, returning raw.")
         return input_text
 
 def meta_parser(input_text: str):
@@ -233,7 +233,7 @@ def load_existing_image(path: str) -> Optional[str]:
             with Image.open(path) as img:
                 return pil_to_base64(img)
         except Exception as e:
-            logger.warning(f"Could not load existing image at {path}: {e}")
+            logger.warning(f"[UTILS] Could not load existing image at {path}: {e}")
     return None
 
 def process_zoom(current_b64: str, save_path: Path) -> Optional[str]:
@@ -244,7 +244,7 @@ def process_zoom(current_b64: str, save_path: Path) -> Optional[str]:
         zoomed.save(save_path)
         return pil_to_base64(zoomed)
     except Exception as e:
-        logger.error(f"Zoom error: {e}")
+        logger.error(f"[UTILS] Zoom error: {e}")
         return None
 
 def process_generated_image(new_b64: str, save_path: Path) -> Optional[str]:
@@ -254,7 +254,7 @@ def process_generated_image(new_b64: str, save_path: Path) -> Optional[str]:
         img.save(save_path)
         return pil_to_base64(img)
     except Exception as e:
-        logger.error(f"Save error: {e}")
+        logger.error(f"[UTILS] Save error: {e}")
         return None
 
 def is_not_empty_val(val):
@@ -263,8 +263,8 @@ def is_not_empty_val(val):
 
 def mock_creation_logic(utterance):
     val = random.random()
-    if val < 0.3: return f"Close up of {utterance} $$$ [ZOOM_OUT] $$$ Wide of {utterance}"
-    elif val < 0.6: return f"First angle {utterance} $$$ Second angle {utterance}"
+    if val < 0.2: return f"[ZOOM_OUT] $$$ Wide of {utterance}"
+    elif val < 0.4: return f"First angle {utterance} $$$ Second angle {utterance}"
     return f"[Mock Prompt] {utterance}"
 
 def mock_gen_logic(prompt):
@@ -274,6 +274,5 @@ def mock_gen_logic(prompt):
     d.rectangle([10,10,40,40], fill="white")
     if "[ZOOM_OUT]" in str(prompt): d.text((10,50), "ZOOM", fill="white")
     return pil_to_base64(img)
-
 
 # -----------------------------------------------

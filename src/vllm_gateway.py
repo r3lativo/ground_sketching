@@ -61,16 +61,16 @@ try:
     # Set the backend URL as a global
     VLLM_OPENAI_URL = f"http://{VLLM_CONFIG.backend.vllm_host}:{VLLM_CONFIG.backend.vllm_port}/v1/chat/completions"
     
-    logger.info("Gateway configuration loaded and validated successfully.")
-    logger.info(f"Gateway will forward requests to: {VLLM_OPENAI_URL}")
+    logger.info("[VLLM_G] Gateway configuration loaded and validated successfully.")
+    logger.info(f"[VLLM_G] Gateway will forward requests to: {VLLM_OPENAI_URL}")
 
 except (ValidationError, ValueError, FileNotFoundError) as e:
-    logger.critical(f"--- FATAL CONFIGURATION ERROR ---")
-    logger.critical(f"Failed to load or validate 'vlm_service' from config/server_config.yaml:")
+    logger.critical(f"[VLLM_G] --- FATAL CONFIGURATION ERROR ---")
+    logger.critical(f"[VLLM_G] Failed to load or validate 'vlm_service' from config/server_config.yaml:")
     logger.critical(f"\n{e}")
     sys.exit("Invalid configuration. Please check the log.")
 except Exception as e:
-    logger.critical(f"FATAL: An unexpected error occurred during config loading: {e}", exc_info=True)
+    logger.critical(f"[VLLM_G] FATAL: An unexpected error occurred during config loading: {e}", exc_info=True)
     sys.exit("Failed to load config.")
 
 # --- Request Body Model ---
@@ -97,13 +97,13 @@ async def lifespan(app: FastAPI):
     global http_client
     # Initialize the httpx client on startup
     http_client = httpx.AsyncClient(timeout=300.0) # Long timeout for LLMs
-    logger.info("Gateway started. HTTPX client created.")
+    logger.info("[VLLM_G] Gateway started. HTTPX client created.")
     
     yield  # The 'yield' separates startup (above) from shutdown (below) code
     
     # On Shutdown
     await http_client.aclose()  # Cleanly close the client connections
-    logger.info("Gateway shutting down. HTTPX client closed.")
+    logger.info("[VLLM_G] Gateway shutting down. HTTPX client closed.")
 
 # --- Helper Function ---
 def _parse_messages_for_openai(
@@ -152,7 +152,7 @@ def _parse_messages_for_openai(
                             "image_url": {"url": data_uri} # The backend server handles the data URI
                         })
                     except Exception as e:
-                        logger.error(f"Failed to decode image: {e}", exc_info=True)
+                        logger.error(f"[VLLM_G] Failed to decode image: {e}", exc_info=True)
                         raise ValueError(f"Invalid image data: {e}")
             
             openai_messages.append({"role": "user", "content": openai_content_list})
@@ -179,16 +179,16 @@ async def call_vllm_backend(payload: Dict[str, Any]) -> str:
         
     # Specific error handling for common network/backend issues
     except httpx.ReadTimeout:
-        logger.error(f"Gateway timeout: vLLM backend at {VLLM_OPENAI_URL} took too long.")
+        logger.error(f"[VLLM_G] Gateway timeout: vLLM backend at {VLLM_OPENAI_URL} took too long.")
         raise HTTPException(status_code=504, detail="Gateway timeout: vLLM backend took too long.")
     except httpx.ConnectError:
-        logger.error(f"Gateway connection error: Could not connect to vLLM backend at {VLLM_OPENAI_URL}.")
+        logger.error(f"[VLLM_G] Gateway connection error: Could not connect to vLLM backend at {VLLM_OPENAI_URL}.")
         raise HTTPException(status_code=503, detail="Service unavailable: Cannot connect to vLLM backend.")
     except httpx.HTTPStatusError as e:
-        logger.error(f"vLLM backend error: {e.response.text}")
+        logger.error(f"[VLLM_G] vLLM backend error: {e.response.text}")
         raise HTTPException(status_code=e.response.status_code, detail=f"vLLM backend error: {e.response.text}")
     except Exception as e:
-        logger.error(f"Internal gateway error: {e}", exc_info=True)
+        logger.error(f"[VLLM_G] Internal gateway error: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Internal gateway error: {str(e)}")
 
 
@@ -198,7 +198,7 @@ app = FastAPI(lifespan=lifespan)
 
 @app.post("/generate")
 async def handle_generation(request: GenerateRequest):
-    logger.debug(f"Received /generate request")
+    logger.debug(f"[VLLM_G] Received /generate request")
 
     try:
         # Standardize the message format (e.g., decode images)
@@ -207,7 +207,7 @@ async def handle_generation(request: GenerateRequest):
         if not openai_messages or openai_messages[-1]["role"] != "assistant":
             openai_messages.append({"role": "assistant", "content": None})
     except Exception as e:
-        logger.error(f"Error processing input: {e}", exc_info=True)
+        logger.error(f"[VLLM_G] Error processing input: {e}", exc_info=True)
         raise HTTPException(status_code=400, detail=f"Failed to process input messages: {e}")
 
     # Build the final JSON payload for the OpenAI-compatible backend
@@ -231,14 +231,14 @@ async def handle_edit(request: GenerateRequest):
     This endpoint is identical to /generate; it just provides a different
     path for semantic clarity (e.g., in logs or for future logic).
     """
-    logger.debug(f"Received /edit request")
+    logger.debug(f"[VLLM_G] Received /edit request")
         
     try:
         openai_messages = _parse_messages_for_openai(request.messages)
         if not openai_messages or openai_messages[-1]["role"] != "assistant":
             openai_messages.append({"role": "assistant", "content": None})
     except Exception as e:
-        logger.error(f"Error processing input: {e}", exc_info=True)
+        logger.error(f"[VLLM_G] Error processing input: {e}", exc_info=True)
         raise HTTPException(status_code=400, detail=f"Failed to process input messages: {e}")
 
     openai_payload = {
@@ -270,7 +270,7 @@ if __name__ == "__main__":
     # We just need to start the server.
     
     # Use the globally loaded config to start the server
-    logger.info(f"Starting FastAPI gateway on http://{VLLM_CONFIG.gateway.host}:{VLLM_CONFIG.gateway.port}")
+    logger.info(f"[VLLM_G] Starting FastAPI gateway on http://{VLLM_CONFIG.gateway.host}:{VLLM_CONFIG.gateway.port}")
     
     # Start the FastAPI server
     uvicorn.run(

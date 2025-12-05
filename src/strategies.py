@@ -74,13 +74,13 @@ class PromptStrategy(ABC):
 
         if thinking_part:
             # Log thought
-            logger.info(f"VLM Thought: {thinking_part.replace("\n", " ")}")
+            logger.info(f"[STRAEGIES] VLM Thought: {thinking_part.replace("\n", " ")}")
 
         if not answer_part:
-            logger.warning("VLM returned no answer after parsing </think>.")
+            logger.warning("[STRAEGIES] VLM returned no answer after parsing </think>.")
             return None
         
-        logger.info(f"VLM Answer: {answer_part.replace("\n", " ")}")
+        logger.info(f"[STRAEGIES] VLM Answer: {answer_part.replace("\n", " ")}")
 
         # 2. Strategy-specific parsing
         return self._parse_answer(answer_part.strip())

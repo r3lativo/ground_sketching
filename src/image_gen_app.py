@@ -63,7 +63,7 @@ try:
         raise ValueError("'image_gen_service' section not found")
     config = ImageGenConfig(**raw_service_config)
 except Exception as e:
-    logger.critical(f"FATAL: Failed to load config: {e}", exc_info=True)
+    logger.critical(f"[IMG_GEN] FATAL: Failed to load config: {e}", exc_info=True)
     sys.exit("Failed to load config.")
 
 # --- Model Loading Logic ---
@@ -107,12 +107,12 @@ def load_model():
                 config.model_id, transformer=model, scheduler=scheduler, torch_dtype=DTYPE, local_files_only=True
             )
 
-            logger.info(f"Loading LoRA weights: {config.lora_path}...")
+            logger.info(f"[IMG_GEN] Loading LoRA weights: {config.lora_path}...")
             _pipe.load_lora_weights(
                 config.lora_path
             )
         else:
-            logger.info(f"Loading base pipeline (no LoRA): {config.model_id}...")
+            logger.info(f"[IMG_GEN] Loading base pipeline (no LoRA): {config.model_id}...")
             _pipe = pipe_cls.from_pretrained(
                 config.model_id,
                 torch_dtype=DTYPE,
@@ -120,9 +120,9 @@ def load_model():
             )
         
         pipeline = _pipe.to(DEVICE)
-        logger.info(f"Pipeline loaded on {DEVICE}.")
+        logger.info(f"[IMG_GEN] Pipeline loaded on {DEVICE}.")
     except Exception as e:
-        logger.error(f"FATAL: Failed to load pipeline: {e}", exc_info=True)
+        logger.error(f"[IMG_GEN] FATAL: Failed to load pipeline: {e}", exc_info=True)
         raise
 
 # --- Lifespan ---
@@ -179,7 +179,7 @@ async def generate_image(request: ImageEditRequest):
     # 1. Await the lock. This pauses the function if the GPU is busy,
     #    but lets the server keep running to accept other connections.
     async with generation_queue_lock:
-        logger.info(f"Processing request (Queue cleared). Prompt: {request.prompt}...")
+        logger.info(f"[IMG_GEN] Processing request (Queue cleared). Prompt: {request.prompt}...")
         
         try:
             # 2. Offload blocking to a thread.
@@ -190,11 +190,11 @@ async def generate_image(request: ImageEditRequest):
                 functools.partial(run_inference_sync, inputs)
             )
         except Exception as e:
-            logger.error(f"Inference failed: {e}", exc_info=True)
+            logger.error(f"[IMG_GEN] Inference failed: {e}", exc_info=True)
             raise HTTPException(status_code=500, detail=f"Inference failed: {e}")
 
     inference_time = time.time() - start_time
-    logger.info(f"Done in {inference_time:.2f}s")
+    logger.info(f"[IMG_GEN] Done in {inference_time:.2f}s")
 
     return ImageEditResponse(image=pil_to_base64(output_image))
 

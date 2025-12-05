@@ -75,7 +75,7 @@ class APIClient:
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         if self.client:
             await self.client.aclose()
-            logger.info("API Client session closed.")
+            logger.info("[API CLIENTS] API Client session closed.")
 
     # --- Initialization Helpers ---
 
@@ -88,12 +88,12 @@ class APIClient:
             self.image_gen_url = f"http://{self.config['image_gen_service']['host']}:{self.config['image_gen_service']['port']}"
             self.polisher_api_base_url = f"http://{self.config['vlm_service']['gateway']['host']}:{self.config['vlm_service']['gateway']['port']}"
             
-            logger.info(f"API Client Initialized.")
-            logger.info(f"Image Gen URL: {self.image_gen_url}")
-            logger.info(f"VLM Base URL: {self.polisher_api_base_url}")
+            logger.info(f"[API CLIENTS] API Client Initialized.")
+            logger.info(f"[API CLIENTS] Image Gen URL: {self.image_gen_url}")
+            logger.info(f"[API CLIENTS] VLM Base URL: {self.polisher_api_base_url}")
             
         except Exception as e:
-            logger.error(f"Failed to load configuration: {e}", exc_info=True)
+            logger.error(f"[API CLIENTS] Failed to load configuration: {e}", exc_info=True)
             raise
 
     def _init_jinja_and_strategies(self):
@@ -127,7 +127,7 @@ class APIClient:
             }
             
         except Exception as e:
-            logger.error(f"Error initializing Strategies: {e}", exc_info=True)
+            logger.error(f"[API CLIENTS] Error initializing Strategies: {e}", exc_info=True)
             raise
 
     # --- Core Logic ---
@@ -202,7 +202,7 @@ class APIClient:
             response.raise_for_status()
             return strategy.process_response(response.json().get("text"))
         except Exception as e:
-            logger.error(f"Meta Extraction Request failed: {e}", exc_info=True)
+            logger.error(f"[API CLIENTS] Meta Extraction Request failed: {e}", exc_info=True)
             return None
 
     async def execute_vlm_strategy(
@@ -223,7 +223,7 @@ class APIClient:
             response.raise_for_status()
             return strategy.process_response(response.json().get("text"))
         except Exception as e:
-            logger.error(f"VLM Strategy Execution failed ({strategy.__class__.__name__}): {e}", exc_info=True)
+            logger.error(f"[API CLIENTS] VLM Strategy Execution failed ({strategy.__class__.__name__}): {e}", exc_info=True)
             return None
 
     async def call_image_gen(self, prompt: str, base64_images: Optional[List[str]], timeout: int = 300) -> Optional[str]:
@@ -251,7 +251,7 @@ class APIClient:
             result = response.json()
             return result.get("image")
         except Exception as e:
-            logger.error(f"Image Gen failed: {e}", exc_info=True)
+            logger.error(f"[API CLIENTS] Image Gen failed: {e}", exc_info=True)
             return None
 
     # --- NEW CALLS ---
@@ -263,7 +263,7 @@ class APIClient:
         Uses 'summarize' strategy (TextCreateStrategy-like).
         The list of prompts is passed as 'context'.
         """
-        logger.info("Calling Prompt Summarizer...")
+        logger.info("[API CLIENTS] Calling Prompt Summarizer...")
         return await self.execute_vlm_strategy(
             strategy=self.strategies['summarize'],
             utterance="", # Utterance not used in this specific strategy's build_user_content
@@ -276,7 +276,7 @@ class APIClient:
         Captions the provided images.
         Uses 'caption' strategy (MultimodalEditStrategy-like).
         """
-        logger.info("Calling Image Captioner...")
+        logger.info("[API CLIENTS] Calling Image Captioner...")
         return await self.execute_vlm_strategy(
             strategy=self.strategies['caption'],
             utterance="Now describe this image in detail.", # Passed as text input to MM strategy
@@ -290,7 +290,7 @@ class APIClient:
         Uses 'fact_check' strategy.
         Passes Fact as 'utterance' and Caption inside 'context' list.
         """
-        logger.info("Calling Fact Checker...")
+        logger.info("[API CLIENTS] Calling Fact Checker...")
         result = await self.execute_vlm_strategy(
             strategy=self.strategies['fact_check'],
             utterance=fact,

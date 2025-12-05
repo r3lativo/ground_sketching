@@ -32,11 +32,11 @@ class ConversationDataManager:
         Otherwise, load source and apply normalization.
         """
         if self.output_path.exists():
-            logger.info(f"Resuming from existing output: {self.output_path}")
+            logger.info(f"[DM] Resuming from existing output: {self.output_path}")
             # Load as string to preserve formatting (e.g. "001" chunk_ids)
             self.df = pd.read_csv(self.output_path, dtype=str)
         else:
-            logger.info(f"Loading fresh source: {self.source_path}")
+            logger.info(f"[DM] Loading fresh source: {self.source_path}")
             self.df = pd.read_csv(self.source_path)
             self._adapt_to_standard_format()
             # Save immediately to establish schema
@@ -71,7 +71,7 @@ class ConversationDataManager:
         Usage: for chunk_id, chunk_df in data_mgr.get_user_groups(...)
         """
         if chunk_col not in self.df.columns:
-            logger.warning(f"Column {chunk_col} not found. Defaulting to 'chunk_id'.")
+            logger.warning(f"[DM] Column {chunk_col} not found. Defaulting to 'chunk_id'.")
             chunk_col = 'chunk_id'
             
         return self.df.groupby(chunk_col)
@@ -119,11 +119,10 @@ class ConversationDataManager:
 
         prev_prompts_list = []
 
-        # remove invalid prompts (empty and NO_CHANGE)
+        # remove invalid prompts (empty)
         for p in raw_prev_prompts_list:
             if self._is_not_empty_val(p):
-                if not self._is_no_change(p):
-                    prev_prompts_list.append(p)
+                prev_prompts_list.append(p)
 
         return prev_prompts_list
 
@@ -135,7 +134,7 @@ class ConversationDataManager:
             if os.path.exists(full_imgs.index):
                 return full_imgs.index
             else:
-                logger.warning(f"'{full_imgs.index}' file does not exist.")
+                logger.warning(f"[DM] '{full_imgs.index}' file does not exist.")
         return None
 
     def get_context_for_index(self, index: int, user: str) -> List[str]:
@@ -206,7 +205,7 @@ class ConversationDataManager:
         chunk_cols_map = {} 
         
         if inst_columns:
-            logger.info(f"Detected Multi-View columns: {inst_columns}")
+            logger.info(f"[DM] Detected Multi-View columns: {inst_columns}")
             
             # Create sub-chunk columns (e.g., chunk_A)
             for col in inst_columns:
@@ -260,9 +259,3 @@ class ConversationDataManager:
         if pd.isna(val):
             return False
         return str(val).strip() != ""
-
-    def _is_no_change(self, val):
-        """Safe check for NO_CHANGE token."""
-        if pd.isna(val):
-            return False
-        return str(val).strip().upper() in ("[NO_CHANGE]", "NO_CHANGE", "[NO CHANGE]")
