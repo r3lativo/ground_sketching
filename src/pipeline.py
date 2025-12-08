@@ -119,7 +119,7 @@ class AugmentationPipeline:
         row = dm.df.loc[index]
         utterance = f"{row['character']}: {row['text']}"
         context = dm.get_context_for_index(index, user)
-        prev_prompts = dm.get_prev_prompts_for_index(index, user, oracle)
+        prev_prompts = dm.get_prev_prompts_for_frame(index, user, oracle)
 
         # 1. Get Strategy (Throttled)
         async with sem:
@@ -133,6 +133,22 @@ class AugmentationPipeline:
                 previous_prompts=prev_prompts,
                 has_images=False 
             )
+
+        # No CONTINUE without NEW
+        if decision.action == Action.CONTINUE:
+            # Check if this user has ever had a [NEW] frame in the past
+            # We assume dm.df is the master source of truth
+            history = dm.df.iloc[:index]
+            
+            # Fast pandas check: (User matches) AND (Frame Choice contains [NEW])
+            user_has_new = history[
+                (history['character'] == user) & 
+                (history['frame_choice'].astype(str).str.contains(Action.NEW, regex=False))
+            ].shape[0] > 0
+
+            if not user_has_new:
+                t_logger.info(f"[CREATE] Index {index}: Enforcing NEW. (Action was CONTINUE but no prior visual context found).")
+                decision.action = Action.NEW
 
         # 2. Log Trace
         t_logger.log_trace(index, "strategy_decision", decision.to_dict())
@@ -239,7 +255,7 @@ class AugmentationPipeline:
 
             # B. Prepare for Best-of-N Verification
             # We need the full prompt history to determine the "True Facts"
-            prev_prompts = dm.get_prev_prompts_for_index(index, user, oracle)
+            prev_prompts = dm.get_prev_prompts_for_frame(index, user, oracle)
             # Add current sub_prompt to history to get complete picture
             full_history = prev_prompts + [sub_prompt]
 

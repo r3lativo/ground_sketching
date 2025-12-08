@@ -103,28 +103,38 @@ class ConversationDataManager:
     def get_start_idx(self) -> int:
         return self.start_idx
 
-    def get_prev_prompts_for_index(self, index: int, user: str, oracle: bool = False) -> List[str]:
-        """Get all previous prompts related to a index"""
+    def get_prev_prompts_for_frame(self, index: int, user: str, oracle: bool = False) -> List[str]:
+        """
+        Get all previous prompts specifically for the CURRENT image generation cycle.
+        Uses optimized pandas vectorization to find the last [NEW] frame.
+        """
+        # 1. Slice history up to the current index (exclusive)
+        # We assume standard RangeIndex. .iloc is position-based.
+        history_df = self.df.iloc[:index]
 
-        # Load the relevant Series
-        full_prev_prompts = self.df['initial_prompt']
+        # 2. Find Visual Start (Last [NEW])
+        # fast vectorized check for '[NEW]' string
+        is_new_frame = history_df['frame_choice'].astype(str).str.contains('[NEW]', regex=False, na=False)
+        
+        # find the index label of the *last* True value
+        last_new_idx = is_new_frame[is_new_frame].last_valid_index()
+        
+        # If no [NEW] is found, we start from the beginning (0)
+        start_idx = int(last_new_idx) if last_new_idx is not None else 0
 
-        # Define the start and end index given the context
-        start_idx = self.set_start_idx(index, user, oracle)
-        end_idx = index
+        # 3. Select and Filter Range
+        # We slice from start_idx (inclusive) to current index (exclusive)
+        # We filter for the specific user and ensure prompts are non-empty
+        relevant_slice = self.df.iloc[start_idx:index]
+        
+        # Create boolean mask for valid prompts
+        # condition: (Character matches) AND (Prompt is not empty/NaN)
+        mask = (relevant_slice['character'] == user) & \
+               (relevant_slice['initial_prompt'].notna()) & \
+               (relevant_slice['initial_prompt'].astype(str).str.strip() != "")
 
-        # Prepare list
-        mask = (full_prev_prompts.index >= start_idx) & (full_prev_prompts.index < end_idx)
-        raw_prev_prompts_list = full_prev_prompts.loc[mask].tolist()
-
-        prev_prompts_list = []
-
-        # remove invalid prompts (empty)
-        for p in raw_prev_prompts_list:
-            if self._is_not_empty_val(p):
-                prev_prompts_list.append(p)
-
-        return prev_prompts_list
+        # 4. Extract and return list
+        return relevant_slice.loc[mask, 'initial_prompt'].tolist()
 
     def get_img_for_index(self, index: int) -> str:
         """Get the image path if it exists"""
