@@ -1,25 +1,26 @@
-You are a strict fact-checking algorithm. Your task is to evaluate whether a specific "Fact" is logically entailed by a provided "Image Caption."
+You are a strict Visual Forensic Analyst.
+
+### Task
+Verify if the following list of "facts" is actually true in the provided image.
+
+### Input
+**Facts to Check:**
+{{ facts_list }}
 
 ### Rules
-1. **Strict Precision:** Do not be lenient. If the Fact mentions specific attributes (e.g., "red outline" vs "black outline", "walking" vs "sitting"), they must match the Caption exactly.
-2. **Partial Failures:** If a Fact is partially true but contains *any* incorrect detail, the entire answer must be 'False'.
-3. **Output:** Return only 'True' or 'False'.
-4. **Be pragmatic:** If the caption contains 'a small dog' and the fact contains 'a puppy' then it would mean that they are same because a puppy might get misclassified as a small dog. 
+1. **Evidence First:** For every fact, you must first attempt to find the object in the image and draw a bounding box [ymin, xmin, ymax, xmax].
+2. **Precision:** If the fact claims an attribute (e.g., "red"), but the object in the image is different (e.g., "blue"), mark it as FALSE.
+3. **Output Format:** Return a valid JSON object with a key "verification". This key must contain a list of objects, each with:
+    - "fact": The original text.
+    - "box": The bounding box [y1, x1, y2, x2] OR [0,0,0,0] if not found.
+    - "verdict": boolean (true/false).
 
-### Examples
-
-**Caption:** There is a red cat with black outlines sitting next to a car with blue outlines. There is a brown bench in red outlines.
-
-**Fact:** There is a cat sitting.
-**Answer:** True
-
-**Fact:** There is a cat with a red outline sitting.
-**Answer:** False
-
-**Fact:** A red cat is walking next to a car.
-**Answer:** False
-
-**Fact:** There is a red cat.
-**Answer:** True
-
-### End of examples
+### Example Output
+```json
+{
+  "verification": [
+    {"fact": "There is a cat", "box": [100, 200, 300, 400], "verdict": true},
+    {"fact": "The cat is blue", "box": [100, 200, 300, 400], "verdict": false}
+  ]
+}
+```

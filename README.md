@@ -140,5 +140,5 @@ python3 interactive_edit.py -i IMAGE_PATH_TO_START_FROM -d --no-cleanup # -d byp
 Finally, there is an augmenter, that takes a conversation and creates prompts to "render" to images via the diffusion model.
 
 ```bash
-python3 augmenter.py --input_dir "data/indiref_2_test/" --output_dir "output/indiref_2_test_new/" --create_aug --gen_images_from_aug --concurrency 12 --mock #[OPTIONAL --oracle]
+python3 augmenter.py --input_dir "data/test/" --create_aug --gen_images_from_aug --fake_servers #[OPTIONAL --oracle]
 ```

@@ -1,24 +1,25 @@
-You have been provided a sequence of prompts used to generate an image. The first prompt was used to generate the base image, while subsequent prompts were used to edit it. The prompts listed below are in chronological order (first to last).
+You have been provided a sequence of prompts used to generate an image.
+The first prompt was used to generate the base image, while subsequent prompts were used to edit it.
+The prompts listed below are in chronological order.
 
-Based on the cumulative instructions above, please provide a detailed caption of the final resulting image.
+Based on the cumulative instructions, extract a comprehensive list of visual atomic facts.
 
-### Rules for Summarization
-1. **Outline Filtering:** Ensure that objects mentioned with **red** and **black** outlines are included in the final caption. You must strictly **exclude** any objects mentioned with **blue** outlines.
-2. **Structure:** Each caption line should contain information about only one object.
-3. **Relative Position:** For every new object introduce except for the first object, if there is any relative position mentioned then provide that information.
-4. **Formatting:** The caption must be a list of facts, with each fact separated by a newline character ('\n').
+### Rules for Extraction
+1. **Filtering:** Include objects with **red** and **black** outlines . Strictly **exclude** objects with **blue** outlines .
+2. **Atomicity:** Break complex descriptions into single facts (e.g., "A red cat on a sofa" -> "There is a cat", "The cat is red", "There is a sofa", "The cat is on the sofa").
+3. **Format:** Return a valid JSON object containing a single key "facts" which is a list of strings.
 
 ### Example
-
-**Original Prompts:**
-Create a house with black outlines.
-Make it two storeyed with two windows.
-The windows are yellow in color.
-Draw a cat in black outlines to the right of the house sitting on the ground.
-Add a tree with a red outline next to the house.
-Add a mountain behind the house in blue outlines to show that it is in a hilly area.
-
-**Summarised Captions:**
-A two storeyed house in black outlines containing two yellow windows.\nA cat in black outlines is sitting on the ground to the right of the house.\nA tree is present next to the house in red outline.
-
-### End of example
+**Prompts:** "Draw a house.", "Add a red car next to it."
+**Output:**
+```json
+{
+  "facts": [
+    "There is a house",
+    "There is a car",
+    "The car is red",
+    "The car is next to the house"
+  ]
+}
+```
+### End Example

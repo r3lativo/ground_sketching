@@ -3,14 +3,14 @@
 import asyncio
 import logging
 import random
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Tuple
 
 # [CRITICAL] Import Action to recognize SKIP/NEW/CONTINUE constants
 from src.api_clients import APIClient, Action 
 from src.utils import mock_creation_logic, mock_gen_logic
 from src.strategies import (
-    SummarizeStrategy, 
-    FactCheckStrategy, 
+    SummarizeStrategy,
+    FactCheckStrategy,
     CaptionStrategy
 )
 
@@ -47,16 +47,9 @@ class MockAPIClient(APIClient):
 
     async def execute_vlm_strategy(
         self, strategy, utterance, context=None, previous_prompts=None, images=None, timeout=300
-    ) -> Optional[str]:
+    ) -> Any:
+        # NOTE: This is a fallback. The specific call_* methods below override this for specific tasks.
         await asyncio.sleep(0.05) 
-
-        # Handle Auxiliary Strategies
-        if isinstance(strategy, SummarizeStrategy):
-            return "A mock summary."
-        if isinstance(strategy, FactCheckStrategy):
-            return random.choice(["True", "False"])
-        if isinstance(strategy, CaptionStrategy):
-            return "A mock caption."
 
         # Handle Prompt Generation using your utils logic
         logger.info(f"[MOCK] Creating prompt for: {utterance[:20]}...")
@@ -64,7 +57,90 @@ class MockAPIClient(APIClient):
         
         return f"<think>Using utils logic</think>\n{generated_prompt}"
 
-    async def call_image_gen(self, prompt: str, base64_images: Optional[List[str]], timeout: int = 300) -> Optional[str]:
+    async def call_image_gen(self, prompt: str, base64_images: Optional[List[str]], seed: Optional[int] = None, timeout: int = 300) -> Optional[str]:
         await asyncio.sleep(0.1)
-        logger.info(f"[MOCK] Generating image for: {prompt[:20]}...")
+        logger.info(f"[MOCK] Generating image for: {prompt[:20]}... (Seed: {seed})")
         return mock_gen_logic(prompt)
+
+    # --- NEW MOCK FUNCTIONS ---
+
+    async def call_prompt_summarizer(self, context: List[str], timeout: int = 300) -> List[str]:
+        """
+        Mocks the decomposition of prompts into facts.
+        """
+        await asyncio.sleep(0.05)
+        logger.info("[MOCK] Summarizing prompts into facts...")
+        # Return a static list of mock facts for testing
+        return [
+            "There is a mock object in the center",
+            "The object has a red outline",
+            "There is a blue sky background"
+        ]
+
+    async def call_image_captioner(self, base64_images: List[str], timeout: int = 300) -> Optional[str]:
+        """
+        Mocks generating a caption.
+        """
+        await asyncio.sleep(0.05)
+        logger.info("[MOCK] Captioning image...")
+        return "A detailed mock caption describing a test scene with red and blue objects."
+
+    async def call_visual_verifier(self, facts: List[str], base64_image: str, timeout: int = 300) -> List[Dict]:
+        """
+        Mocks checking facts against an image. Returns random verdicts.
+        """
+        await asyncio.sleep(0.05)
+        logger.info("[MOCK] Verifying facts against image...")
+        
+        results = []
+        for fact in facts:
+            # Randomly decide if true or false to test scoring logic
+            is_true = random.choice([True, True, False]) # Slight bias towards True
+            results.append({
+                "fact": fact,
+                "box": [100, 100, 200, 200] if is_true else [0, 0, 0, 0],
+                "verdict": is_true
+            })
+        return results
+
+    async def verify_image_faithfulness(
+        self, 
+        base64_image: str, 
+        facts: Optional[List[str]] = None, 
+        context: Optional[List[str]] = None,
+        timeout: int = 300
+    ) -> Tuple[float, List[Dict]]:
+        """
+        Mocks the full verification loop. 
+        Returns a random score to test 'Best-of-N' selection.
+        """
+        await asyncio.sleep(0.05)
+        
+        # 1. Mock getting facts if needed
+        if not facts:
+            facts = await self.call_prompt_summarizer(context or [])
+
+        # 2. Mock verification details
+        # We generate a random score between 0.0 and 1.0 to ensure the pipeline
+        # actually has to "choose" the best one.
+        logger.info("[MOCK] Calculating faithfulness score...")
+        
+        # Randomly verify some facts
+        details = []
+        confirmed_count = 0
+        
+        for fact in facts:
+            # Weighted coin flip for realism
+            is_verified = random.random() > 0.3 
+            if is_verified:
+                confirmed_count += 1
+            
+            details.append({
+                "fact": fact,
+                "box": [50, 50, 150, 150] if is_verified else [0,0,0,0],
+                "verdict": is_verified
+            })
+
+        final_score = confirmed_count / len(facts) if facts else 0.0
+        
+        return final_score, details

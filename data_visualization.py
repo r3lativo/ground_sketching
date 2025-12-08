@@ -136,7 +136,10 @@ def main():
     df = load_data(selected_file)
     if df.empty: return
 
-    chat_df = df[df['m-type'] == 'text'].copy()
+    try:
+        chat_df = df[df['m-type'] == 'text'].copy()
+    except:
+        chat_df = df
     if chat_df.empty:
         st.warning("No text messages found.")
         return
@@ -169,6 +172,9 @@ def main():
             if start_idx >= 0:
                 ctx_indices = set(df[(df['index'] >= start_idx) & (df['index'] <= st.session_state.selected_idx)]['index'].values)
 
+        # Build list of characters
+        characters = list(chat_df['character'].values)
+
         # Render Messages
         for _, row in chat_df.iterrows():
             idx = row['index']
@@ -183,8 +189,7 @@ def main():
             label = f"{eye}{character}: {text}"
             
             # Alignment Logic
-            # A = Right (User), B = Left (System)
-            if character == 'A':
+            if character == characters[0]:
                 # Empty col then Content col
                 c_spacer, c_btn = st.columns([1, 3]) 
                 with c_btn:
@@ -202,13 +207,16 @@ def main():
                         st.session_state.selected_idx = idx
                         st.rerun()
 
-        st.divider()
-        st.markdown("#### Summary / Q&A")
-        qa_df = df[(df['m-type'].isin(['Question', 'Answer'])) | (df['m-type'].isna())]
-        qa_df = qa_df[qa_df['m-type'] != 'text']
-        for _, r in qa_df.iterrows():
-            mtype = r.get('m-type', 'Short Answer')
-            st.text(f"[{mtype}] {r.get('text', '')}")
+        try:
+            st.divider()
+            st.markdown("#### Summary / Q&A")
+            qa_df = df[(df['m-type'].isin(['Question', 'Answer'])) | (df['m-type'].isna())]
+            qa_df = qa_df[qa_df['m-type'] != 'text']
+            for _, r in qa_df.iterrows():
+                mtype = r.get('m-type', 'Short Answer')
+                st.text(f"[{mtype}] {r.get('text', '')}")
+        except:
+            pass
 
     # --- RIGHT: DETAILS ---
     with col_details:

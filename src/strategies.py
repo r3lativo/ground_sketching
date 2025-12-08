@@ -18,6 +18,11 @@ class PromptStrategy(ABC):
         self.system_prompt = system_prompt
 
     @property
+    def default_params(self) -> Dict[str, Any]:
+        """Returns strategy-specific overrides for generation parameters."""
+        return {}
+
+    @property
     @abstractmethod
     def endpoint_suffix(self) -> str:
         """Returns the URL suffix (e.g., '/generate' or '/edit')."""
@@ -74,13 +79,13 @@ class PromptStrategy(ABC):
 
         if thinking_part:
             # Log thought
-            logger.info(f"[STRAEGIES] VLM Thought: {thinking_part.replace("\n", " ")}")
+            logger.info(f"[STRATEGIES] VLM Thought: {thinking_part.replace("\n", " ")}")
 
         if not answer_part:
-            logger.warning("[STRAEGIES] VLM returned no answer after parsing </think>.")
+            logger.warning("[STRATEGIES] VLM returned no answer after parsing </think>.")
             return None
         
-        logger.info(f"[STRAEGIES] VLM Answer: {answer_part.replace("\n", " ")}")
+        logger.info(f"[STRATEGIES] VLM Answer: {answer_part.replace("\n", " ")}")
 
         # 2. Strategy-specific parsing
         return self._parse_answer(answer_part.strip())
@@ -146,25 +151,30 @@ class MetaStrategy(TextEditStrategy):
     def _parse_answer(self, answer_text: str) -> Dict[str, Optional[str]]:
         return meta_parser(answer_text)
 
-
-# --- NEW STRATEGIES ---
+# --- UPDATED STRATEGIES ---
 
 class SummarizeStrategy(PromptStrategy):
     """
-    Summarizes a list of prompts.
+    Summarizes prompts into a JSON list of facts.
     Expects 'context' to contain the list of prompts to summarize.
     """
+    @property
+    def default_params(self) -> Dict[str, Any]:
+        return {"temperature": 0.1, "top_p": 0.1}
+
     @property
     def endpoint_suffix(self) -> str:
         return "/generate"
 
     def build_user_content(self, utterance, context=None, previous_prompts=None, images=None) -> str:
-        # Context holds the list of prompts
         prompts_str = "\n".join(context) if context else str(context)
-        return f"Here are the prompts:\n{prompts_str}\n Please summarize the prompts into a list separated by newlines:\n"
+        return f"Here are the prompts:\n{prompts_str}\n"
 
-    def _parse_answer(self, answer_text: str) -> str:
-        return answer_text.strip()
+    def _parse_answer(self, answer_text: str) -> List[str]:
+        parsed = json_parser(answer_text)
+        if isinstance(parsed, dict):
+            return parsed.get("facts", [])
+        return []
 
 
 class CaptionStrategy(MultimodalEditStrategy):
@@ -175,20 +185,34 @@ class CaptionStrategy(MultimodalEditStrategy):
     pass
 
 
-class FactCheckStrategy(PromptStrategy):
+class FactCheckStrategy(MultimodalEditStrategy):
     """
-    Checks a fact against a caption.
-    Expects 'utterance' to be the Fact and 'context' to be the Caption.
+    Verifies a list of facts against an image (Multimodal).
+    Expects 'utterance' to be the JSON string of facts.
+    Expects 'images' to be passed in build_payload.
     """
     @property
+    def default_params(self) -> Dict[str, Any]:
+        return {"temperature": 0.1, "top_p": 0.1}
+
+    @property
     def endpoint_suffix(self) -> str:
-        return "/generate"
+        return "/edit"
 
-    def build_user_content(self, utterance, context=None, previous_prompts=None, images=None) -> str:
-        # utterance = Fact
-        # context = List containing the Caption string
-        caption = context[0] if isinstance(context, list) and context else str(context)
-        return f"Here is the Caption:\n{caption}\nHere is the Fact: {utterance}\nAnswer strictly with 'True' or 'False'."
+    def build_user_content(self, utterance, context=None, previous_prompts=None, images=None) -> List[Dict[str, Any]]:
+        content = []
+        if images:
+            for img_b64 in images:
+                # Ensure standard base64 header
+                img_str = img_b64 if "data:image" in img_b64 else f"data:image/jpeg;base64,{img_b64}"
+                content.append({"type": "image", "image": img_str})
+        
+        content.append({"type": "text", "text": f"Facts to Check:\n{utterance}"})
+        return content
 
-    def _parse_answer(self, answer_text: str) -> str:
-        return answer_text.strip()
+    def _parse_answer(self, answer_text: str) -> List[Dict[str, Any]]:
+        # Returns the list of verification dicts: [{'fact':..., 'verdict':...}]
+        parsed = json_parser(answer_text)
+        if isinstance(parsed, dict):
+            return parsed.get("verification", [])
+        return []

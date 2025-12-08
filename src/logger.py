@@ -54,8 +54,6 @@ class TaskLogger:
         entry = {
             "index": index,
             "step": step_type,
-            "character": self.char_sanitized,
-            "file": self.filename_stem,
             "response": raw_response
         }
         with open(self.trace_path, "a", encoding="utf-8") as f:

@@ -5,6 +5,7 @@ import asyncio
 import logging
 import sys
 from pathlib import Path
+from datetime import datetime
 
 from src.utils import setup_logging, check_server, load_config
 from src.data_manager import ConversationDataManager
@@ -20,11 +21,12 @@ logger = logging.getLogger("Augmenter")
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Parallel Augmentation")
     parser.add_argument("--input_dir", type=str, required=True, help="Input directory containing CSVs")
-    parser.add_argument("--output_dir", type=str, required=True, help="Output root directory")
+    parser.add_argument("--output_dir", type=str, default='output/', help="Output root directory")
     
     parser.add_argument("--create_aug", action='store_true', help="Run Stage 1: Generate prompts")
     parser.add_argument("--gen_images_from_aug", action='store_true', help="Run Stage 2: Render images")
-    
+    parser.add_argument("--candidate_count", type=int, default=3, help="How many images to generate and check?")
+
     parser.add_argument("--concurrency", type=int, default=8, help="Global Max Concurrent API Requests")
     parser.add_argument("--oracle", action='store_true', help="Oracle Context Mode")
     
@@ -64,15 +66,14 @@ def verify_services(args):
 async def main():
     args = parse_arguments()
     
+    now = datetime.now()
+    date_time = now.strftime("%m%d_%H%M%S")
+
+    # 1. Load directories
     in_dir = Path(args.input_dir)
     out_dir = Path(args.output_dir)
-    
-    # 1. Setup Directory Structure
-    # Output structure: output_dir / [logs, traces, images, data]
-    (out_dir / "logs").mkdir(parents=True, exist_ok=True)
-    (out_dir / "traces").mkdir(parents=True, exist_ok=True)
-    (out_dir / "images").mkdir(parents=True, exist_ok=True)
-    (out_dir / "data").mkdir(parents=True, exist_ok=True)
+    out_dir = out_dir / 'fake' if args.fake_servers else out_dir
+    out_dir = out_dir / date_time
 
     if not in_dir.exists():
         logger.error(f"Input directory does not exist: {in_dir}")
@@ -109,8 +110,17 @@ async def main():
 
     async with api_client:
         for csv_file in csv_files:
+
+            # Build path for each file
+            csv_out_dir = out_dir / csv_file.stem
+
+            # Setup Directory Structure
+            (csv_out_dir / "logs").mkdir(parents=True, exist_ok=True)
+            (csv_out_dir / "traces").mkdir(parents=True, exist_ok=True)
+            (csv_out_dir / "images").mkdir(parents=True, exist_ok=True)
+
             # Output CSV path
-            aug_csv_path = out_dir / "data" / f"{csv_file.stem}_augmented.csv"
+            aug_csv_path = csv_out_dir / f"{csv_file.stem}_augmented.csv"
             
             # Create DataManager
             dm = ConversationDataManager(str(csv_file), str(aug_csv_path))
@@ -123,13 +133,14 @@ async def main():
             logger.info(f"File: {csv_file.name} | Users: {users}")
 
             for user in users:
-                t_logger = TaskLogger(out_dir, csv_file.name, user)
+                t_logger = TaskLogger(csv_out_dir, csv_file.name, user)
                 
                 pipeline_config = {
                     'create': args.create_aug,
                     'render': args.gen_images_from_aug,
                     'oracle': args.oracle,
-                    'img_output_dir': out_dir / "images"
+                    'candidate_count': args.candidate_count,
+                    'img_output_dir': csv_out_dir / "images"
                 }
 
                 # Add to the global list of tasks

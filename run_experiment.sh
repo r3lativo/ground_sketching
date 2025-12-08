@@ -70,17 +70,12 @@ wait $CHECK_PID_1 $CHECK_PID_2
 # 4. Run Experiment
 echo "--- STARTING PYTHON ORCHESTRATOR ---"
 
-# Define Input/Output relative to project root
-EXP_NAME="experiment_1_mini"
-INPUT_DIR="data/$EXP_NAME"
-OUTPUT_DIR="output/$EXP_NAME"
+# Define Input relative to project root
+INPUT_DIR="data/test"
 python3 augmenter.py \
     --input_dir "$INPUT_DIR" \
-    --output_dir "$OUTPUT_DIR" \
     --create_aug \
-    --gen_images_from_aug \
-    --concurrency 12 \
-    --automatic_users
+    --gen_images_from_aug
 
 # 4. Cleanup
 echo "--- CLEANING UP ---"

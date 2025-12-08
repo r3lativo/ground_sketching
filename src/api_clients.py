@@ -206,15 +206,20 @@ class APIClient:
             return None
 
     async def execute_vlm_strategy(
-        self, strategy: PromptStrategy, utterance: str, 
-        context: Optional[List[str]] = None, 
-        previous_prompts: Optional[List[str]] = None, 
+        self, strategy: PromptStrategy, utterance: str,
+        context: Optional[List[str]] = None,
+        previous_prompts: Optional[List[str]] = None,
         images: Optional[List[str]] = None, timeout: int = 300
     ) -> Optional[str]:
         
         if not self.client: raise RuntimeError("Client not initialized.")
         
         client_config = self.config.get("vlm_client", {})
+        
+        # OVERRIDE with strategy defaults
+        if hasattr(strategy, 'default_params'):
+            client_config.update(strategy.default_params)
+
         endpoint = f"{self.polisher_api_base_url}{strategy.endpoint_suffix}"
         payload = strategy.build_payload(utterance, client_config, context, previous_prompts, images)
 
@@ -226,12 +231,15 @@ class APIClient:
             logger.error(f"[API CLIENTS] VLM Strategy Execution failed ({strategy.__class__.__name__}): {e}", exc_info=True)
             return None
 
-    async def call_image_gen(self, prompt: str, base64_images: Optional[List[str]], timeout: int = 300) -> Optional[str]:
+    async def call_image_gen(self, prompt: str, base64_images: Optional[List[str]], seed: Optional[int] = None, timeout: int = 300) -> Optional[str]:
         if not self.client: raise RuntimeError("Client not initialized.")
 
         endpoint = f"{self.image_gen_url}/img_generate"
         cfg = self.config.get('image_gen_client', {})
         
+        # Use passed seed if valid, otherwise fallback to config
+        current_seed = seed if seed is not None else cfg.get("seed")
+
         if not base64_images:
             dummy_image = Image.new('RGB', (1024, 1024), color='white')
             base64_images = [pil_to_base64(dummy_image)]
@@ -239,11 +247,13 @@ class APIClient:
         payload = {
             "prompt": prompt,
             "images": base64_images,
-            "seed": cfg.get("seed"),
+            "seed": current_seed,
             "true_cfg_scale": cfg.get("true_cfg_scale"),
             "negative_prompt": cfg.get("negative_prompt"),
             "num_inference_steps": cfg.get("num_inference_steps"),
         }
+
+        logger.info(f"[API CLIENTS] Generating image for: {prompt[:20]}... (Seed: {seed})")
         
         try:
             response = await self.client.post(endpoint, json=payload, timeout=timeout)
@@ -254,22 +264,41 @@ class APIClient:
             logger.error(f"[API CLIENTS] Image Gen failed: {e}", exc_info=True)
             return None
 
-    # --- NEW CALLS ---
+    # --- VISUAL VERIFICATION & FAITHFULNESS ---
 
-    async def call_prompt_summarizer(self, context: List[str], timeout: int = 300) -> Optional[str]:
+    async def call_prompt_summarizer(self, context: List[str], timeout: int = 300) -> List[str]:
         """
-        Summarizes a list of prompts.
-        It should tell us what important objects are there by the end of the prompt.
-        Uses 'summarize' strategy (TextCreateStrategy-like).
-        The list of prompts is passed as 'context'.
+        Decomposes the prompt history into a list of atomic visual facts.
         """
-        logger.info("[API CLIENTS] Calling Prompt Summarizer...")
-        return await self.execute_vlm_strategy(
+        logger.info("[API CLIENTS] Calling Prompt Summarizer (Fact Decomposition)...")
+        # Uses 'summarize' strategy which now returns List[str] via json_parser
+        result = await self.execute_vlm_strategy(
             strategy=self.strategies['summarize'],
-            utterance="", # Utterance not used in this specific strategy's build_user_content
+            utterance="", 
             context=context,
             timeout=timeout
         )
+        # Ensure we return a list, even if strategy fails
+        return result if isinstance(result, list) else []
+
+    async def call_visual_verifier(self, facts: List[str], base64_image: str, timeout: int = 300) -> List[Dict]:
+        """
+        Verifies a list of facts against an image.
+        Returns a detailed list of dicts: {'fact': str, 'box': [y,x,y,x], 'verdict': bool}
+        """
+        logger.info("[API CLIENTS] Calling Visual Verifier (Fact Check)...")
+        
+        # Convert list to string for the prompt
+        facts_str = str(facts)
+        
+        # Uses 'fact_check' strategy which returns List[Dict] via json_parser
+        result = await self.execute_vlm_strategy(
+            strategy=self.strategies['fact_check'],
+            utterance=facts_str, 
+            images=[base64_image],
+            timeout=timeout
+        )
+        return result if isinstance(result, list) else []
 
     async def call_image_captioner(self, base64_images: List[str], timeout: int = 300) -> Optional[str]:
         """
@@ -284,18 +313,53 @@ class APIClient:
             timeout=timeout
         )
 
-    async def call_fact_checker(self, fact: str, caption: str, timeout: int = 360) -> str:
+    async def verify_image_faithfulness(
+        self, 
+        base64_image: str, 
+        facts: Optional[List[str]] = None, 
+        context: Optional[List[str]] = None,
+        timeout: int = 300
+    ) -> Tuple[float, List[Dict]]:
         """
-        Checks if the fact is contained in the caption.
-        Uses 'fact_check' strategy.
-        Passes Fact as 'utterance' and Caption inside 'context' list.
+        Manages verification and calculates the score.
+        
+        Args:
+            base64_image: The image to verify.
+            facts: (Optional) Pre-computed list of atomic facts.
+            context: (Optional) If facts aren't provided, use this prompt history to generate them.
+            
+        Returns:
+            score: Float (0.0 to 1.0) representing % of confirmed facts.
+            details: List of verification dicts (useful for debugging/logging).
         """
-        logger.info("[API CLIENTS] Calling Fact Checker...")
-        result = await self.execute_vlm_strategy(
-            strategy=self.strategies['fact_check'],
-            utterance=fact,
-            context=[caption], # Strategy expects context list
-            timeout=timeout
-        )
-        # Fallback if result is None
-        return result if result else "False"
+        # 1. Decompose
+        # If facts are provided (e.g. calculated once per user), use them. 
+        # Otherwise, derive them from context.
+        if not facts:
+            if not context:
+                raise ValueError("[API CLIENTS] verify_image_faithfulness requires either 'facts' or 'context'.")
+            facts = await self.call_prompt_summarizer(context, timeout=timeout)
+        
+        if not facts:
+            logger.warning("[API CLIENTS] No facts available for verification. Returning 0.0.")
+            return 0.0, []
+
+        # 2. Verify
+        verification_results = await self.call_visual_verifier(facts, base64_image, timeout=timeout)
+        
+        if not verification_results:
+             return 0.0, []
+
+        # 3. Score
+        # We calculate the score as: (True Verdicts / Total Facts)
+        true_count = 0
+        for item in verification_results:
+            # We check for explicit True verdict. 
+            # (Optional: You could also check if 'box' is not [0,0,0,0] for extra strictness)
+            if item.get("verdict") is True:
+                # if str(item.get("box")) != "[0,0,0,0]"
+                true_count += 1
+        
+        final_score = true_count / len(facts) if facts else 0.0
+        
+        return final_score, verification_results
