@@ -72,7 +72,7 @@ echo "--- STARTING PYTHON ORCHESTRATOR ---"
 
 # Define Input relative to project root
 INPUT_DIR="data/test"
-python3 augmenter.py \
+python -m src.augmenter \
     --input_dir "$INPUT_DIR" \
     --create_aug \
     --gen_images_from_aug
