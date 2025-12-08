@@ -30,7 +30,8 @@ class AugmentationPipeline:
         self,
         data_manager,
         user: str,
-        global_semaphore: asyncio.Semaphore,
+        vlm_semaphore: asyncio.Semaphore,
+        img_semaphore: asyncio.Semaphore,
         t_logger,
         pipeline_config: dict
     ):
@@ -95,7 +96,7 @@ class AugmentationPipeline:
             if create:
                 await self._phase_create(
                     data_manager, index, user, oracle,
-                    global_semaphore, t_logger
+                    vlm_semaphore, t_logger
                 )
 
             # --- PHASE 2: RENDER (With Verification) ---
@@ -103,7 +104,7 @@ class AugmentationPipeline:
                 await self._phase_render(
                     data_manager, index, user, oracle, 
                     state, user_out_path, 
-                    global_semaphore, t_logger,
+                    vlm_semaphore, img_semaphore, t_logger,
                     candidate_count
                 )
 
@@ -112,7 +113,7 @@ class AugmentationPipeline:
 
         t_logger.info(f"--- Finished User: {user} ---")
 
-    async def _phase_create(self, dm, index, user, oracle, sem, t_logger):
+    async def _phase_create(self, dm, index, user, oracle, vlm_sem, t_logger):
         """
         Handles Logic: VLM Decision -> Strategy Execution -> Prompt Update
         """
@@ -122,7 +123,7 @@ class AugmentationPipeline:
         prev_prompts = dm.get_prev_prompts_for_frame(index, user, oracle)
 
         # 1. Get Strategy (Throttled)
-        async with sem:
+        async with vlm_sem:
             t_logger.info(f"[CREATE] Index {index}: Asking VLM for strategy...")
             # We pass has_images=False intentionally to force the VLM to focus on 
             # text creation logic rather than multimodal editing at this stage.
@@ -173,7 +174,7 @@ class AugmentationPipeline:
 
         # 5. Execute Strategy
         new_prompt = ""
-        async with sem:
+        async with vlm_sem:
                 t_logger.info(f"[CREATE] Index {index}: Executing Strategy {decision.strategy_name}...")
                 new_prompt = await self.client.execute_vlm_strategy(
                     decision.strategy, utterance, context, prev_prompts
@@ -183,7 +184,7 @@ class AugmentationPipeline:
         await dm.update_cell(index, 'initial_prompt', new_prompt)
         return True
 
-    async def _phase_render(self, dm, index, user, oracle, state, out_path, sem, t_logger, candidate_count):
+    async def _phase_render(self, dm, index, user, oracle, state, out_path, vlm_sem, img_sem, t_logger, candidate_count):
         """
         Handles Logic: State Update -> Refinement -> Best-of-N Generation -> Save
         """
@@ -220,7 +221,7 @@ class AugmentationPipeline:
         final_prompt = initial_prompt
         
         if current_context_image and not is_new_frame:
-            async with sem:
+            async with vlm_sem:
                 mm_decision = await self.client.get_meta_and_strategy(is_oracle=oracle, has_images=True)
                 if mm_decision.strategy:
                     t_logger.info(f"[RENDER] Index {index}: Refining prompt with visual context...")
@@ -261,7 +262,7 @@ class AugmentationPipeline:
 
             # Step B.1: Decompose Text into Facts (Once)
             visual_facts = []
-            async with sem:
+            async with vlm_sem:
                  visual_facts = await self.client.call_prompt_summarizer(full_history)
             
             # Step B.2: Pipelined Loop
@@ -307,7 +308,7 @@ class AugmentationPipeline:
                 # Generate a random seed for this specific candidate
                 candidate_seed = random.randint(0, 2**32 - 1)
                 
-                async with sem:
+                async with img_sem:
                     imgs_payload = [current_context_image] if current_context_image else None
                     # This waits for the Diffuser, but VLM is idle (or we just finished waiting for it)
                     new_b64 = await self.client.call_image_gen(

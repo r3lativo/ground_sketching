@@ -27,7 +27,8 @@ def parse_arguments():
     parser.add_argument("--gen_images_from_aug", action='store_true', help="Run Stage 2: Render images")
     parser.add_argument("--candidate_count", type=int, default=3, help="How many images to generate and check?")
 
-    parser.add_argument("--concurrency", type=int, default=8, help="Global Max Concurrent API Requests")
+    parser.add_argument("--vlm_concurrency", type=int, default=50, help="VLM Max Concurrent API Requests")
+    parser.add_argument("--img_concurrency", type=int, default=8, help="IMG Max Concurrent API Requests")
     parser.add_argument("--oracle", action='store_true', help="Oracle Context Mode")
     
     parser.add_argument("--fake_servers", action='store_true', help="Use Mock Clients but run full pipeline logic")
@@ -100,9 +101,10 @@ async def main():
     api_client = ClientClass("config/server_config.yaml", "config/experiment_config.yaml")
     
     pipeline = AugmentationPipeline(api_client)
-    
-    # GLOBAL SEMAPHORE: Controls total active API requests across ALL files/users
-    global_sem = asyncio.Semaphore(args.concurrency)
+
+    # SPLIT SEMAPHORES
+    vlm_semaphore = asyncio.Semaphore(args.vlm_concurrency)
+    img_semaphore = asyncio.Semaphore(args.img_concurrency)
     
     # 5. Build Tasks (Collect ALL tasks from ALL files first)
     tasks = [] 
@@ -145,12 +147,16 @@ async def main():
 
                 # Add to the global list of tasks
                 tasks.append(
-                    pipeline.run_single_user(dm, user, global_sem, t_logger, pipeline_config)
+                    pipeline.run_single_user(
+                        dm, user,
+                        vlm_semaphore, img_semaphore,
+                        t_logger, pipeline_config
+                    )
                 )
 
         # 6. Execute All Tasks Parallel
         if tasks:
-            logger.info(f"Starting execution of {len(tasks)} character pipelines with concurrency {args.concurrency}...")
+            logger.info(f"Starting execution of {len(tasks)} character pipelines with VLM concurrency {args.vlm_concurrency} and IMG concurrency {args.img_concurrency}...")
             await asyncio.gather(*tasks)
         else:
             logger.warning("No tasks were created. Check input CSVs.")
