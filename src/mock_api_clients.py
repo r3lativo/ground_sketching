@@ -41,7 +41,9 @@ class MockAPIClient(APIClient):
         valid_actions = [Action.NEW, Action.CONTINUE, Action.SKIP]
         selected_action = random.choices(valid_actions, weights=[20, 30, 50], k=1)[0]
 
-        mock_response = f"<think>Mocking meta decision...</think><answer>\n<action>{selected_action}</action>\n<meta>Scene: Mock Location</meta>\n<imagery>Detailed shot of {utterance}</imagery></answer>"
+        mock_think = "<think>Mock...Thinking...</think>"
+        mock_answer = f'```json{{"frame_meta": "Mock...Frame Meta","relation": "Mock...Frame Relation","imagery": "Mock...{utterance}","action": "{selected_action}"}}```'
+        mock_response = f"{mock_think}{mock_answer}"
         
         return self.strategies['meta_extraction'].process_response(mock_response)
 
@@ -55,7 +57,7 @@ class MockAPIClient(APIClient):
         logger.info(f"[MOCK] Creating prompt for: {utterance[:20]}...")
         generated_prompt = mock_creation_logic(utterance)
         
-        return f"<think>Using utils logic</think>\n{generated_prompt}"
+        return generated_prompt
 
     async def call_image_gen(self, prompt: str, base64_images: Optional[List[str]], seed: Optional[int] = None, timeout: Optional[float] = None) -> Optional[str]:
         await asyncio.sleep(0.1)

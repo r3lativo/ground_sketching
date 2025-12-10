@@ -258,7 +258,7 @@ class ConversationDataManager:
                     df[target_col_name] = df[target_col_name].astype(int)
         
         # 4. Initialize columns if missing
-        for col in ['frame_choice', 'meta_info', 'imagery_utterance', 'initial_prompt', 'final_prompt', 'img_path']:
+        for col in ['frame_choice', 'frame_meta', 'relation', 'imagery', 'initial_prompt', 'final_prompt', 'img_path']:
             if col not in df.columns:
                 df[col] = pd.NA
 

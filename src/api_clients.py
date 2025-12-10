@@ -35,8 +35,9 @@ class StrategyDecision:
     action: Optional[str] = None
     strategy: Optional[PromptStrategy] = None
     strategy_name: Optional[str] = None
-    meta_info: Optional[Dict[str, Any]] = None
-    imagery_utterance: Optional[str] = None
+    frame_meta: Optional[str] = None
+    relation: Optional[str] = None
+    imagery: Optional[str] = None
 
     def to_dict(self):
         """
@@ -45,8 +46,9 @@ class StrategyDecision:
         return {
             "action": self.action,
             "strategy_name": self.strategy_name,
-            "meta_info": self.meta_info,
-            "imagery_utterance": self.imagery_utterance
+            "frame_meta": self.frame_meta,
+            "relation": self.relation,
+            "imagery": self.imagery
         }
 
 # --- Main Client ---
@@ -160,8 +162,9 @@ class APIClient:
             return StrategyDecision() # Returns empty/None values safely
 
         action = response_data.get('action')
-        meta_info = response_data.get('meta')
-        imagery_utterance = response_data.get('imagery_utterance')
+        frame_meta = response_data.get('frame_meta')
+        relation = response_data.get('relation')
+        imagery = response_data.get('imagery')
 
         # 3. Determine Strategy Name dynamically
         strategy_name = None
@@ -182,8 +185,9 @@ class APIClient:
             action=action,
             strategy=selected_strategy,
             strategy_name=strategy_name,
-            meta_info=meta_info,
-            imagery_utterance=imagery_utterance
+            frame_meta=frame_meta,
+            relation=relation,
+            imagery=imagery
         )
 
     async def _fetch_meta_info(self, utterance, context, previous_prompts, timeout: Optional[float] = None) -> Optional[Dict]:

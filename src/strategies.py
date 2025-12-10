@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 from typing import List, Optional, Dict, Any, Union
 
 # Import the centralized parsers
-from src.utils import json_parser, meta_parser, thinking_parser
+from src.utils import json_parser, thinking_parser
 
 logger = logging.getLogger(__name__)
 
@@ -149,7 +149,7 @@ class MetaStrategy(TextEditStrategy):
         return f"{ctx_str}\n{hist_str}\n{target_str}"
 
     def _parse_answer(self, answer_text: str) -> Dict[str, Optional[str]]:
-        return meta_parser(answer_text)
+        return json_parser(answer_text)
 
 # --- UPDATED STRATEGIES ---
 

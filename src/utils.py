@@ -227,7 +227,7 @@ def meta_parser(input_text: str):
     Robust against missing tags.
     """
     if not input_text:
-        return {"meta": None, "action": None, "imagery_utterance": None}
+        return {"meta": None, "action": None, "imagery": None}
 
     def extract(tag, text):
         pattern = f"<{tag}>(.*?)</{tag}>"
@@ -237,7 +237,7 @@ def meta_parser(input_text: str):
     return {
         "meta": extract("meta", input_text),
         "action": extract("action", input_text),
-        "imagery_utterance": extract("imagery", input_text) 
+        "imagery": extract("imagery", input_text) 
     }
 
 def thinking_parser(text: str, delimiter: str = "</think>") -> dict:
@@ -293,7 +293,7 @@ def is_not_empty_val(val):
 def mock_creation_logic(utterance):
     val = random.random()
     if val < 0.2: return f"[ZOOM_OUT] $$$ Wide of {utterance}"
-    elif val < 0.4: return f"First angle {utterance} $$$ Second angle {utterance}"
+    elif val < 0.4: return f"X of '{utterance}' $$$ Y of whatever"
     return f"[Mock Prompt] {utterance}"
 
 def mock_gen_logic(prompt):

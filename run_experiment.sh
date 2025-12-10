@@ -70,8 +70,8 @@ wait $CHECK_PID_1 $CHECK_PID_2
 # 4. Run Experiment
 echo "--- STARTING PYTHON ORCHESTRATOR ---"
 
-# Define Input relative to project root
-INPUT_DIR="data/test"
+# Define Input Folder
+INPUT_DIR="/lustre/fswork/projects/rech/bgp/ucm29gh/code/jeanzay-rl/data/IndiRef/meetup_final/Attributive"
 python -m src.augmenter \
     --input_dir "$INPUT_DIR" \
     --create_aug \

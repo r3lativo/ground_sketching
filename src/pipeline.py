@@ -164,13 +164,14 @@ class AugmentationPipeline:
         if decision.action == Action.NEW:
             prev_prompts = [] # Reset prompt context for the strategy generation
         
-        if decision.imagery_utterance:
-            utterance = decision.imagery_utterance
+        if decision.imagery:
+            utterance = decision.imagery
 
         # Write Metadata
         await dm.update_cell(index, 'frame_choice', decision.action)
-        await dm.update_cell(index, 'meta_info', decision.meta_info)
-        await dm.update_cell(index, 'initial_prompt', decision.imagery_utterance)
+        await dm.update_cell(index, 'frame_meta', decision.frame_meta)
+        await dm.update_cell(index, 'relation', decision.relation)
+        await dm.update_cell(index, 'initial_prompt', decision.imagery)
 
         # 5. Execute Strategy
         new_prompt = ""
