@@ -96,8 +96,11 @@ async def lifespan(app: FastAPI):
     # On Startup
     global http_client
     # Initialize the httpx client on startup
-    http_client = httpx.AsyncClient(timeout=300.0) # Long timeout for LLMs
-    logger.info("[VLLM_G] Gateway started. HTTPX client created.")
+    limits = httpx.Limits(max_keepalive_connections=50, max_connections=100)
+    timeout = httpx.Timeout(None, connect=60.0)
+
+    http_client = httpx.AsyncClient(limits=limits, timeout=timeout)
+    logger.info("[VLLM_G] Gateway started. HTTPX client created with high concurrency limits.")
     
     yield  # The 'yield' separates startup (above) from shutdown (below) code
     

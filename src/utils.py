@@ -159,7 +159,7 @@ def add_padding_to_image(img_pil, scale_factor=0.8, fill_color="white"):
 
 # --- Network Checks ---
 
-def check_server(host: str, port: int, timeout: int = 3) -> bool:
+def check_server(host: str, port: int, timeout: int = 60) -> bool:
     """Checks if a server is reachable."""
     check_host = "127.0.0.1" if host == "0.0.0.0" else host
     print(f"Checking {check_host}:{port}...", end="", flush=True)

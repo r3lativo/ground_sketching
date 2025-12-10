@@ -68,8 +68,8 @@ class APIClient:
 
     async def __aenter__(self):
         # Connection pooling limits to prevent opening too many file descriptors
-        limits = httpx.Limits(max_keepalive_connections=20, max_connections=50)
-        self.client = httpx.AsyncClient(limits=limits, timeout=60.0)
+        limits = httpx.Limits(max_keepalive_connections=50, max_connections=100)
+        self.client = httpx.AsyncClient(limits=limits, timeout=None) 
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
@@ -139,7 +139,7 @@ class APIClient:
         context: Optional[List[str]] = None,
         previous_prompts: Optional[List[str]] = None,
         has_images: Optional[bool] = False,
-        timeout: int = 300
+        timeout: Optional[float] = None
     ) -> StrategyDecision:
         
         if not self.client:
@@ -186,7 +186,7 @@ class APIClient:
             imagery_utterance=imagery_utterance
         )
 
-    async def _fetch_meta_info(self, utterance, context, previous_prompts, timeout) -> Optional[Dict]:
+    async def _fetch_meta_info(self, utterance, context, previous_prompts, timeout: Optional[float] = None) -> Optional[Dict]:
         """Helper to handle the specific Meta Extraction API call."""
         strategy = self.strategies['meta_extraction']
         client_config = self.config.get("vlm_client", {})
@@ -209,7 +209,7 @@ class APIClient:
         self, strategy: PromptStrategy, utterance: str,
         context: Optional[List[str]] = None,
         previous_prompts: Optional[List[str]] = None,
-        images: Optional[List[str]] = None, timeout: int = 300
+        images: Optional[List[str]] = None, timeout: Optional[float] = None
     ) -> Optional[str]:
         
         if not self.client: raise RuntimeError("Client not initialized.")
@@ -231,7 +231,7 @@ class APIClient:
             logger.error(f"[API CLIENTS] VLM Strategy Execution failed ({strategy.__class__.__name__}): {e}", exc_info=True)
             return None
 
-    async def call_image_gen(self, prompt: str, base64_images: Optional[List[str]], seed: Optional[int] = None, timeout: int = 300) -> Optional[str]:
+    async def call_image_gen(self, prompt: str, base64_images: Optional[List[str]], seed: Optional[int] = None, timeout: Optional[float] = None) -> Optional[str]:
         if not self.client: raise RuntimeError("Client not initialized.")
 
         endpoint = f"{self.image_gen_url}/img_generate"
@@ -266,7 +266,7 @@ class APIClient:
 
     # --- VISUAL VERIFICATION & FAITHFULNESS ---
 
-    async def call_prompt_summarizer(self, context: List[str], timeout: int = 300) -> List[str]:
+    async def call_prompt_summarizer(self, context: List[str], timeout: Optional[float] = None) -> List[str]:
         """
         Decomposes the prompt history into a list of atomic visual facts.
         """
@@ -281,7 +281,7 @@ class APIClient:
         # Ensure we return a list, even if strategy fails
         return result if isinstance(result, list) else []
 
-    async def call_visual_verifier(self, facts: List[str], base64_image: str, timeout: int = 300) -> List[Dict]:
+    async def call_visual_verifier(self, facts: List[str], base64_image: str, timeout: Optional[float] = None) -> List[Dict]:
         """
         Verifies a list of facts against an image.
         Returns a detailed list of dicts: {'fact': str, 'box': [y,x,y,x], 'verdict': bool}
@@ -300,7 +300,7 @@ class APIClient:
         )
         return result if isinstance(result, list) else []
 
-    async def call_image_captioner(self, base64_images: List[str], timeout: int = 300) -> Optional[str]:
+    async def call_image_captioner(self, base64_images: List[str], timeout: Optional[float] = None) -> Optional[str]:
         """
         Captions the provided images.
         Uses 'caption' strategy (MultimodalEditStrategy-like).
@@ -318,7 +318,7 @@ class APIClient:
         base64_image: str, 
         facts: Optional[List[str]] = None, 
         context: Optional[List[str]] = None,
-        timeout: int = 300
+        timeout: Optional[float] = None
     ) -> Tuple[float, List[Dict]]:
         """
         Manages verification and calculates the score.

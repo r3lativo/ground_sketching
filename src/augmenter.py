@@ -6,6 +6,7 @@ import logging
 import sys
 from pathlib import Path
 from datetime import datetime
+import random
 
 from src.utils import setup_logging, check_server, load_config
 from src.data_manager import ConversationDataManager
@@ -22,12 +23,13 @@ def parse_arguments():
     parser = argparse.ArgumentParser(description="Parallel Augmentation")
     parser.add_argument("--input_dir", type=str, required=True, help="Input directory containing CSVs")
     parser.add_argument("--output_dir", type=str, default='output/', help="Output root directory")
+    parser.add_argument("--n_files", type=int, default=10, help="Maximum number of files to process")
     
     parser.add_argument("--create_aug", action='store_true', help="Run Stage 1: Generate prompts")
     parser.add_argument("--gen_images_from_aug", action='store_true', help="Run Stage 2: Render images")
     parser.add_argument("--candidate_count", type=int, default=3, help="How many images to generate and check?")
 
-    parser.add_argument("--vlm_concurrency", type=int, default=50, help="VLM Max Concurrent API Requests")
+    parser.add_argument("--vlm_concurrency", type=int, default=20, help="VLM Max Concurrent API Requests")
     parser.add_argument("--img_concurrency", type=int, default=8, help="IMG Max Concurrent API Requests")
     parser.add_argument("--oracle", action='store_true', help="Oracle Context Mode")
     
@@ -84,11 +86,12 @@ async def main():
     verify_services(args)
 
     # 3. Discovery
-    csv_files = list(in_dir.glob("*.csv"))
+    csv_files = [f for f in in_dir.glob("*.csv") if not f.name.startswith(".")]
+    total_files = len(csv_files)
     if not csv_files:
         logger.warning(f"No CSV files found in {in_dir}")
         return
-    logger.info(f"Found {len(csv_files)} files to process.")
+    logger.info(f"Found {total_files} CSV files available.")
 
     # 4. Initialize Client Strategy
     if args.fake_servers:
@@ -109,6 +112,13 @@ async def main():
     # 5. Build Tasks (Collect ALL tasks from ALL files first)
     tasks = [] 
     data_managers = []
+
+    # Select N random files (and discard the rest)
+    if args.n_files > 0 and args.n_files < total_files:
+        csv_files = random.sample(csv_files, args.n_files)
+        logger.info(f"Randomly selected {len(csv_files)} files for processing.")
+    else:
+        logger.info(f"Processing all {total_files} files (N={args.n_files}).")
 
     async with api_client:
         for csv_file in csv_files:

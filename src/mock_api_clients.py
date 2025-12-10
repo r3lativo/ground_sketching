@@ -30,7 +30,7 @@ class MockAPIClient(APIClient):
         logger.info("[MOCK] Closing Mock API Session.")
         self.client = None
 
-    async def _fetch_meta_info(self, utterance, context, previous_prompts, timeout) -> Optional[Dict]:
+    async def _fetch_meta_info(self, utterance, context, previous_prompts, timeout: Optional[float] = None) -> Optional[Dict]:
         """
         Simulates the Meta Extraction VLM call.
         """
@@ -46,7 +46,7 @@ class MockAPIClient(APIClient):
         return self.strategies['meta_extraction'].process_response(mock_response)
 
     async def execute_vlm_strategy(
-        self, strategy, utterance, context=None, previous_prompts=None, images=None, timeout=300
+        self, strategy, utterance, context=None, previous_prompts=None, images=None, timeout: Optional[float] = None
     ) -> Any:
         # NOTE: This is a fallback. The specific call_* methods below override this for specific tasks.
         await asyncio.sleep(0.05) 
@@ -57,14 +57,14 @@ class MockAPIClient(APIClient):
         
         return f"<think>Using utils logic</think>\n{generated_prompt}"
 
-    async def call_image_gen(self, prompt: str, base64_images: Optional[List[str]], seed: Optional[int] = None, timeout: int = 300) -> Optional[str]:
+    async def call_image_gen(self, prompt: str, base64_images: Optional[List[str]], seed: Optional[int] = None, timeout: Optional[float] = None) -> Optional[str]:
         await asyncio.sleep(0.1)
         logger.info(f"[MOCK] Generating image for: {prompt[:20]}... (Seed: {seed})")
         return mock_gen_logic(prompt)
 
     # --- NEW MOCK FUNCTIONS ---
 
-    async def call_prompt_summarizer(self, context: List[str], timeout: int = 300) -> List[str]:
+    async def call_prompt_summarizer(self, context: List[str], timeout: Optional[float] = None) -> List[str]:
         """
         Mocks the decomposition of prompts into facts.
         """
@@ -77,7 +77,7 @@ class MockAPIClient(APIClient):
             "There is a blue sky background"
         ]
 
-    async def call_image_captioner(self, base64_images: List[str], timeout: int = 300) -> Optional[str]:
+    async def call_image_captioner(self, base64_images: List[str], timeout: Optional[float] = None) -> Optional[str]:
         """
         Mocks generating a caption.
         """
@@ -85,7 +85,7 @@ class MockAPIClient(APIClient):
         logger.info("[MOCK] Captioning image...")
         return "A detailed mock caption describing a test scene with red and blue objects."
 
-    async def call_visual_verifier(self, facts: List[str], base64_image: str, timeout: int = 300) -> List[Dict]:
+    async def call_visual_verifier(self, facts: List[str], base64_image: str, timeout: Optional[float] = None) -> List[Dict]:
         """
         Mocks checking facts against an image. Returns random verdicts.
         """
@@ -108,7 +108,7 @@ class MockAPIClient(APIClient):
         base64_image: str, 
         facts: Optional[List[str]] = None, 
         context: Optional[List[str]] = None,
-        timeout: int = 300
+        timeout: Optional[float] = None
     ) -> Tuple[float, List[Dict]]:
         """
         Mocks the full verification loop. 

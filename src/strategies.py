@@ -160,7 +160,7 @@ class SummarizeStrategy(PromptStrategy):
     """
     @property
     def default_params(self) -> Dict[str, Any]:
-        return {"temperature": 0.1, "top_p": 0.1}
+        return {"temperature": 0.6}
 
     @property
     def endpoint_suffix(self) -> str:
@@ -193,7 +193,7 @@ class FactCheckStrategy(MultimodalEditStrategy):
     """
     @property
     def default_params(self) -> Dict[str, Any]:
-        return {"temperature": 0.1, "top_p": 0.1}
+        return {"temperature": 0.6}
 
     @property
     def endpoint_suffix(self) -> str:
