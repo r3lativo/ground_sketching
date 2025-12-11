@@ -113,6 +113,13 @@ class AugmentationPipeline:
 
         t_logger.info(f"--- Finished User: {user} ---")
 
+    async def _update_cells(self, dm, index, decision):
+        await dm.update_cell(index, 'frame_choice', decision.action)
+        await dm.update_cell(index, 'frame_meta', decision.frame_meta)
+        await dm.update_cell(index, 'relation', decision.relation)
+        await dm.update_cell(index, 'imagery', decision.imagery)
+        await dm.update_cell(index, 'initial_prompt', decision.imagery) # This will be modified in the render phase
+
     async def _phase_create(self, dm, index, user, oracle, vlm_sem, t_logger):
         """
         Handles Logic: VLM Decision -> Strategy Execution -> Prompt Update
@@ -122,6 +129,7 @@ class AugmentationPipeline:
         context = dm.get_context_for_index(index, user)
         prev_prompts = dm.get_prev_prompts_for_frame(index, user, oracle)
 
+        ### META PHASE ###
         # 1. Get Strategy (Throttled)
         async with vlm_sem:
             t_logger.info(f"[CREATE] Index {index}: Asking VLM for strategy...")
@@ -157,22 +165,21 @@ class AugmentationPipeline:
         # 3. Handle SKIP
         if not decision.action or decision.action == Action.SKIP:
             t_logger.info(f"[CREATE] Index {index}: Action is SKIP.")
-            await dm.update_cell(index, 'frame_choice', Action.SKIP)
+            await self._update_cells(dm, index, decision)
             return False
 
         # 4. Handle NEW vs KEEP
         if decision.action == Action.NEW:
             prev_prompts = [] # Reset prompt context for the strategy generation
         
+        # If there is an imagery, we pass that as the utterance to model
         if decision.imagery:
             utterance = decision.imagery
 
         # Write Metadata
-        await dm.update_cell(index, 'frame_choice', decision.action)
-        await dm.update_cell(index, 'frame_meta', decision.frame_meta)
-        await dm.update_cell(index, 'relation', decision.relation)
-        await dm.update_cell(index, 'initial_prompt', decision.imagery)
+        await self._update_cells(dm, index, decision)
 
+        ### INITIAL PROMPT PHASE ###
         # 5. Execute Strategy
         new_prompt = ""
         async with vlm_sem:
@@ -360,3 +367,28 @@ class AugmentationPipeline:
              updates = True
 
         return updates
+
+    async def _phase_relations(self, dm, index, user, oracle, vlm_sem, t_logger):
+        """
+        Use the meta information and the relation to build triplets
+        to connect the frames.
+        """
+        # Retrieve all the last seq frames for this user.
+        # Remove the sequence name and just give the frame ID
+        # e.g. B_3_seq_2 -> B_3
+
+        # For r in relations:
+            # if r:
+                # current_frame = t
+                # prev_frame = t-1 (if exists)
+                # next_frame = t+1 (if exists)
+                # context = from first_u of prev_frame to last_u of next_frame
+
+                # send to model and ask for triplet relation
+                # between t and either t-1 and t+1
+                # if it exists, else return None
+
+        # output example:
+        #(t-1, relation, t)
+        #(t+1, relation, t)
+        # the order between t and tOTHER can be whatever

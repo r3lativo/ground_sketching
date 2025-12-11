@@ -106,29 +106,36 @@ class ConversationDataManager:
     def get_prev_prompts_for_frame(self, index: int, user: str, oracle: bool = False) -> List[str]:
         """
         Get all previous prompts specifically for the CURRENT image generation cycle.
-        Uses optimized pandas vectorization to find the last [NEW] frame.
+        Finds the last [NEW] frame specifically associated with the requested user.
         """
         # 1. Slice history up to the current index (exclusive)
-        # We assume standard RangeIndex. .iloc is position-based.
         history_df = self.df.iloc[:index]
 
-        # 2. Find Visual Start (Last [NEW])
-        # fast vectorized check for '[NEW]' string
-        is_new_frame = history_df['frame_choice'].astype(str).str.contains('[NEW]', regex=False, na=False)
+        # 2. Find Visual Start (Last [NEW] *for this user*)
+        # We need two conditions:
+        # A. The row has the '[NEW]' tag
+        has_new_tag = history_df['frame_choice'].astype(str).str.contains('[NEW]', regex=False, na=False)
         
-        # find the index label of the *last* True value
-        last_new_idx = is_new_frame[is_new_frame].last_valid_index()
+        # B. The row belongs to the specific user (Critical fix)
+        is_user = history_df['character'] == user
+
+        # Combine conditions: Find rows that are NEW AND belong to USER
+        valid_start_points = has_new_tag & is_user
         
-        # If no [NEW] is found, we start from the beginning (0)
+        # Find the index label of the *last* time this specific user started a new frame
+        last_new_idx = valid_start_points[valid_start_points].last_valid_index()
+        
+        # If no [NEW] is found for this user, we start from the beginning (0)
         start_idx = int(last_new_idx) if last_new_idx is not None else 0
 
         # 3. Select and Filter Range
         # We slice from start_idx (inclusive) to current index (exclusive)
-        # We filter for the specific user and ensure prompts are non-empty
         relevant_slice = self.df.iloc[start_idx:index]
         
         # Create boolean mask for valid prompts
         # condition: (Character matches) AND (Prompt is not empty/NaN)
+        # Note: We re-check character here to ensure we only get this user's prompts 
+        # within that time range (ignoring intervening prompts from other users).
         mask = (relevant_slice['character'] == user) & \
                (relevant_slice['initial_prompt'].notna()) & \
                (relevant_slice['initial_prompt'].astype(str).str.strip() != "")

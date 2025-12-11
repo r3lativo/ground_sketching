@@ -280,21 +280,28 @@ def main():
             
             # Metadata Grid
             c1, c2, c3 = st.columns(3)
-            c1.markdown(f"**Frame**\n\n{row.get('frame_choice', '-')}")
-            c2.markdown(f"**Imagery**\n\n{row.get('imagery_utterance', '-')}")
-            c3.markdown(f"**Meta**\n\n{row.get('meta_info', '-')}")
+            c1.markdown(f"**Frame Choice**\n\n{row.get('frame_choice', '-')}")
+            c2.markdown(f"**Frame Meta**\n\n{row.get('frame_meta', '-')}")
+            c3.markdown(f"**Relation**\n\n{row.get('relation', '-')}")
             
             # Prompts
             st.divider()
-            cc1, cc2 = st.columns(2)
+            cc1, cc2, cc3 = st.columns(3)
             with cc1:
+                st.markdown("**Imagery**")
+                val = row.get('imagery')
+                if pd.notna(val) and val != "": 
+                    st.caption(val)
+                else:
+                    st.text("-")
+            with cc2:
                 st.markdown("**Initial Prompt**")
                 val = row.get('initial_prompt')
                 if pd.notna(val) and val != "":
                     st.caption(val)
                 else:
                     st.text("-")
-            with cc2:
+            with cc3:
                 st.markdown("**Final Prompt**")
                 val = row.get('final_prompt')
                 if pd.notna(val) and val != "":
