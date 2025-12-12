@@ -355,22 +355,35 @@ class ConversationDataManager:
             'next_text': next_text
         }
 
-    # 2. Helper to extract text by finding global boundaries
     def _get_text_window(self, user, target_num, utterance=None):
-        # construct the frame ID
+        """
+        Helper to extract text by finding global boundaries
+        """
         if target_num <= 0: return None
 
-        # the start index is the (last+1) utterance of the prev frame (or 0 if no prev frame)
-        prev_slice = self.df[self.df['frame_id'] == f"{user}_{target_num-1}"]
-        # Handle case where prev_slice is empty (start at 0) or has values
-        start_idx = prev_slice.index.max() + 1 if not prev_slice.empty else 0
-        
-        # the end index is the (first-1) utterance of the next frame (or max if no next frame)
+        # --- FIX: DEFINE START ---
+        # Instead of looking at where the previous frame ended (which creates overlap),
+        # we start exactly where the CURRENT frame begins.
+        if target_num == 1:
+            # Frame 1 is special: it catches everything from the very top of the file
+            start_idx = 0
+        else:
+            # For Frame 2+, the start is the first occurrence of this frame ID
+            curr_slice = self.df[self.df['frame_id'] == f"{user}_{target_num}"]
+            if curr_slice.empty:
+                return None 
+            start_idx = curr_slice.index.min()
+
+        # --- DEFINE END ---
+        # The end is defined by the start of the NEXT frame.
+        # This gives "ownership" of the gap text (B's lines) to the current frame.
         next_slice = self.df[self.df['frame_id'] == f"{user}_{target_num+1}"]
-        # Handle case where next_slice is empty (end at max) or has values
+        
         if not next_slice.empty:
+            # Go up to the index immediately before the next frame starts
             end_idx = next_slice.index.min() - 1
         else:
+            # If no next frame, go to the end of the file
             end_idx = self.df.index.max()
 
         # print(f"---\nTARGET: {user}_{target_num}")
