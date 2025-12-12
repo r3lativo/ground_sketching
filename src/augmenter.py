@@ -27,6 +27,7 @@ def parse_arguments():
     
     parser.add_argument("--create_aug", action='store_true', help="Run Stage 1: Generate prompts")
     parser.add_argument("--gen_images_from_aug", action='store_true', help="Run Stage 2: Render images")
+    parser.add_argument("--relation_triplets", action='store_true', help="Run Stage 3: Create triplets from relations")
     parser.add_argument("--candidate_count", type=int, default=3, help="How many images to generate and check?")
 
     parser.add_argument("--vlm_concurrency", type=int, default=20, help="VLM Max Concurrent API Requests")
@@ -151,6 +152,7 @@ async def main():
                     'create': args.create_aug,
                     'render': args.gen_images_from_aug,
                     'oracle': args.oracle,
+                    'relation_triplets': args.relation_triplets,
                     'candidate_count': args.candidate_count,
                     'img_output_dir': csv_out_dir / "images"
                 }

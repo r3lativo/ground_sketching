@@ -265,7 +265,7 @@ class ConversationDataManager:
                     df[target_col_name] = df[target_col_name].astype(int)
         
         # 4. Initialize columns if missing
-        for col in ['frame_choice', 'frame_meta', 'relation', 'imagery', 'initial_prompt', 'final_prompt', 'img_path']:
+        for col in ['frame_choice', 'frame_meta', 'relation', 'imagery', 'initial_prompt', 'final_prompt', 'img_path', 'extracted_triplets', 'frame_id']:
             if col not in df.columns:
                 df[col] = pd.NA
 
@@ -276,3 +276,118 @@ class ConversationDataManager:
         if pd.isna(val):
             return False
         return str(val).strip() != ""
+
+    def ensure_frame_ids(self, user: str) -> None:
+        """
+        Populates 'frame_id' column.
+        Logic: 
+        - Frame 1: Includes from start of file to index BEFORE the second [NEW].
+        - Frame 2: From second [NEW] to index BEFORE third [NEW].
+        - etc.
+        """
+        if 'frame_id' not in self.df.columns:
+            self.df['frame_id'] = pd.NA
+
+        mask = self.df['character'] == user
+        if not mask.any():
+            return
+        
+        # Identify where new frames start
+        new_marker_mask = (
+            self.df.loc[mask, 'frame_choice']
+            .astype(str)
+            .str.contains('[NEW]', regex=False)
+            .fillna(False)
+        )
+        
+        # Generate IDs:
+        # The first [NEW] (count 1) and everything before it (count 0)
+        # are grouped into Frame 1. Frame 2 only starts at the 2nd [NEW].
+        # Therefore, we clip any value less than 1 to 1.
+        frame_ids = new_marker_mask.cumsum().clip(lower=1)
+        
+        # Apply the frame id to the frame_id column
+        self.df.loc[mask, 'frame_id'] = frame_ids.apply(lambda x: f"{user}_{x}")
+
+    def get_frame_neighborhood(self, index: int, user: str) -> dict:
+        """
+        Retrieves context for Previous, Current, and Next frames.
+        Window definition: From the first utterance of Frame X (inclusive) 
+        up to the first utterance of Frame X+1 (exclusive).
+        """
+        # 1. Parse Current ID
+        curr_id_str = self.df.at[index, 'frame_id']
+        if pd.isna(curr_id_str): 
+            return {}
+
+        try:
+            curr_num = int(curr_id_str.split('_')[-1])
+        except (ValueError, IndexError):
+            return {}
+
+        # Capture the specific text we want to highlight
+        # We pass this into the helper so it can mark it with -->
+        current_utterance_text = self.df.at[index, 'text']
+
+        # 3. Construct Result
+        prev_num = curr_num - 1
+        next_num = curr_num + 1
+
+        # Previous ID Logic:
+        prev_id_str = f"{user}_{prev_num}" if prev_num > 0 else None
+
+        # Next ID Logic
+        next_id_candidate = f"{user}_{next_num}"
+        has_next = (self.df['frame_id'] == next_id_candidate).any()
+        next_id_str = next_id_candidate if has_next else None
+
+        # Pass the utterance only to the current window
+        prev_text = self._get_text_window(user, prev_num)
+        curr_text = self._get_text_window(user, curr_num, utterance=current_utterance_text)
+        next_text = self._get_text_window(user, next_num)
+
+        return {
+            'current_frame_id': curr_id_str,
+            'prev_frame_id': prev_id_str,
+            'next_frame_id': next_id_str,
+            'prev_text': prev_text,
+            'curr_text': curr_text,
+            'next_text': next_text
+        }
+
+    # 2. Helper to extract text by finding global boundaries
+    def _get_text_window(self, user, target_num, utterance=None):
+        # construct the frame ID
+        if target_num <= 0: return None
+
+        # the start index is the (last+1) utterance of the prev frame (or 0 if no prev frame)
+        prev_slice = self.df[self.df['frame_id'] == f"{user}_{target_num-1}"]
+        # Handle case where prev_slice is empty (start at 0) or has values
+        start_idx = prev_slice.index.max() + 1 if not prev_slice.empty else 0
+        
+        # the end index is the (first-1) utterance of the next frame (or max if no next frame)
+        next_slice = self.df[self.df['frame_id'] == f"{user}_{target_num+1}"]
+        # Handle case where next_slice is empty (end at max) or has values
+        if not next_slice.empty:
+            end_idx = next_slice.index.min() - 1
+        else:
+            end_idx = self.df.index.max()
+
+        # print(f"---\nTARGET: {user}_{target_num}")
+        # print(f"START: {start_idx}")
+        # print(f"END: {end_idx}\n---")
+
+        # build the mask
+        mask = (self.df.index >= start_idx) & (self.df.index <= end_idx)
+
+        # Retrieve text for BOTH speakers in this window
+        subset = self.df.loc[mask].copy()
+
+        # Define formatting helper
+        def format_row(row):
+            # Check if this row's text matches the utterance we want to highlight
+            suffix = " <---" if (utterance is not None and str(row['text']) == str(utterance)) else ""
+            return f"{row['character']}: {row['text']}{suffix}"
+
+        formatted_list = subset.apply(format_row, axis=1).tolist()
+        return "\n".join(formatted_list)

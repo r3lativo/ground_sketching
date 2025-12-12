@@ -41,9 +41,10 @@ class AugmentationPipeline:
         t_logger.info(f"--- Starting Pipeline for User: {user} ---")
         
         # Unpack Config
-        create = pipeline_config.get('create', False)
-        render = pipeline_config.get('render', False)
-        oracle = pipeline_config.get('oracle', False)
+        create = pipeline_config.get('create')
+        render = pipeline_config.get('render')
+        oracle = pipeline_config.get('oracle')
+        relation_triplets = pipeline_config.get('relation_triplets')
         candidate_count = pipeline_config.get('candidate_count')
         
         img_out_dir = pipeline_config.get('img_output_dir')
@@ -106,6 +107,20 @@ class AugmentationPipeline:
                     state, user_out_path, 
                     vlm_semaphore, img_semaphore, t_logger,
                     candidate_count
+                )
+
+        for index in sorted_indices:
+            try: row = data_manager.df.loc[index]
+            except KeyError: continue
+            
+            if row['character'] != user: continue
+
+            await data_manager.save()
+
+            if relation_triplets:
+                await self._phase_relations(
+                    data_manager, index, user,
+                    vlm_semaphore, t_logger
                 )
 
             # Save periodically
@@ -367,28 +382,65 @@ class AugmentationPipeline:
              updates = True
 
         return updates
+    
+    async def _phase_relations(self, dm, index, user, vlm_sem, t_logger):
+        row = dm.df.loc[index]
+        relation_raw = row.get('relation')
 
-    async def _phase_relations(self, dm, index, user, oracle, vlm_sem, t_logger):
-        """
-        Use the meta information and the relation to build triplets
-        to connect the frames.
-        """
-        # Retrieve all the last seq frames for this user.
-        # Remove the sequence name and just give the frame ID
-        # e.g. B_3_seq_2 -> B_3
+        # 0. Skip if no relation is defined
+        if not dm._is_not_empty_val(relation_raw):
+            return False
 
-        # For r in relations:
-            # if r:
-                # current_frame = t
-                # prev_frame = t-1 (if exists)
-                # next_frame = t+1 (if exists)
-                # context = from first_u of prev_frame to last_u of next_frame
+        # 1. Ensure Frame IDs
+        dm.ensure_frame_ids(user)
 
-                # send to model and ask for triplet relation
-                # between t and either t-1 and t+1
-                # if it exists, else return None
+        # 2. Retrieve Neighborhood
+        neighborhood = dm.get_frame_neighborhood(index, user)
+        
+        # [Edge Case] Isolated Frame Check
+        # Logic: If NO previous history AND NO future context, 
+        #        cannot form a triplet relation to anything.
+        p_txt = neighborhood.get('prev_text')
+        n_txt = neighborhood.get('next_text')
+        
+        if not p_txt and not n_txt:
+             t_logger.info(f"[RELATIONS] Index {index}: Isolated frame (No Prev/Next Text). Skipping extraction.")
+             return False
 
-        # output example:
-        #(t-1, relation, t)
-        #(t+1, relation, t)
-        # the order between t and tOTHER can be whatever
+        t_logger.info(f"[RELATIONS] Index {index}: Processing relation '{relation_raw}'")
+
+        # 3. Prepare Prompt
+        text_combined = f"{row['character']}: {row['text']}"
+        
+        extracted_data = None
+        
+        # 4. Execute
+        async with vlm_sem:
+            cid = neighborhood['current_frame_id']
+            t_logger.info(f"[RELATIONS] Extracting triplets for Frame {cid}...")
+            
+            extracted_data = await self.client.call_triplets_extraction(
+                relation=relation_raw,
+                context=neighborhood
+            )
+
+        # 5. Save Cleaned Triplets
+        if extracted_data:
+            clean_triplets = [
+                (item['subject'], item['predicate'], item['object'])
+                for item in extracted_data
+                if isinstance(item, dict) and all(k in item for k in ['subject', 'predicate', 'object'])
+            ]
+
+            if extracted_data:
+                t_logger.log_trace(index, "triplets_extraction", {
+                    "relation": relation_raw, 
+                    "frame_id": cid,
+                    "triplets": clean_triplets
+                })
+
+            if clean_triplets:
+                await dm.update_cell(index, 'extracted_triplets', str(clean_triplets))
+                return True
+
+        return False

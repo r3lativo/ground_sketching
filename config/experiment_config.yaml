@@ -33,6 +33,8 @@ experiment:
     summarize_t: 'prompt_summarize.jinja2'
     fact_t: 'fact_checker.jinja2'
 
+    triplets_extraction_t: 'triplets_extraction.jinja2'
+
   meetup:
     datapath:  "/lustre/fswork/projects/rech/bgp/ucm29gh/code/jeanzay-rl/data/IndiRef/meetup_final"
     test_case: "/lustre/fswork/projects/rech/bgp/ucm29gh/code/jeanzay-rl/data/IndiRef/meetup_final/Attributive/101_215_367_399.csv"

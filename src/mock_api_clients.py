@@ -8,11 +8,6 @@ from typing import List, Optional, Dict, Any, Tuple
 # [CRITICAL] Import Action to recognize SKIP/NEW/CONTINUE constants
 from src.api_clients import APIClient, Action 
 from src.utils import mock_creation_logic, mock_gen_logic
-from src.strategies import (
-    SummarizeStrategy,
-    FactCheckStrategy,
-    CaptionStrategy
-)
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +37,9 @@ class MockAPIClient(APIClient):
         selected_action = random.choices(valid_actions, weights=[20, 30, 50], k=1)[0]
 
         mock_think = "<think>Mock...Thinking...</think>"
-        mock_answer = f'```json{{"frame_meta": "Mock...Frame Meta","relation": "Mock...Frame Relation","imagery": "Mock...{utterance}","action": "{selected_action}"}}```'
+        frame_meta = random.choice(['Mock...Frame Meta', ''])
+        relation = random.choice(['Mock...Frame Relation', ''])
+        mock_answer = f'```json{{"frame_meta": "{frame_meta}","relation": "{relation}","imagery": "Mock...{utterance}","action": "{selected_action}"}}```'
         mock_response = f"{mock_think}{mock_answer}"
         
         return self.strategies['meta_extraction'].process_response(mock_response)
@@ -97,7 +94,7 @@ class MockAPIClient(APIClient):
         results = []
         for fact in facts:
             # Randomly decide if true or false to test scoring logic
-            is_true = random.choice([True, True, False]) # Slight bias towards True
+            is_true = random.choices([True, False], weights=[6, 4])[0] # Slight bias towards True
             results.append({
                 "fact": fact,
                 "box": [100, 100, 200, 200] if is_true else [0, 0, 0, 0],
@@ -146,3 +143,15 @@ class MockAPIClient(APIClient):
         final_score = confirmed_count / len(facts) if facts else 0.0
         
         return final_score, details
+
+    async def call_triplets_extraction(self, relation: str, context: dict, timeout: Optional[float] = None) -> List[Tuple[str]]:
+        """
+        Tries to extract triplets from a relation and the given context.
+        """
+        logger.info("[MOCK] Calling Triplets Extraction...")
+        print(self.strategies['triplets_extraction'].build_user_content(relation, context))
+
+        mock_response = '```json[{"subject": "x","predicate": "relation","object": "y"}]```'
+        final = random.choice(['', self.strategies['triplets_extraction'].process_response(mock_response)])
+
+        return final

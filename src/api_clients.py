@@ -17,7 +17,8 @@ from src.strategies import (
     # New Strategies
     SummarizeStrategy,
     CaptionStrategy,
-    FactCheckStrategy
+    FactCheckStrategy,
+    TripletsExtractionStrategy
 )
 
 logger = logging.getLogger(__name__)
@@ -126,6 +127,8 @@ class APIClient:
                 'summarize': load_strat(SummarizeStrategy, 'summarize_t'),
                 'caption': load_strat(CaptionStrategy, 'caption_t'),
                 'fact_check': load_strat(FactCheckStrategy, 'fact_t'),
+
+                'triplets_extraction': load_strat(TripletsExtractionStrategy, 'triplets_extraction_t'),
             }
             
         except Exception as e:
@@ -367,3 +370,16 @@ class APIClient:
         final_score = true_count / len(facts) if facts else 0.0
         
         return final_score, verification_results
+
+    async def call_triplets_extraction(self, relation: str, context: dict, timeout: Optional[float] = None) -> List[Tuple[str]]:
+        """
+        Tries to extract triplets from a relation and the given context.
+        """
+        logger.info("[API CLIENTS] Calling Triplets Extraction...")
+        result = await self.execute_vlm_strategy(
+            strategy=self.strategies['triplets_extraction'],
+            relation=relation,
+            context=context,
+            timeout=timeout
+        )
+        return result

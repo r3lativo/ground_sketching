@@ -3,6 +3,8 @@
 import logging
 from abc import ABC, abstractmethod
 from typing import List, Optional, Dict, Any, Union
+import ast
+import re
 
 # Import the centralized parsers
 from src.utils import json_parser, thinking_parser
@@ -216,3 +218,36 @@ class FactCheckStrategy(MultimodalEditStrategy):
         if isinstance(parsed, dict):
             return parsed.get("verification", [])
         return []
+
+
+class TripletsExtractionStrategy(PromptStrategy):
+    """
+    Extracts triplets (Frame_A, Relation, Frame_B) based on a relation directive and temporal context.
+    """
+    @property
+    def endpoint_suffix(self) -> str:
+        return "/generate"
+
+    def build_user_content(self, relation: str, context: dict = None) -> str:
+        """
+        Constructs a structured prompt for the VLM.
+        Expects 'relation' to be the specific Relation Directive.
+        Expects 'context' to be a dict containing.
+        """
+        ctx = context or {}
+        prev_txt = ctx.get('prev_text')
+        curr_txt = ctx.get('curr_text')
+        next_txt = ctx.get('next_text')
+        
+        # Retrieve the specific IDs we generated in DataManager
+        p_id = ctx.get('prev_frame_id')
+        c_id = ctx.get('current_frame_id')
+        n_id = ctx.get('next_frame_id')
+        prompt = f"RELATION: '{relation}'\n\n--- CONTEXT ---\n"
+        if p_id: prompt+=f"[PREVIOUS SCENE ID: {p_id}]:\n{prev_txt}\n\n"
+        if c_id: prompt+=f"[CURRENT SCENE ID: {c_id}]:\n{curr_txt}\n\n"
+        if n_id: prompt+=f"[NEXT SCENE ID: {n_id}]:\n{next_txt}"
+        return prompt
+
+    def _parse_answer(self, answer_text: str):
+        return json_parser(answer_text)
