@@ -10,7 +10,7 @@ import os
 import re
 import sys
 from datetime import datetime
-from PIL import Image, ImageFilter, ImageDraw
+from PIL import Image, ImageDraw
 import socket
 import json
 import numpy as np
@@ -172,6 +172,35 @@ def check_server(host: str, port: int, timeout: int = 60) -> bool:
     except Exception as e:
         print(f" [FAILED] ({e})")
         return False
+
+def verify_services(args):
+    """Checks if required servers are running."""
+    if args.fake_servers:
+        logger.info("Skipping server checks (Fake servers mode active).")
+        return
+
+    try:
+        cfg = load_config(args.server_config_path)
+        failed = []
+
+        # Check VLM Gateway
+        vlm = cfg['vlm_service']['gateway']
+        if not check_server(vlm['host'], vlm['port']):
+            failed.append("Prompt Polisher (VLM)")
+
+        # Check Image Gen (only if rendering)
+        if args.gen_images_from_aug:
+            img = cfg['image_gen_service']
+            if not check_server(img['host'], img['port']):
+                failed.append("Image Generation")
+
+        if failed:
+            logger.error(f"Required services are down: {', '.join(failed)}")
+            sys.exit(1)
+            
+    except Exception as e:
+        logger.error(f"Failed to verify services: {e}")
+        sys.exit(1)
 
 # --- Robust Parsers ---
 

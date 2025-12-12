@@ -2,11 +2,11 @@
 
 This repository contains the server infrastructure for a master's thesis project exploring multimodal representations of common ground in situated dialogue.
 
-The core hypothesis is that text-only Large Language Models (LLMs) struggle with reasoning in situated, embodied tasks because they lack the visual and spatial grounding that humans inherently use. These models are often trained on "space-less, time-less" text, hindering their ability to resolve ambiguities or track references that are clear from a shared visual context.
+Text-only Large Language Models (LLMs) struggle with reasoning in situated, embodied tasks: is it because they lack the visual and spatial grounding that humans inherently use? These models are often trained on "space-less, time-less" text, hindering their ability to resolve ambiguities or track references that are clear from a shared visual context.
 
-This project aims to address this gap by developing a system that compositionally generates a visual representation, or "mental imagery," from conversational utterances. This visual sketch serves as a persistent, grounded representation of the situational context, which we hypothesize will improve an agent's reasoning and question-answering capabilities.
+This project aims to address this gap by developing a system that compositionally generates a visual representation, or "mental imagery," from conversational utterances. This visual sketch serves as a persistent, grounded representation of the situational context, which we hypothesize will improve an agent's reasoning and question-answering capabilities. The assumption is that visual imagery would help the model to create associations more easily.
 
-The code herein sets up the necessary services, including an image generation model and a Visual Language Model (VLM) which acts as a "prompt polisher". This polisher translates abstract conversational intentions into the precise, detailed prompts required for compositional image editing. The current experimental work focuses on defining a robust "visual lexicon" of operations (such as adding, removing, or modifying objects) and "style-as-semantics" to represent metadata like uncertainty.
+The code herein sets up the necessary services, including an image generation model and a Visual Language Model (VLM) which acts as a "prompt polisher". This polisher translates abstract conversational intentions into the precise, detailed prompts required for compositional image editing.
 
 ## Project Structure
 
@@ -19,17 +19,18 @@ The code herein sets up the necessary services, including an image generation mo
 ├── scripts/                # Bash scripts to launch the services
 ├── src/                    # Source code package
 │   ├── api_clients.py      # Python clients to call the model server APIs
+|   ├── augmenter.py        # Access point
+|   ├── data_manager.py     # Deals with preparing the data
 │   ├── image_gen_app.py    # FastAPI app for the image generation service
-│   ├── __init__.py         # Makes 'src' a Python package
-│   ├── utils.py            # Helper functions (logging, encoding, etc.)
+│   ├── logger.py           # Logger
+│   ├── mock_api_clients.py # Mock API class for test without running models
+│   ├── pipeline.py         # Manipulates the prepared data
+│   ├── strategies.py       # Prepares and parses i/o for VL model
+│   ├── utils.py            # Helper functions
 │   └── vllm_gateway.py     # FastAPI gateway for the VLM service
 ├── templates/              # Jinja2 templates for system prompts
-├── augmenter.py            # Script to augment CSVs with prompts and render images
-├── interactive_edit.py     # Interactive CLI tool for editing images
 ├── README.md               # This file
 ├── requirements.txt        # Python dependencies
-├── simple_interact.py      # (A simple interaction script)
-└── test_pipeline.py        # Example script to test the full pipeline
 ```
 
 ## Setup ⚙️
@@ -117,27 +118,7 @@ module load cuda/12.4.1
 
 ### 2\. Run a Test / Experiment
 
-Once the servers are running, execute the example test script (or your custom experiment script later).
-
-```bash
-# Ensure you have sample images in the data/ directory first
-python test_pipeline.py
-```
-
-  * This script will:
-      * Load sample images and a prompt.
-      * Call the prompt polisher gateway API.
-      * Call the image generation API with the (potentially enhanced) prompt.
-      * Save the resulting image to the `output/` directory.
-  * Check `logs/test_pipeline.log` for details of the run.
-
-There is also an interactive editor to create and edit images on the spot:
-
-```bash
-python3 interactive_edit.py -i IMAGE_PATH_TO_START_FROM -d --no-cleanup # -d bypasses the polisher, --no-cleanup skips the artifact cleaner
-```
-
-Finally, there is an augmenter, that takes a conversation and creates prompts to "render" to images via the diffusion model.
+Once the servers are running, you can run the augmenter, that takes a conversation and creates prompts to "render" to images via the diffusion model.
 
 ```bash
 python -m src.augmenter --input_dir "data/test/" --create_aug --gen_images_from_aug --relation_triplets --fake_servers #[OPTIONAL --oracle]

@@ -1,7 +1,6 @@
 # src/image_gen_app.py
 
 import math
-import os
 import logging
 import time
 import sys
@@ -12,10 +11,9 @@ from typing import Optional, List
 
 import torch
 import yaml
-from pydantic import BaseModel, ValidationError, Field
+from pydantic import BaseModel
 from fastapi import FastAPI, HTTPException
 from diffusers import (
-    DiffusionPipeline,
     FlowMatchEulerDiscreteScheduler,
     QwenImageEditPipeline,
     QwenImageEditPlusPipeline,

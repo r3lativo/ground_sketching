@@ -1,4 +1,4 @@
-# augmenter.py
+# src/augmenter.py
 
 import argparse
 import asyncio
@@ -8,7 +8,7 @@ from pathlib import Path
 from datetime import datetime
 import random
 
-from src.utils import setup_logging, check_server, load_config
+from src.utils import verify_services
 from src.data_manager import ConversationDataManager
 from src.pipeline import AugmentationPipeline
 from src.api_clients import APIClient
@@ -21,6 +21,9 @@ logger = logging.getLogger("Augmenter")
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Parallel Augmentation")
+    parser.add_argument("--server_config_path", type=str, default='config/server_config.yaml')
+    parser.add_argument("--experiment_config_path", type=str, default='config/experiment_config.yaml')
+
     parser.add_argument("--input_dir", type=str, required=True, help="Input directory containing CSVs")
     parser.add_argument("--output_dir", type=str, default='output/', help="Output root directory")
     parser.add_argument("--n_files", type=int, default=10, help="Maximum number of files to process")
@@ -37,35 +40,6 @@ def parse_arguments():
     parser.add_argument("--fake_servers", action='store_true', help="Use Mock Clients but run full pipeline logic")
     
     return parser.parse_args()
-
-def verify_services(args):
-    """Checks if required servers are running."""
-    if args.fake_servers:
-        logger.info("Skipping server checks (Fake servers mode active).")
-        return
-
-    try:
-        cfg = load_config('config/server_config.yaml')
-        failed = []
-
-        # Check VLM Gateway
-        vlm = cfg['vlm_service']['gateway']
-        if not check_server(vlm['host'], vlm['port']):
-            failed.append("Prompt Polisher (VLM)")
-
-        # Check Image Gen (only if rendering)
-        if args.gen_images_from_aug:
-            img = cfg['image_gen_service']
-            if not check_server(img['host'], img['port']):
-                failed.append("Image Generation")
-
-        if failed:
-            logger.error(f"Required services are down: {', '.join(failed)}")
-            sys.exit(1)
-            
-    except Exception as e:
-        logger.error(f"Failed to verify services: {e}")
-        sys.exit(1)
 
 async def main():
     args = parse_arguments()
@@ -102,7 +76,10 @@ async def main():
         ClientClass = APIClient
 
     # Initialize Resources
-    api_client = ClientClass("config/server_config.yaml", "config/experiment_config.yaml")
+    api_client = ClientClass(
+        args.server_config_path,
+        args.experiment_config_path
+    )
     
     pipeline = AugmentationPipeline(api_client)
 
@@ -115,12 +92,11 @@ async def main():
     data_managers = []
 
     # Select N random files (and discard the rest)
-    if args.n_files > 0 and args.n_files < total_files:
+    if 0 < args.n_files < total_files:
         csv_files = random.sample(csv_files, args.n_files)
-        logger.info(f"Randomly selected {len(csv_files)} files for processing.")
+        logger.info(f"Randomly selected {len(csv_files)} files.")
     else:
-        logger.info(f"Processing all {total_files} files (N={args.n_files}).")
-
+        logger.info(f"Processing all {total_files} files.")
     async with api_client:
         for csv_file in csv_files:
 
@@ -168,10 +144,17 @@ async def main():
 
         # 6. Execute All Tasks Parallel
         if tasks:
-            logger.info(f"Starting execution of {len(tasks)} character pipelines with VLM concurrency {args.vlm_concurrency} and IMG concurrency {args.img_concurrency}...")
-            await asyncio.gather(*tasks)
+            logger.info(f"Starting execution...")
+            
+            # Change this line:
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+            
+            # Check for errors
+            for i, res in enumerate(results):
+                if isinstance(res, Exception):
+                    logger.error(f"Task {i} failed with error: {res}")
         else:
-            logger.warning("No tasks were created. Check input CSVs.")
+            logger.warning("No tasks were created.")
 
         # 7. Final Save
         logger.info("All tasks done. Performing final save...")

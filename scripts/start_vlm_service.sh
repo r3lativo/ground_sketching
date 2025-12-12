@@ -2,11 +2,6 @@
 # Start the prompt_polisher model and the vllm gateway
 set -e # Exit immediately if any command fails
 
-# echo "--- 0. Load the necessary environmnental modules ---"
-# module purge                        # Clear all inherited modules to start from a clean slate
-# module load arch/a100               # Load the HPC's specific module for A100 GPUs (drivers, CUDA, etc.)
-# module load pytorch-gpu/py3/2.8.0   # Load the PyTorch environment module
-
 CONFIG_FILE="config/server_config.yaml"
 CONFIG_GATEWAY="vlm_service.gateway"
 CONFIG_BACKEND="vlm_service.backend"
@@ -83,9 +78,9 @@ done
 echo " vLLM server is ready!"
 echo "--- 3. Starting FastAPI gateway in the foreground ---"
 # Read the gateway's *own* host and port from the config
-APP_HOST=$(yq -r ".$CONFIG_GATEWAY.host" $CONFIG_FILE)
-APP_PORT=$(yq ".$CONFIG_GATEWAY.port" $CONFIG_FILE)
-echo "The gateway to vllm will be available at http://$APP_HOST:$APP_PORT"
+GATEWAY_HOST=$(yq -r ".$CONFIG_GATEWAY.host" $CONFIG_FILE)
+GATEWAY_PORT=$(yq ".$CONFIG_GATEWAY.port" $CONFIG_FILE)
+echo "The gateway to vllm will be available at http://$GATEWAY_HOST:$GATEWAY_PORT"
 
 # Run the FastAPI gateway Python script in the foreground
 # This keeps this bash script alive and allows the 'trap' to function

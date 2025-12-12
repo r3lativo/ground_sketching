@@ -75,7 +75,9 @@ INPUT_DIR="/lustre/fswork/projects/rech/bgp/ucm29gh/code/jeanzay-rl/data/IndiRef
 python -m src.augmenter \
     --input_dir "$INPUT_DIR" \
     --create_aug \
-    --gen_images_from_aug
+    --gen_images_from_aug \
+    --relation_triplets \
+    --n_files 1
 
 # 4. Cleanup
 echo "--- CLEANING UP ---"

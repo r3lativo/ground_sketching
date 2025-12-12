@@ -1,17 +1,10 @@
 # src/pipeline.py
 
 import asyncio
-import logging
 import random
-import os
-import pandas as pd
 from pathlib import Path
-from PIL import Image, ImageDraw
 
 from src.utils import (
-    pil_to_base64,
-    base64_to_pil,
-    clean_image_artifacts,
     load_existing_image,
     process_zoom,
     process_generated_image,
@@ -19,8 +12,6 @@ from src.utils import (
 )
 from src.api_clients import Action
 
-# Note: We rely on the TaskLogger passed from augmenter, not the global logger
-global_logger = logging.getLogger(__name__)
 
 class AugmentationPipeline:
     def __init__(self, api_client):
@@ -81,6 +72,7 @@ class AugmentationPipeline:
              except Exception as e:
                  t_logger.warning(f"Failed to load initial context image: {e}")
 
+        # --- A. CREATE AND RENDER ---
         for index in sorted_indices:
             try:
                 row = data_manager.df.loc[index]
@@ -90,17 +82,14 @@ class AugmentationPipeline:
             if row['character'] != user:
                 continue
 
-            # Get initial index for context windowing
-            data_manager.set_start_idx(index, user, oracle)
-
-            # --- PHASE 1: CREATE ---
+            # PHASE 1: CREATE
             if create:
                 await self._phase_create(
                     data_manager, index, user, oracle,
                     vlm_semaphore, t_logger
                 )
 
-            # --- PHASE 2: RENDER (With Verification) ---
+            # PHASE 2: RENDER (With Verification)
             if render and user_out_path:
                 await self._phase_render(
                     data_manager, index, user, oracle, 
@@ -109,6 +98,7 @@ class AugmentationPipeline:
                     candidate_count
                 )
 
+        # --- B. TRIPLET RELATION ---
         for index in sorted_indices:
             try: row = data_manager.df.loc[index]
             except KeyError: continue
@@ -123,12 +113,13 @@ class AugmentationPipeline:
                     vlm_semaphore, t_logger
                 )
 
-            # Save periodically
-            await data_manager.save()
+        # Save periodically
+        await data_manager.save()
 
         t_logger.info(f"--- Finished User: {user} ---")
 
     async def _update_cells(self, dm, index, decision):
+        """Helper to update all relevant cells for meta extraction"""
         await dm.update_cell(index, 'frame_choice', decision.action)
         await dm.update_cell(index, 'frame_meta', decision.frame_meta)
         await dm.update_cell(index, 'relation', decision.relation)
@@ -141,7 +132,8 @@ class AugmentationPipeline:
         """
         row = dm.df.loc[index]
         utterance = f"{row['character']}: {row['text']}"
-        context = dm.get_context_for_index(index, user)
+        start_idx = dm.calculate_start_idx(index, user, oracle)
+        context = dm.get_context_for_index(index, user, start_idx=start_idx)
         prev_prompts = dm.get_prev_prompts_for_frame(index, user, oracle)
 
         ### META PHASE ###
@@ -160,8 +152,7 @@ class AugmentationPipeline:
 
         # No CONTINUE without NEW
         if decision.action == Action.CONTINUE:
-            # Check if this user has ever had a [NEW] frame in the past
-            # We assume dm.df is the master source of truth
+            # Check if *this* user has ever had a [NEW] frame in the past
             history = dm.df.iloc[:index]
             
             # Fast pandas check: (User matches) AND (Frame Choice contains [NEW])
@@ -198,11 +189,11 @@ class AugmentationPipeline:
         # 5. Execute Strategy
         new_prompt = ""
         async with vlm_sem:
-                t_logger.info(f"[CREATE] Index {index}: Executing Strategy {decision.strategy_name}...")
-                new_prompt = await self.client.execute_vlm_strategy(
-                    decision.strategy, utterance, context, prev_prompts
-                )
-                t_logger.log_trace(index, "strategy_generation", {"prompt": new_prompt})
+            t_logger.info(f"[CREATE] Index {index}: Executing Strategy {decision.strategy_name}...")
+            new_prompt = await self.client.execute_vlm_strategy(
+                decision.strategy, utterance, context, prev_prompts
+            )
+            t_logger.log_trace(index, "strategy_generation", {"prompt": new_prompt})
 
         await dm.update_cell(index, 'initial_prompt', new_prompt)
         return True
@@ -240,7 +231,7 @@ class AugmentationPipeline:
 
         # --- 3. REFINE PROMPT ---
         # We only refine if we have visual context (CONTINUE mode).
-        # If NEW, we act as if we have no prior visual context.
+        # If NEW, we have no prior visual context.
         final_prompt = initial_prompt
         
         if current_context_image and not is_new_frame:
@@ -302,11 +293,40 @@ class AugmentationPipeline:
             
             for i in range(actual_loops + 1):
                 
-                # --- A. CHECK PREVIOUS VERIFICATION ---
-                # Before starting new work, check if the previous background task finished
+                # --- PARALLEL EXECUTION DEFINITION ---
+                # We define the generation step as a coroutine here.
+                # It will run concurrently with the verification of the PREVIOUS image.
+                async def _gen_step():
+                    # Stop generating if we have hit the requested count (cleanup phase)
+                    if i >= actual_loops: 
+                        return None
+                    
+                    t_logger.info(f"[RENDER] Generating Candidate {i+1}/{actual_loops}...")
+                    candidate_seed = random.randint(0, 2**32 - 1)
+                    
+                    async with img_sem:
+                        imgs_payload = [current_context_image] if current_context_image else None
+                        return await self.client.call_image_gen(
+                            sub_prompt, imgs_payload, seed=candidate_seed
+                        )
+
+                # --- START CONCURRENT TASKS ---
+                # Task List: [0] Generation, [1] Verification (Optional)
+                current_tasks = [_gen_step()]
                 if verification_task:
-                    # Wait for the VLM to finish checking the PREVIOUS image
-                    score, details = await verification_task
+                    current_tasks.append(verification_task)
+
+                # Wait for BOTH the next image to generate AND the previous one to verify
+                results = await asyncio.gather(*current_tasks)
+
+                # --- PROCESS RESULTS ---
+                
+                # 1. Result of Generation (Always index 0)
+                new_b64 = results[0]
+
+                # 2. Result of Verification (Index 1, if it existed)
+                if verification_task:
+                    score, details = results[1]
                     
                     t_logger.info(f"[RENDER] Candidate Score: {score:.2f}")
 
@@ -315,44 +335,25 @@ class AugmentationPipeline:
                         best_candidate_b64 = pending_candidate_b64
                         best_verification_details = details
                     
-                    # Early Stopping: If perfect, we can cancel future work
+                    # Early Stopping: If perfect, we stop immediately
                     if score >= 1.0:
                         t_logger.info(f"[RENDER] Perfect score achieved. Stopping early.")
                         break
 
-                # --- B. STOPPING CONDITION ---
-                # If we have finished generating N images, stop the loop
-                if i >= actual_loops:
+                # --- PREPARE FOR NEXT LOOP ---
+                
+                # If we are in the extra cleanup loop (i >= actual_loops) and no new image was generated, we are done.
+                if new_b64 is None:
                     break
 
-                # --- C. GENERATE NEXT IMAGE ---
-                t_logger.info(f"[RENDER] Generating Candidate {i+1}/{actual_loops}...")
-
-                # Generate a random seed for this specific candidate
-                candidate_seed = random.randint(0, 2**32 - 1)
-                
-                async with img_sem:
-                    imgs_payload = [current_context_image] if current_context_image else None
-                    # This waits for the Diffuser, but VLM is idle (or we just finished waiting for it)
-                    new_b64 = await self.client.call_image_gen(
-                        sub_prompt,
-                        imgs_payload,
-                        seed=candidate_seed
-                    )
-                
-                if not new_b64:
-                    continue
-
-                # --- D. START NEXT VERIFICATION ---
-                # If we have facts, kick off verification in BACKGROUND
                 if visual_facts:
-                    pending_candidate_b64 = new_b64 # Keep ref to image
-                    # Create task = Fire and Forget (until next loop)
+                    # If we have facts, we queue the NEW image for verification in the NEXT loop
+                    pending_candidate_b64 = new_b64
                     verification_task = asyncio.create_task(
                         self.client.verify_image_faithfulness(base64_image=new_b64, facts=visual_facts)
                     )
                 else:
-                    # If no verification needed (no facts), just accept this image
+                    # If no facts exist (no verification needed), this image is automatically the winner
                     best_candidate_b64 = new_b64
                     break
 

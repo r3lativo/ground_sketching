@@ -213,27 +213,44 @@ class APIClient:
             return None
 
     async def execute_vlm_strategy(
-        self, strategy: PromptStrategy, utterance: str,
+        self, 
+        strategy: PromptStrategy, 
+        utterance: Optional[str] = "",
         context: Optional[List[str]] = None,
         previous_prompts: Optional[List[str]] = None,
-        images: Optional[List[str]] = None, timeout: Optional[float] = None
-    ) -> Optional[str]:
+        images: Optional[List[str]] = None, 
+        timeout: Optional[float] = None,
+        **kwargs
+    ) -> Optional[Any]:
         
         if not self.client: raise RuntimeError("Client not initialized.")
         
         client_config = self.config.get("vlm_client", {})
         
-        # OVERRIDE with strategy defaults
         if hasattr(strategy, 'default_params'):
             client_config.update(strategy.default_params)
 
         endpoint = f"{self.polisher_api_base_url}{strategy.endpoint_suffix}"
-        payload = strategy.build_payload(utterance, client_config, context, previous_prompts, images)
+        
+        payload = strategy.build_payload(
+            utterance=utterance, 
+            config=client_config, 
+            context=context, 
+            previous_prompts=previous_prompts, 
+            images=images, 
+            **kwargs 
+        )
 
         try:
             response = await self.client.post(endpoint, json=payload, timeout=timeout)
             response.raise_for_status()
-            return strategy.process_response(response.json().get("text"))
+            
+            # Helper to safely get text
+            resp_json = response.json()
+            # Some VLMs return 'content', others 'text'.
+            raw_text = resp_json.get("text", resp_json.get("content", ""))
+            
+            return strategy.process_response(raw_text)
         except Exception as e:
             logger.error(f"[API CLIENTS] VLM Strategy Execution failed ({strategy.__class__.__name__}): {e}", exc_info=True)
             return None
@@ -378,6 +395,7 @@ class APIClient:
         logger.info("[API CLIENTS] Calling Triplets Extraction...")
         result = await self.execute_vlm_strategy(
             strategy=self.strategies['triplets_extraction'],
+            utterance="",
             relation=relation,
             context=context,
             timeout=timeout
