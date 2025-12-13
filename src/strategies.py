@@ -32,9 +32,10 @@ class PromptStrategy(ABC):
     def build_user_content(
         self, 
         utterance: str, 
-        context: Optional[List[str]] = None,
+        context: Union[List[str], Dict[str, Any], None] = None,
         previous_prompts: Optional[List[str]] = None,
-        images: Optional[List[str]] = None
+        images: Optional[List[str]] = None,
+        **kwargs  # Allow custom arguments in abstract method
     ) -> Union[str, List[Dict[str, Any]]]:
         pass
 
@@ -42,14 +43,22 @@ class PromptStrategy(ABC):
         self, 
         utterance: str, 
         config: Dict[str, Any],
-        context: Optional[List[str]] = None,
+        context: Union[List[str], Dict[str, Any], None] = None,
         previous_prompts: Optional[List[str]] = None,
-        images: Optional[List[str]] = None
+        images: Optional[List[str]] = None,
+        **kwargs  # Accept extra args here to prevent TypeError
     ) -> Dict[str, Any]:
         """
         Constructs the full JSON payload for the API request.
+        Passes **kwargs down to build_user_content.
         """
-        user_content = self.build_user_content(utterance, context, previous_prompts, images)
+        user_content = self.build_user_content(
+            utterance=utterance, 
+            context=context, 
+            previous_prompts=previous_prompts, 
+            images=images, 
+            **kwargs
+        )
         
         messages = [
             {"role": "system", "content": self.system_prompt},
@@ -100,7 +109,7 @@ class TextCreateStrategy(PromptStrategy):
     def endpoint_suffix(self) -> str:
         return "/generate"
 
-    def build_user_content(self, utterance, context=None, previous_prompts=None, images=None) -> str:
+    def build_user_content(self, utterance, context=None, previous_prompts=None, images=None, **kwargs) -> str:
         ctx_str = f"Conversation Context:\n{context}\n" if context else ""
         return f"{ctx_str}Target Utterance:\n{utterance}\n"
 
@@ -113,7 +122,7 @@ class TextEditStrategy(PromptStrategy):
     def endpoint_suffix(self) -> str:
         return "/generate"
 
-    def build_user_content(self, utterance, context=None, previous_prompts=None, images=None) -> str:
+    def build_user_content(self, utterance, context=None, previous_prompts=None, images=None, **kwargs) -> str:
         ctx_str = f"Conversation Context:\n{context}\n" if context else ""
         hist_str = f"Previous Prompts:\n{previous_prompts}\n" if previous_prompts else ""
         return f"{ctx_str}Target Utterance:\n{utterance}\n{hist_str}"
@@ -127,7 +136,7 @@ class MultimodalEditStrategy(PromptStrategy):
     def endpoint_suffix(self) -> str:
         return "/edit"
 
-    def build_user_content(self, utterance, context=None, previous_prompts=None, images=None) -> List[Dict[str, Any]]:
+    def build_user_content(self, utterance, context=None, previous_prompts=None, images=None, **kwargs) -> List[Dict[str, Any]]:
         content = []
         if images:
             for img_b64 in images:
@@ -142,7 +151,7 @@ class MultimodalEditStrategy(PromptStrategy):
 
 
 class MetaStrategy(TextEditStrategy):
-    def build_user_content(self, utterance, context=None, previous_prompts=None, images=None) -> str:
+    def build_user_content(self, utterance, context=None, previous_prompts=None, images=None, **kwargs) -> str:
         ctx_str = f"Conversation Context <context>:\n{context if context else 'None'}"
         hist_str = f"Previous Prompts <previous>:\n{previous_prompts if previous_prompts else 'None'}"
         target_str = f"Target Utterance <target>:\n{utterance}"
@@ -166,7 +175,7 @@ class SummarizeStrategy(PromptStrategy):
     def endpoint_suffix(self) -> str:
         return "/generate"
 
-    def build_user_content(self, utterance, context=None, previous_prompts=None, images=None) -> str:
+    def build_user_content(self, utterance, context=None, previous_prompts=None, images=None, **kwargs) -> str:
         prompts_str = "\n".join(context) if context else str(context)
         return f"Here are the prompts:\n{prompts_str}\n"
 
@@ -199,7 +208,7 @@ class FactCheckStrategy(MultimodalEditStrategy):
     def endpoint_suffix(self) -> str:
         return "/edit"
 
-    def build_user_content(self, utterance, context=None, previous_prompts=None, images=None) -> List[Dict[str, Any]]:
+    def build_user_content(self, utterance, context=None, previous_prompts=None, images=None, **kwargs) -> List[Dict[str, Any]]:
         content = []
         if images:
             for img_b64 in images:
@@ -226,25 +235,42 @@ class TripletsExtractionStrategy(PromptStrategy):
     def endpoint_suffix(self) -> str:
         return "/generate"
 
-    def build_user_content(self, relation: str, context: dict = None) -> str:
+    def build_user_content(
+        self, 
+        utterance: str, 
+        context: Union[List[str], Dict[str, Any], None] = None,
+        previous_prompts=None, 
+        images=None, 
+        **kwargs
+    ) -> str:
         """
-        Constructs a structured prompt for the VLM.
-        Expects 'relation' to be the specific Relation Directive.
-        Expects 'context' to be a dict containing.
+        Robustly handles input:
+        - If 'relation' is passed in kwargs, uses that.
+        - Otherwise, assumes 'utterance' IS the relation.
+        - Expects 'context' to be the neighborhood dict.
         """
-        ctx = context or {}
-        prev_txt = ctx.get('prev_text')
-        curr_txt = ctx.get('curr_text')
-        next_txt = ctx.get('next_text')
         
-        # Retrieve the specific IDs we generated in DataManager
+        # 1. Determine the Relation
+        # If the caller passed relation="...", use it. Else use the utterance string.
+        relation_text = kwargs.get('relation', utterance)
+
+        # 2. Parse Context
+        ctx = context if isinstance(context, dict) else {}
+        
+        prev_txt = ctx.get('prev_text', '')
+        curr_txt = ctx.get('curr_text', '')
+        next_txt = ctx.get('next_text', '')
+        
         p_id = ctx.get('prev_frame_id')
         c_id = ctx.get('current_frame_id')
         n_id = ctx.get('next_frame_id')
-        prompt = f"RELATION: '{relation}'\n\n--- CONTEXT ---\n"
-        if p_id: prompt+=f"[PREVIOUS SCENE ID: {p_id}]:\n{prev_txt}\n\n"
-        if c_id: prompt+=f"[CURRENT SCENE ID: {c_id}]:\n{curr_txt}\n\n"
-        if n_id: prompt+=f"[NEXT SCENE ID: {n_id}]:\n{next_txt}"
+        
+        # 3. Build Prompt
+        prompt = f"RELATION: '{relation_text}'\n\n--- CONTEXT ---\n"
+        if p_id: prompt += f"[PREVIOUS SCENE ID: {p_id}]:\n{prev_txt}\n\n"
+        if c_id: prompt += f"[CURRENT SCENE ID: {c_id}]:\n{curr_txt}\n\n"
+        if n_id: prompt += f"[NEXT SCENE ID: {n_id}]:\n{next_txt}"
+        
         return prompt
 
     def _parse_answer(self, answer_text: str):

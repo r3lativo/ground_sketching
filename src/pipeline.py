@@ -131,6 +131,12 @@ class AugmentationPipeline:
         Handles Logic: VLM Decision -> Strategy Execution -> Prompt Update
         """
         row = dm.df.loc[index]
+
+        # --- SKIP LOGIC: If we already have a prompt, don't ask VLM again ---
+        if dm._is_not_empty_val(row.get('initial_prompt')) and dm._is_not_empty_val(row.get('frame_choice')):
+             t_logger.info(f"[CREATE] Index {index}: Found existing prompt. Skipping creation.")
+             return True
+
         utterance = f"{row['character']}: {row['text']}"
         start_idx = dm.calculate_start_idx(index, user, oracle)
         context = dm.get_context_for_index(index, user, start_idx=start_idx)
@@ -206,13 +212,37 @@ class AugmentationPipeline:
         initial_prompt = str(row.get('initial_prompt', '')).strip()
         frame_choice = str(row.get('frame_choice', '')).strip()
         
-        # --- 1. HANDLE SKIP ---
+        # --- 1. HANDLE SKIP ACTION ---
         if Action.SKIP in frame_choice:
              t_logger.info(f"[RENDER] Index {index}: Frame choice is SKIP. Skipping generation.")
              return False
 
         if not is_not_empty_val(initial_prompt):
             return False
+        
+        # --- SKIP LOGIC: If we already have a valid image path, skip generation ---
+        existing_img_path = row.get('img_path')
+        if dm._is_not_empty_val(existing_img_path):
+             # Optional: Check if file actually exists on disk
+             if Path(str(existing_img_path)).exists():
+                 t_logger.info(f"[RENDER] Index {index}: Found existing image at {existing_img_path}. Skipping.")
+                 
+                 # IMPORTANT: We still need to update the state for the next rows!
+                 # Load the image so subsequent [CONTINUE] frames can use it as context.
+                 loaded = await asyncio.to_thread(load_existing_image, str(existing_img_path))
+                 if loaded:
+                     state['current_image_b64'] = loaded
+                     state['prev_image_path'] = str(existing_img_path)
+                     
+                 # If this was a [NEW] frame, we must increment the frame index 
+                 # to keep the numbering consistent with the file.
+                 if Action.NEW in str(row.get('frame_choice', '')):
+                     state['frame_idx'] += 1
+                     state['seq_idx'] = 1
+                 else:
+                     state['seq_idx'] += 1
+                     
+                 return False
 
         # --- 2. UPDATE STATE (Frame & Seq) ---
         is_new_frame = (Action.NEW in frame_choice)
@@ -388,6 +418,11 @@ class AugmentationPipeline:
         row = dm.df.loc[index]
         relation_raw = row.get('relation')
 
+        # --- SKIP LOGIC ---
+        if dm._is_not_empty_val(row.get('extracted_triplets')):
+            t_logger.info(f"[RELATIONS] Index {index}: Triplets already extracted. Skipping.")
+            return False
+
         # 0. Skip if no relation is defined
         if not dm._is_not_empty_val(relation_raw):
             return False
@@ -421,7 +456,7 @@ class AugmentationPipeline:
             t_logger.info(f"[RELATIONS] Extracting triplets for Frame {cid}...")
             
             extracted_data = await self.client.call_triplets_extraction(
-                relation=relation_raw,
+                utterance=relation_raw,
                 context=neighborhood
             )
 

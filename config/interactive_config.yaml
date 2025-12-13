@@ -1,5 +1,0 @@
-# config/interactive_config.yaml
-
-experiment_file: 'logs/interactive_session.csv'
-output_dir: 'output/interactive'
-dummy_img_height: 1024

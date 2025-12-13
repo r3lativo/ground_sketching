@@ -388,15 +388,14 @@ class APIClient:
         
         return final_score, verification_results
 
-    async def call_triplets_extraction(self, relation: str, context: dict, timeout: Optional[float] = None) -> List[Tuple[str]]:
+    async def call_triplets_extraction(self, utterance: str, context: dict, timeout: Optional[float] = None) -> List[Tuple[str]]:
         """
         Tries to extract triplets from a relation and the given context.
         """
         logger.info("[API CLIENTS] Calling Triplets Extraction...")
         result = await self.execute_vlm_strategy(
             strategy=self.strategies['triplets_extraction'],
-            utterance="",
-            relation=relation,
+            utterance=utterance,
             context=context,
             timeout=timeout
         )
