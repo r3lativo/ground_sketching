@@ -144,12 +144,12 @@ class MockAPIClient(APIClient):
         
         return final_score, details
 
-    async def call_triplets_extraction(self, relation: str, context: dict, timeout: Optional[float] = None) -> List[Tuple[str]]:
+    async def call_triplets_extraction(self, utterance: str, context: dict, timeout: Optional[float] = None) -> List[Tuple[str]]:
         """
         Tries to extract triplets from a relation and the given context.
         """
         logger.info("[MOCK] Calling Triplets Extraction...")
-        print(self.strategies['triplets_extraction'].build_user_content(relation, context))
+        print(self.strategies['triplets_extraction'].build_user_content(utterance, context))
 
         mock_response = '```json[{"subject": "x","predicate": "relation","object": "y"}]```'
         final = random.choice(['', self.strategies['triplets_extraction'].process_response(mock_response)])
