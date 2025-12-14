@@ -3,9 +3,9 @@
 import asyncio
 import logging
 import random
+import json
 from typing import List, Optional, Dict, Any, Tuple
 
-# [CRITICAL] Import Action to recognize SKIP/NEW/CONTINUE constants
 from src.api_clients import APIClient, Action 
 from src.utils import mock_creation_logic, mock_gen_logic
 
@@ -13,7 +13,9 @@ logger = logging.getLogger(__name__)
 
 class MockAPIClient(APIClient):
     """
-    A drop-in replacement for APIClient that uses your local mock logic.
+    Enhanced Mock Client.
+    Executes the REAL strategy construction logic to catch bugs in strategies.py,
+    but skips the actual HTTP network call.
     """
 
     async def __aenter__(self):
@@ -27,131 +29,98 @@ class MockAPIClient(APIClient):
 
     async def _fetch_meta_info(self, utterance, context, previous_prompts, timeout: Optional[float] = None) -> Optional[Dict]:
         """
-        Simulates the Meta Extraction VLM call.
+        Route it through generic helper logic.
         """
-        await asyncio.sleep(0.05)
-
-        # Use Action constants. 
-        # Weights: 20% NEW, 30% CONTINUE, 50% SKIP
-        valid_actions = [Action.NEW, Action.CONTINUE, Action.SKIP]
-        selected_action = random.choices(valid_actions, weights=[20, 30, 50], k=1)[0]
-
-        mock_think = "<think>Mock...Thinking...</think>"
-        frame_meta = random.choice(['Mock...Frame Meta', ''])
-        relation = random.choice(['Mock...Frame Relation', ''])
-        mock_answer = f'```json{{"frame_meta": "{frame_meta}","relation": "{relation}","imagery": "Mock...{utterance}","action": "{selected_action}"}}```'
-        mock_response = f"{mock_think}{mock_answer}"
-        
-        return self.strategies['meta_extraction'].process_response(mock_response)
+        strategy = self.strategies['meta_extraction']
+        return self._generate_fake_response(strategy, utterance)
 
     async def execute_vlm_strategy(
-        self, strategy, utterance, context=None, previous_prompts=None, images=None, timeout: Optional[float] = None
+        self, 
+        strategy, 
+        utterance: Optional[str] = "",
+        context: Optional[List[str]] = None,
+        previous_prompts: Optional[List[str]] = None,
+        images: Optional[List[str]] = None, 
+        timeout: Optional[float] = None,
+        **kwargs
     ) -> Any:
-        # NOTE: This is a fallback. The specific call_* methods below override this for specific tasks.
-        await asyncio.sleep(0.05) 
-
-        # Handle Prompt Generation using your utils logic
-        logger.info(f"[MOCK] Creating prompt for: {utterance[:20]}...")
-        generated_prompt = mock_creation_logic(utterance)
         
-        return generated_prompt
+        # 1. Run the actual build_payload to catch argument errors
+        client_config = self.config.get("vlm_client", {})
+        if hasattr(strategy, 'default_params'):
+            client_config.update(strategy.default_params)
+            
+        try:
+            # We discard the result, we just want to ensure it builds without error
+            _ = strategy.build_payload(
+                utterance=utterance, 
+                config=client_config, 
+                context=context, 
+                previous_prompts=previous_prompts, 
+                images=images, 
+                **kwargs
+            )
+        except Exception as e:
+            logger.error(f"[MOCK] CRITICAL: Strategy {strategy.__class__.__name__} failed to build payload! Error: {e}")
+            raise e
 
+        # 2. SIMULATE LATENCY
+        await asyncio.sleep(0.01)
+
+        # 3. RETURN FAKE DATA (Based on strategy type)
+        return self._generate_fake_response(strategy, utterance)
+
+    # --- We still mock image gen because it has no strategy logic ---
     async def call_image_gen(self, prompt: str, base64_images: Optional[List[str]], seed: Optional[int] = None, timeout: Optional[float] = None) -> Optional[str]:
         await asyncio.sleep(0.1)
-        logger.info(f"[MOCK] Generating image for: {prompt[:20]}... (Seed: {seed})")
+        logger.info(f"[MOCK] Generating image for: {prompt}... (Seed: {seed})")
         return mock_gen_logic(prompt)
 
-    # --- NEW MOCK FUNCTIONS ---
+    # --- IMPROVEMENT ---
+    # We do NOT override call_triplets_extraction, call_visual_verifier, etc.
+    # We let the parent class (APIClient) run those methods.
+    # The parent class calls 'execute_vlm_strategy', so we ONLY override that.
 
-    async def call_prompt_summarizer(self, context: List[str], timeout: Optional[float] = None) -> List[str]:
-        """
-        Mocks the decomposition of prompts into facts.
-        """
-        await asyncio.sleep(0.05)
-        logger.info("[MOCK] Summarizing prompts into facts...")
-        # Return a static list of mock facts for testing
-        return [
-            "There is a mock object in the center",
-            "The object has a red outline",
-            "There is a blue sky background"
-        ]
-
-    async def call_image_captioner(self, base64_images: List[str], timeout: Optional[float] = None) -> Optional[str]:
-        """
-        Mocks generating a caption.
-        """
-        await asyncio.sleep(0.05)
-        logger.info("[MOCK] Captioning image...")
-        return "A detailed mock caption describing a test scene with red and blue objects."
-
-    async def call_visual_verifier(self, facts: List[str], base64_image: str, timeout: Optional[float] = None) -> List[Dict]:
-        """
-        Mocks checking facts against an image. Returns random verdicts.
-        """
-        await asyncio.sleep(0.05)
-        logger.info("[MOCK] Verifying facts against image...")
+    def _generate_fake_response(self, strategy, utterance):
+        """Internal helper to route fake responses."""
         
-        results = []
-        for fact in facts:
-            # Randomly decide if true or false to test scoring logic
-            is_true = random.choices([True, False], weights=[6, 4])[0] # Slight bias towards True
-            results.append({
-                "fact": fact,
-                "box": [100, 100, 200, 200] if is_true else [0, 0, 0, 0],
-                "verdict": is_true
-            })
-        return results
+        strat_name = strategy.__class__.__name__
+        logger.info(f"[MOCK] simulating {strat_name}...")
 
-    async def verify_image_faithfulness(
-        self, 
-        base64_image: str, 
-        facts: Optional[List[str]] = None, 
-        context: Optional[List[str]] = None,
-        timeout: Optional[float] = None
-    ) -> Tuple[float, List[Dict]]:
-        """
-        Mocks the full verification loop. 
-        Returns a random score to test 'Best-of-N' selection.
-        """
-        await asyncio.sleep(0.05)
-        
-        # 1. Mock getting facts if needed
-        if not facts:
-            facts = await self.call_prompt_summarizer(context or [])
-
-        # 2. Mock verification details
-        # We generate a random score between 0.0 and 1.0 to ensure the pipeline
-        # actually has to "choose" the best one.
-        logger.info("[MOCK] Calculating faithfulness score...")
-        
-        # Randomly verify some facts
-        details = []
-        confirmed_count = 0
-        
-        for fact in facts:
-            # Weighted coin flip for realism
-            is_verified = random.random() > 0.3 
-            if is_verified:
-                confirmed_count += 1
+        if strat_name == 'MetaStrategy':
+            # Weights: 40% NEW, 30% CONTINUE, 30% SKIP
+            valid_actions = [Action.NEW, Action.CONTINUE, Action.SKIP]
+            selected_action = random.choices(valid_actions, weights=[40, 30, 30], k=1)[0]
             
-            details.append({
-                "fact": fact,
-                "box": [50, 50, 150, 150] if is_verified else [0,0,0,0],
-                "verdict": is_verified
+            # Construct a valid JSON string that the parser expects
+            fake_json = json.dumps({
+                "frame_meta": "Mock Frame Meta",
+                "relation": "Mock Relation",
+                "imagery": f"Mock imagery for {utterance[:10]}",
+                "action": selected_action
             })
+            return strategy.process_response(f"<think>...</think>```json{fake_json}```")
 
-        final_score = confirmed_count / len(facts) if facts else 0.0
-        
-        return final_score, details
+        elif strat_name == 'SummarizeStrategy':
+            return ["Fact A: The object is red.", "Fact B: The sky is blue."]
+            
+        elif strat_name == 'FactCheckStrategy':
+            return [{"fact": "Fact A", "verdict": True, "box": [0,0,10,10]}]
+            
+        elif strat_name == 'TripletsExtractionStrategy':
+            return [{"subject": "A", "predicate": "touches", "object": "B"}]
+            
+        elif strat_name == 'CaptionStrategy':
+            return "A mock caption of the image."
+            
+        else:
+            # Default text creation
+            return mock_creation_logic(utterance or "Generic Prompt")
 
     async def call_triplets_extraction(self, utterance: str, context: dict, timeout: Optional[float] = None) -> List[Tuple[str]]:
-        """
-        Tries to extract triplets from a relation and the given context.
-        """
-        logger.info("[MOCK] Calling Triplets Extraction...")
+        """Tries to extract triplets from a relation and the given context."""
         print(self.strategies['triplets_extraction'].build_user_content(utterance, context))
-
-        mock_response = '```json[{"subject": "x","predicate": "relation","object": "y"}]```'
-        final = random.choice(['', self.strategies['triplets_extraction'].process_response(mock_response)])
-
-        return final
+        return await self.execute_vlm_strategy(
+            strategy=self.strategies['triplets_extraction'],
+            utterance=utterance, context=context, timeout=timeout
+        )
