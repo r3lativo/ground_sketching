@@ -16,7 +16,7 @@ Please strictly follow the rewriting rules below:
 - Find and retain the fundamental details of the objects: If expressible trough images, do so; else, add some text to represent that information.
 - If the position of a particular object is specified, retain it in the final output.
 - Some information in the context might belong to a previous scene experienced by the user in <target>. If the utterance contains information that was part of the previous scene, then do not add that information to the current scene. Only add the information present in the <target> and any other information from the <context> if it complements the <target> information. 'Complementary information' means that both the informations belong to the same scene.
-- If <context> contains `<moved>` marker, it means that the speaker of the current <target> utterance moved at that moment. Keep in mind that `<moved>` does *not* always mean that it's a new scene, as the participants might continue talking about previous information.
+- If <context> contains `<scene_change>` marker, it means that the scene in which the the current <target> utterance's speaker changed at that moment. Keep in mind that `<scene_change>` does *not* always mean that it's a new scene, as the participants might continue talking about previous information.
 - You **must** make sure that present objects with black outline are *not* edited, unless the <target> utterance explicitly requires an edit on them.
 
 ## 2. Task Type Handling Rules

@@ -57,7 +57,8 @@ C. ACTION Rules:
 2. If [IMAGERY] is not empty then the [ACTION] can **only** be either [NEW] or [CONTINUE]. It can never be [SKIP].
 3. If [IMAGERY] is not empty and the <previous> frame has different information (i.e., the visual information in the <target> is different and unrelated to the information in <previous>), return [ACTION] -> `[NEW]`. If the <previous> frame has not changed and the <target> information can be added to the same frame, return [ACTION] -> `[CONTINUE]`.
 4. If <target> does not contain [IMAGERY] i.e. [IMAGERY] is empty (e.g., <target> is acknowledgments like "Okay," "Got it," "I see," or conversational filler), then return [ACTION] -> `[SKIP]`.
-5. If <context> contains `<moved>` marker, it means that the speaker of the current <target> utterance moved at that moment. Use this information to decide the [ACTION], keeping in mind that `<moved>` does *not* always mean [ACTION] -> `[NEW]`, as the participants might continue talking about previous information.
+5. If <context> contains `<scene_change>` marker, it means that the scene in which the the current <target> utterance's speaker changed at that moment. Use this information to decide the [ACTION], keeping in mind that `<scene_change>` does *not* always mean [ACTION] -> `[NEW]`, as the participants might continue talking about previous information.
+
 
 --- Examples ---
 #### Example 1
@@ -169,7 +170,7 @@ I need to analyze the utterance "Oh, wait. The first aid station is actually on 
 [
 "Nathan: im looking at a temple",
 "Nathan: going to the left",
-"Nathan <moved>",
+"Nathan <scene_change>",
 "Adam: ok got it",
 ]
 </context>
@@ -196,7 +197,7 @@ I need to analyze the utterance spoken by Nathan 'can see a blue car'. First, le
 [
 "Nathan: im looking at a temple",
 "Nathan: going to the left",
-"Nathan <moved>",
+"Nathan <scene_change>",
 "Adam: how did it look like?",
 ]
 </context>

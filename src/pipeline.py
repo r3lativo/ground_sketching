@@ -145,8 +145,7 @@ class AugmentationPipeline:
              return True
 
         utterance = f"{row['character']}: {row['text']}"
-        start_idx = dm.calculate_start_idx(index, user, oracle)
-        context = dm.get_context_for_index(index, user, start_idx=start_idx)
+        context = dm.get_context_for_index(index, user, oracle, include_prev=True)
         prev_prompts = dm.get_prev_prompts_for_frame(index, user, oracle)
 
         ### META PHASE ###

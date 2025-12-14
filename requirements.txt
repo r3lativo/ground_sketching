@@ -17,3 +17,5 @@ numpy
 Jinja2
 yq
 streamlit # for data visualization
+tqdm
+tenacity

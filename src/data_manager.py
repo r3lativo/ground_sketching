@@ -6,7 +6,7 @@ import asyncio
 import logging
 from pathlib import Path
 import os
-from typing import List, Optional, Tuple, Any
+from typing import List, Any
 
 logger = logging.getLogger(__name__)
 
@@ -73,19 +73,6 @@ class ConversationDataManager:
             else:
                 self.df.to_csv(self.output_path, index=False)
 
-    # --- Data Retrieval & Updates ---
-
-    def get_user_groups(self, user: str, chunk_col: str):
-        """
-        Returns an iterator of (chunk_id, chunk_df) for a specific user.
-        Usage: for chunk_id, chunk_df in data_mgr.get_user_groups(...)
-        """
-        if chunk_col not in self.df.columns:
-            logger.warning(f"[DM] Column {chunk_col} not found. Defaulting to 'chunk_id'.")
-            chunk_col = 'chunk_id'
-            
-        return self.df.groupby(chunk_col)
-
     async def update_cell(self, index: int, column: str, value: Any):
         """Updates a specific cell in the dataframe."""
         if isinstance(value, str):
@@ -93,175 +80,109 @@ class ConversationDataManager:
         else:
             self.df.at[index, column] = value
 
-    def calculate_start_idx(self, index: int, user: str, oracle: bool = False) -> int:
+    # --- SHARED HELPER (The Core Logic) ---
+
+    def _get_frame_start_index(self, index: int, user: str, oracle: bool = False) -> int:
         """
-        Calculates the start index relative to the user context.
-        Does NOT store state on self.
+        Finds the index where the CURRENT frame began (The last [NEW] tag).
+        If no [NEW] is found, returns 0.
         """
-        start_idx = 0
-        if not oracle:
-            context_start_col = f"ctx_start_idx_{user}"
-            if context_start_col in self.df.columns:
-                try:
-                    val = self.df.at[index, context_start_col]
-                    start_idx = int(float(val)) if pd.notna(val) else 0
-                except:
-                    start_idx = 0
-        return max(0, start_idx)
+        # 1. Slice history up to current point
+        history_df = self.df.iloc[:index + 1] # Include current row to check if IT is the start
+
+        # 2. Find rows that are [NEW] AND belong to this user
+        has_new_tag = history_df['frame_choice'].astype(str).str.contains('[NEW]', regex=False, na=False)
+        is_user = history_df['character'] == user
+        
+        # 3. Find the last valid index
+        valid_start_points = has_new_tag & is_user
+        last_new_idx = valid_start_points[valid_start_points].last_valid_index()
+        
+        # FALLBACK: If no [NEW] is found (start of file), return 0
+        return int(last_new_idx) if last_new_idx is not None else 0
+
+    # --- Data Retrieval (Simplified & Aligned) ---
 
     def get_prev_prompts_for_frame(self, index: int, user: str, oracle: bool = False) -> List[str]:
         """
-        Get all previous prompts specifically for the CURRENT image generation cycle.
-        Finds the last [NEW] frame specifically associated with the requested user.
+        Get all previous prompts belonging to the current visual scene.
         """
-        # Slice history up to the current index (exclusive)
-        history_df = self.df.iloc[:index]
+        start_idx = self._get_frame_start_index(index, user, oracle)
         
-        # Find Last [NEW] for this specific user
-        has_new_tag = history_df['frame_choice'].astype(str).str.contains('[NEW]', regex=False, na=False)
-        is_user = history_df['character'] == user
-        valid_start_points = has_new_tag & is_user
-        
-        # Find the index label of the *last* time this specific user started a new frame
-        last_new_idx = valid_start_points[valid_start_points].last_valid_index()
-        start_idx = int(last_new_idx) if last_new_idx is not None else 0
-
-        # We slice from start_idx (inclusive) to current index (exclusive)
+        # Slice from start (inclusive) to current (exclusive)
+        # We don't include the current row's prompt because it hasn't been generated yet!
         relevant_slice = self.df.iloc[start_idx:index]
         
-        # Create boolean mask for valid prompts
         mask = (relevant_slice['character'] == user) & \
                (relevant_slice['initial_prompt'].notna()) & \
                (relevant_slice['initial_prompt'].astype(str).str.strip() != "")
 
         return relevant_slice.loc[mask, 'initial_prompt'].tolist()
 
-    def get_img_for_index(self, index: int) -> str:
-        """Get the image path if it exists"""
-        full_imgs = self.df['img_path']
+    def get_context_for_index(self, index: int, user: str, oracle: bool = False, include_prev: bool = False) -> List[str]:
+        """
+        Get conversation history.
+        - include_prev=False: Returns only the current scene (from last [NEW] to index).
+        - include_prev=True: Returns (Previous Scene) + <scene_change> + (Current Scene).
+        """
+        # 1. Identify all [NEW] boundaries for this user up to current index
+        # We look at history inclusive of 'index' to see if current row is a start
+        history_df = self.df.iloc[:index + 1]
+        
+        is_user = history_df['character'] == user
+        has_new = history_df['frame_choice'].astype(str).str.contains('[NEW]', regex=False, na=False)
+        
+        # Get indices of all rows that marked a [NEW] scene for this user
+        valid_starts = history_df.index[is_user & has_new].tolist()
 
-        if self._is_not_empty_val(full_imgs.index):
-            if os.path.exists(full_imgs.index):
-                return full_imgs.index
+        # 2. Determine the "Current" Scene Start
+        # If no [NEW] tags found yet, the start is 0
+        curr_start_idx = valid_starts[-1] if valid_starts else 0
+
+        # 3. Determine the "Window" Start
+        start_idx = curr_start_idx
+        
+        if include_prev:
+            if len(valid_starts) >= 2:
+                # We have at least 2 scenes, so grab the one before the current one
+                prev_start_idx = valid_starts[-2]
+                start_idx = prev_start_idx
             else:
-                logger.warning(f"[DM] '{full_imgs.index}' file does not exist.")
-        return None
+                # Only 1 scene exists (or none), so we fall back to the beginning of file
+                start_idx = 0
 
-    def get_context_for_index(self, index: int, user: str, start_idx: int) -> List[str]:
-        """
-        Retrieves context using the provided start_idx explicitly.
-        """
-        # Prepare formatted strings
-        full_formatted = self.df[['character', 'text']].agg(': '.join, axis=1)
+        # 4. Slice the Dataframe
+        # We retrieve text from start_idx up to (but not including) the current utterance
         end_idx = index
+        mask = (self.df.index >= start_idx) & (self.df.index < end_idx)
+        subset = self.df.loc[mask]
         
-        mask = (full_formatted.index >= start_idx) & (full_formatted.index < end_idx)
-        ctx_list = full_formatted.loc[mask].tolist()
-        
-        # Marker Logic
-        chunk_col = f"chunk_{user}"
-        if chunk_col in self.df.columns:
-            current_chunk_val = self.df.at[index, chunk_col]
+        # Convert to list of strings
+        ctx_list = subset.apply(lambda row: f"{row['character']}: {row['text']}", axis=1).tolist()
+
+        # 5. Insert Marker
+        # If we included the previous scene, we must mark where the current scene actually begins.
+        # We check if curr_start_idx falls strictly inside our sliced window.
+        if include_prev and start_idx < curr_start_idx < end_idx:
+            # We need the relative position in the list.
+            # Since 'subset' contains exactly the rows in ctx_list, we count how many rows 
+            # appear *before* the curr_start_idx.
+            rows_before = subset[subset.index < curr_start_idx].shape[0]
             
-            # Find the first index where this chunk value appears
-            # Walk backwards from 'index' until value changes
-            scene_start_idx = index
-            for i in range(index - 1, -1, -1):
-                if self.df.at[i, chunk_col] != current_chunk_val:
-                    break
-                scene_start_idx = i
-            
-            if start_idx < scene_start_idx < end_idx:
-                insert_pos = scene_start_idx - start_idx
-                if 0 <= insert_pos < len(ctx_list):
-                    ctx_list.insert(insert_pos, f"{user} <moved>")
+            if 0 <= rows_before < len(ctx_list):
+                 ctx_list.insert(rows_before, f"{user} <scene_change>")
 
         return ctx_list
 
-    # --- Adapter Logic (Private) ---
-
-    def _adapt_to_standard_format(self) -> None:
-        """
-        Standardizes the DataFrame schema.
-        - Renames 'msg'->'text', 'user'->'character'
-        - Generates 'chunk_id' if missing
-        - Calculates context start indices ('ctx_start_idx_X')
-        """
-        df = self.df
-        
-        # 1. Column Mapping
-        rename_map = {'msg': 'text', 'user': 'character'}
-        df.rename(columns={k: v for k, v in rename_map.items() if k in df.columns}, inplace=True)
-
-        # 2. Chunk ID Padding
-        if 'chunk_id' in df.columns:
-            # Clean float-like strings ("1.0") -> "001"
-            df['chunk_id'] = df['chunk_id'].astype(str).str.replace(r'\.0$', '', regex=True)
-            df['chunk_id'] = df['chunk_id'].apply(lambda x: x.zfill(3))
-
-        # 3. Dynamic Multi-View Logic (inst columns)
-        inst_columns = [c for c in df.columns if c.endswith('_inst')]
-        chunk_cols_map = {} 
-        
-        if inst_columns:
-            logger.info(f"[DM] Detected Multi-View columns: {inst_columns}")
-            
-            # Create sub-chunk columns (e.g., chunk_A)
-            for col in inst_columns:
-                prefix = col.replace('_inst', '')
-                chunk_col_name = f"chunk_{prefix}"
-                chunk_cols_map[prefix] = chunk_col_name
-                
-                loc_series = df[col].fillna("UNKNOWN_LOC")
-                condition = loc_series != loc_series.shift()
-                df[chunk_col_name] = condition.cumsum().fillna(0).astype(int).apply(lambda x: f"{x:03d}")
-
-            # Calculate Start Indices
-            prefixes = list(chunk_cols_map.keys())
-            if len(prefixes) >= 2:
-                start_index_helpers = {}
-                for prefix in prefixes:
-                    col_chunk = chunk_cols_map[prefix]
-                    mask_changed = df[col_chunk] != df[col_chunk].shift()
-                    helper = pd.Series(np.nan, index=df.index)
-                    helper[mask_changed] = df.index[mask_changed]
-                    start_index_helpers[prefix] = helper.ffill().fillna(0).astype(int)
-
-                for i, prefix_A in enumerate(prefixes):
-                    prefix_B = prefixes[(i + 1) % len(prefixes)]
-                    col_chunk_A = chunk_cols_map[prefix_A]
-                    target_col_name = f"ctx_start_idx_{prefix_A}"
-                    
-                    mask_A_changed = df[col_chunk_A] != df[col_chunk_A].shift()
-                    df[target_col_name] = np.nan
-                    
-                    helper_B = start_index_helpers[prefix_B]
-                    df.loc[mask_A_changed, target_col_name] = helper_B.loc[mask_A_changed]
-                    df[target_col_name] = df[target_col_name].ffill()
-                    
-                    if not df.empty:
-                        df.at[0, target_col_name] = helper_B.at[0]
-                        df[target_col_name] = df[target_col_name].ffill()
-                    
-                    df[target_col_name] = df[target_col_name].astype(int)
-        
-        # 4. Initialize columns if missing
-        for col in ['frame_choice', 'frame_meta', 'relation', 'imagery', 'initial_prompt', 'final_prompt', 'img_path', 'extracted_triplets', 'frame_id']:
-            if col not in df.columns:
-                df[col] = pd.NA
-
-        self.df = df
+    # --- Helpers ---
 
     def ensure_frame_ids(self, user: str) -> None:
         """
-        Populates 'frame_id' column for a specific user.
+        Populates 'frame_id' column based on [NEW] tags.
         """
-        # Note: We rely on the mask to prevent overwriting other users' IDs
         mask = self.df['character'] == user
-        if not mask.any():
-            return
+        if not mask.any(): return
         
-        # Identify where new frames start
         new_marker_mask = (
             self.df.loc[mask, 'frame_choice']
             .astype(str)
@@ -277,8 +198,6 @@ class ConversationDataManager:
         
         # Apply the frame id to the frame_id column
         self.df.loc[mask, 'frame_id'] = frame_ids.apply(lambda x: f"{user}_{x}")
-
-    # --- Helpers ---
 
     def get_frame_neighborhood(self, index: int, user: str) -> dict:
         """
@@ -349,6 +268,15 @@ class ConversationDataManager:
 
         return "\n".join(subset.apply(format_row, axis=1).tolist())
 
+    def _adapt_to_standard_format(self) -> None:
+        """
+        Standardizes the DataFrame schema. Simplified.
+        """
+        df = self.df
+        rename_map = {'msg': 'text', 'user': 'character'}
+        df.rename(columns={k: v for k, v in rename_map.items() if k in df.columns}, inplace=True)
+        self.df = df
+        
     def _is_not_empty_val(self, val):
         """Safe check for non-empty, non-NA prompt strings."""
         if pd.isna(val): return False
