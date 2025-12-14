@@ -199,6 +199,11 @@ async def call_vllm_backend(payload: Dict[str, Any]) -> str:
 # Create the FastAPI app instance and link the lifespan manager
 app = FastAPI(lifespan=lifespan)
 
+@app.get("/health")
+async def health_check():
+    """Simple health check for the bash script to verify readiness."""
+    return {"status": "ok"}
+
 @app.post("/generate")
 async def handle_generation(request: GenerateRequest):
     logger.debug(f"[VLLM_G] Received /generate request")
