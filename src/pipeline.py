@@ -24,7 +24,8 @@ class AugmentationPipeline:
         vlm_semaphore: asyncio.Semaphore,
         img_semaphore: asyncio.Semaphore,
         t_logger,
-        pipeline_config: dict
+        pipeline_config: dict,
+        pbar=None
     ):
         """
         Runs the pipeline for ONE specific user in a specific file.
@@ -88,6 +89,7 @@ class AugmentationPipeline:
                     data_manager, index, user, oracle,
                     vlm_semaphore, t_logger
                 )
+                if pbar: pbar.update(1)
 
             # PHASE 2: RENDER (With Verification)
             if render and user_out_path:
@@ -97,6 +99,10 @@ class AugmentationPipeline:
                     vlm_semaphore, img_semaphore, t_logger,
                     candidate_count
                 )
+                if pbar: pbar.update(1)
+            
+            # Save periodically
+            await data_manager.save()
 
         # --- B. TRIPLET RELATION ---
         for index in sorted_indices:
@@ -105,17 +111,18 @@ class AugmentationPipeline:
             
             if row['character'] != user: continue
 
-            await data_manager.save()
-
             if relation_triplets:
                 await self._phase_relations(
                     data_manager, index, user,
                     vlm_semaphore, t_logger
                 )
+                if pbar: pbar.update(1)
 
-        # Save periodically
+            # Save periodically
+            await data_manager.save()
+
+        # Final save
         await data_manager.save()
-
         t_logger.info(f"--- Finished User: {user} ---")
 
     async def _update_cells(self, dm, index, decision):

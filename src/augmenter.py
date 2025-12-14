@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 from datetime import datetime
 import random
+from tqdm.asyncio import tqdm
 
 from src.utils import verify_services
 from src.data_manager import ConversationDataManager
@@ -91,6 +92,9 @@ async def main():
     tasks = [] 
     data_managers = []
 
+    # Accumulator for total steps
+    total_work_units = 0
+
     # Select N random files (and discard the rest)
     if 0 < args.n_files < total_files:
         csv_files = random.sample(csv_files, args.n_files)
@@ -117,44 +121,56 @@ async def main():
             dm.save_lock = asyncio.Lock()
             data_managers.append(dm)
 
+            # Calculate how much work this file represents
+            # We count 1 unit for every row in every active phase
+            rows = len(dm.df)
+            file_work = 0
+            if args.create_aug: file_work += rows
+            if args.gen_images_from_aug: file_work += rows
+            if args.relation_triplets: file_work += rows
+            
+            total_work_units += file_work
+
             # Get Users
             users = [u for u in dm.df['character'].unique() if isinstance(u, str)]
             logger.info(f"File: {csv_file.name} | Users: {users}")
 
-            for user in users:
-                t_logger = TaskLogger(csv_out_dir, csv_file.name, user)
-                
-                pipeline_config = {
-                    'create': args.create_aug,
-                    'render': args.gen_images_from_aug,
-                    'oracle': args.oracle,
-                    'relation_triplets': args.relation_triplets,
-                    'candidate_count': args.candidate_count,
-                    'img_output_dir': csv_out_dir / "images"
-                }
-
-                # Add to the global list of tasks
-                tasks.append(
-                    pipeline.run_single_user(
-                        dm, user,
-                        vlm_semaphore, img_semaphore,
-                        t_logger, pipeline_config
-                    )
-                )
-
-        # 6. Execute All Tasks Parallel
-        if tasks:
-            logger.info(f"Starting execution...")
+        # 6. Execute All Tasks with Progress Bar
+        # Create the Master Progress Bar
+        with tqdm(total=total_work_units, unit="step", desc="Global Progress") as pbar:
             
-            # Change this line:
+            for dm in data_managers:
+                # We need to re-find users since we are iterating DMs now
+                users = [u for u in dm.df['character'].unique() if isinstance(u, str)]
+                csv_out_dir = out_dir / Path(dm.source_path).stem 
+                
+                for user in users:
+                    t_logger = TaskLogger(csv_out_dir, Path(dm.source_path).name, user)
+                    pipeline_config = {
+                        'create': args.create_aug,
+                        'render': args.gen_images_from_aug,
+                        'oracle': args.oracle,
+                        'relation_triplets': args.relation_triplets,
+                        'candidate_count': args.candidate_count,
+                        'img_output_dir': csv_out_dir / "images"
+                    }
+                    
+                    tasks.append(
+                        pipeline.run_single_user(
+                            dm, user,
+                            vlm_semaphore, img_semaphore,
+                            t_logger, pipeline_config,
+                            pbar
+                        )
+                    )
+
+            # Execute
             results = await asyncio.gather(*tasks, return_exceptions=True)
             
-            # Check for errors
+            # Error reporting
             for i, res in enumerate(results):
-                if isinstance(res, Exception):
-                    logger.error(f"Task {i} failed with error: {res}")
-        else:
-            logger.warning("No tasks were created.")
+                    if isinstance(res, Exception):
+                        logger.error(f"Task {i} failed: {res}")
 
         # 7. Final Save
         logger.info("All tasks done. Performing final save...")
