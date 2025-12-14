@@ -207,11 +207,7 @@ def verify_services(args):
 def json_parser(input_text: str, key_term: Optional[str] = None) -> Union[Dict, List, str, Any]:
     """
     Robustly extracts JSON from Markdown blocks or raw text.
-    
-    Improvements:
-    1. key_term is now Optional. If None, returns the whole JSON object.
-    2. Uses Regex to extract content *inside* ```json ... ``` blocks, ignoring surrounding text.
-    3. Fallback to finding the first '{' and last '}' if markdown tags are missing.
+    Supports both JSON Objects {...} and JSON Lists [...].
     """
     if not input_text:
         return input_text
@@ -219,20 +215,30 @@ def json_parser(input_text: str, key_term: Optional[str] = None) -> Union[Dict, 
     json_str = input_text
 
     # 1. Regex Extraction (Best for "Text + JSON block" scenarios)
-    # Looks for ```json ... ``` or just ``` ... ```
-    # re.DOTALL allows the dot (.) to match newlines
     match = re.search(r"```(?:json)?\s*(.*?)```", input_text, re.DOTALL)
     
     if match:
         json_str = match.group(1).strip()
     else:
-        # 2. Fallback Heuristic: Find the first '{' and last '}'
-        # Useful if the model forgot markdown tags but outputted JSON mixed with text
-        start_idx = input_text.find('{')
-        end_idx = input_text.rfind('}')
+        # 2. Fallback Heuristic: Find the first valid JSON start ({ or [)
+        idx_curly = input_text.find('{')
+        idx_square = input_text.find('[')
+
+        # Filter out -1 (not found) and find the earliest one
+        starts = [i for i in [idx_curly, idx_square] if i != -1]
         
-        if start_idx != -1 and end_idx != -1 and end_idx > start_idx:
-            json_str = input_text[start_idx : end_idx + 1]
+        if starts:
+            start_idx = min(starts)
+            
+            # If the list bracket [ appears first, we look for the closing ]
+            # Otherwise we look for the closing }
+            if start_idx == idx_square:
+                end_idx = input_text.rfind(']')
+            else:
+                end_idx = input_text.rfind('}')
+
+            if end_idx != -1 and end_idx > start_idx:
+                json_str = input_text[start_idx : end_idx + 1]
 
     try:
         data = json.loads(json_str)
@@ -240,14 +246,12 @@ def json_parser(input_text: str, key_term: Optional[str] = None) -> Union[Dict, 
         # If a specific key is requested, try to return it
         if key_term:
             if isinstance(data, dict):
-                return data.get(key_term, input_text) # Return raw text if key missing
-            return input_text # Cannot get key from a list/string
+                return data.get(key_term, input_text)
+            return input_text # Cannot get key from a list
             
-        # If no key requested, return the full parsed data
         return data
 
     except json.JSONDecodeError:
-        # logger.debug(f"[UTILS] JSON decode failed for {key_term}, returning raw.")
         return input_text
 
 def meta_parser(input_text: str):

@@ -467,23 +467,32 @@ class AugmentationPipeline:
                 context=neighborhood
             )
 
-        # 5. Save Cleaned Triplets
+        # 5. Save with Fallback
         if extracted_data:
-            clean_triplets = [
-                (item['subject'], item['predicate'], item['object'])
-                for item in extracted_data
-                if isinstance(item, dict) and all(k in item for k in ['subject', 'predicate', 'object'])
-            ]
-
-            if extracted_data:
-                t_logger.log_trace(index, "triplets_extraction", {
-                    "relation": relation_raw, 
-                    "frame_id": cid,
-                    "triplets": clean_triplets
-                })
-
+            clean_triplets = []
+            
+            # A. Attempt Strict Cleaning
+            # We only iterate if the parser successfully returned a LIST
+            if isinstance(extracted_data, list):
+                for item in extracted_data:
+                    # Check if items conform to the schema
+                    if isinstance(item, dict) and all(k in item for k in ['subject', 'predicate', 'object']):
+                        clean_triplets.append((item['subject'], item['predicate'], item['object']))
+            
+            # B. Decide what to save
+            # Case 1: We successfully extracted valid triplets -> Save the clean list
             if clean_triplets:
-                await dm.update_cell(index, 'extracted_triplets', str(clean_triplets))
-                return True
+                final_value = str(clean_triplets)
+                t_logger.info(f"[RELATIONS] Extracted {len(clean_triplets)} triplets.")
+            
+            # Case 2: The model returned something (e.g. raw text, malformed dict), but strict cleaning failed.
+            # We save the raw 'extracted_data' so you don't lose the information.
+            else:
+                final_value = str(extracted_data)
+                t_logger.warning(f"[RELATIONS] Extraction format invalid. Saving raw output: {final_value[:50]}...")
+
+            # Save whatever we decided on
+            await dm.update_cell(index, 'extracted_triplets', final_value)
+            return True
 
         return False
