@@ -139,10 +139,20 @@ class AugmentationPipeline:
         """
         row = dm.df.loc[index]
 
-        # --- SKIP LOGIC: If we already have a prompt, don't ask VLM again ---
-        if dm._is_not_empty_val(row.get('initial_prompt')) and dm._is_not_empty_val(row.get('frame_choice')):
-             t_logger.info(f"[CREATE] Index {index}: Found existing prompt. Skipping creation.")
-             return True
+        # --- SKIP LOGIC ---
+        frame_val = str(row.get('frame_choice', ''))
+        prompt_val = row.get('initial_prompt')
+        
+        # 1. Check if we already decided to SKIP this frame
+        if frame_val == Action.SKIP:
+            t_logger.info(f"[CREATE] Index {index}: Found existing [SKIP]. Skipping.")
+            return True
+            
+        # 2. Check if we have a valid prompt for NEW/CONTINUE
+        # We only skip if BOTH the frame choice AND the prompt exist
+        if dm._is_not_empty_val(frame_val) and dm._is_not_empty_val(prompt_val):
+            t_logger.info(f"[CREATE] Index {index}: Found existing Prompt & Frame. Skipping.")
+            return True
 
         utterance = f"{row['character']}: {row['text']}"
         context = dm.get_context_for_index(index, user, oracle, include_prev=True)
