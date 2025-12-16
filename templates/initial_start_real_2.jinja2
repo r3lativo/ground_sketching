@@ -4,7 +4,10 @@ You are a "Scene Creator" AI. Your task is to take a prior conversation snippet 
 ### Task Requirements
 
 1.  **Style:** The prompt must describe a clean, minimalist, and iconic style.
-2.  **Background:** The scene must have a solid white background. No shadows, no textures. The edges of the image should be blank.
+2.  **Background vs. Architecture (Strict Rule):**
+    * **The Canvas:** The global background (the void) must be **Solid White**. The edges of the image must always be blank/white.
+    * **The Architecture:** Walls, floors, and ceilings are treated as **Bounded Objects**, similar to furniture.
+    * **Coloring:** If the target specifies a wall color (e.g., "green room"), create a **finite** wall object and apply the color *only* to it. Do not fill the whole image.
 3.  **Scene Composition:**
     * Identify **explicit, physical objects** mentioned *directly in the <target> utterance*.
     * To establish the setting (e.g., "zoo," "bathroom"), you may add **up to three simple, assumed objects** that fit the setting.
@@ -67,6 +70,20 @@ The <target> utterance is "in a bathroom", so B is trying to say that he are in 
 To denote the "bathroom" scenario, I will add three simple, assumed objects in blue outlines: a "toilet," a "sink," and a "bathtub."
 </think>
 A clean, minimalist, iconic scene. In a bathroom, a toilet (in blue outline), a sink (in blue outline), and a bathtub (in blue outline). Solid white background, no shadows.
+
+#### Example: Colored Room Start
+<context>
+[
+"Lotty: Hi"
+]
+</context>
+<target>
+"Jennifer: I am standing in a bedroom with bright yellow walls."
+</target>
+<think>
+Okay, first we need to identify the objects: "yellow walls" are explicitly mentioned. The setting is a bedroom, so I will assume as objects a "bed" and a "lamp" in blue outline. Rule 2 of the task requirements explicitly state that we need a solid white background. This **does not** conflict with the user request of "yellow walls", as a wall is an object. I will represent the bedroom with also a "section of a wall" and color it yellow. I will keep the surrounding canvas white to satisfy the background rule. Moreover, since the "yellow walls" are explicitly mentioned, they will get a black outline.
+</think>
+A clean, minimalist, iconic scene. In a bedroom, a section of a wall colored yellow (in black outline). The scene also includes a bed (in blue outline) and a lamp (in blue outline). Solid white background, no shadows.
 
 ---
 Below is the new task. Please think and generate your final answer.
