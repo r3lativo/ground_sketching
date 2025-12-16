@@ -175,48 +175,51 @@ def main():
         # Build list of characters
         characters = list(chat_df['character'].values)
 
-        # Render Messages
-        for _, row in chat_df.iterrows():
-            idx = row['index']
-            character = row.get('character', '?')
-            text = row.get('text', '')
+        # ---------------------------------------------------------------------
+        # NEW: Wrap the message loop in a fixed-height container
+        # Adjust 'height' (in pixels) to fit your screen (e.g., 600, 700, 800)
+        # ---------------------------------------------------------------------
+        with st.container(height=800, border=False):
             
-            is_selected = (idx == st.session_state.selected_idx)
-            is_ctx = (idx in ctx_indices)
-            
-            # Visual Marker
-            eye = "👁️ " if is_ctx else ""
-            label = f"{eye}{character}: {text}"
-            
-            # Alignment Logic
-            if character == characters[0]:
-                # Empty col then Content col
-                c_spacer, c_btn = st.columns([1, 3]) 
-                with c_btn:
-                    # Highlight selected
-                    type_ = "primary" if is_selected else "secondary"
-                    if st.button(label, key=f"msg_{idx}", type=type_, use_container_width=True):
-                        st.session_state.selected_idx = idx
-                        st.rerun()
-            else:
-                # Content col then Empty col
-                c_btn, c_spacer = st.columns([3, 1])
-                with c_btn:
-                    type_ = "primary" if is_selected else "secondary"
-                    if st.button(label, key=f"msg_{idx}", type=type_, use_container_width=True):
-                        st.session_state.selected_idx = idx
-                        st.rerun()
+            # Render Messages
+            for _, row in chat_df.iterrows():
+                idx = row['index']
+                character = row.get('character', '?')
+                text = row.get('text', '')
+                
+                is_selected = (idx == st.session_state.selected_idx)
+                is_ctx = (idx in ctx_indices)
+                
+                eye = "👁️ " if is_ctx else ""
+                label = f"{eye}{character}: {text}"
+                
+                if character == characters[0]:
+                    c_spacer, c_btn = st.columns([1, 3]) 
+                    with c_btn:
+                        type_ = "primary" if is_selected else "secondary"
+                        # Note: We removed unique keys per button or managed them carefully
+                        if st.button(label, key=f"msg_{idx}", type=type_, use_container_width=True):
+                            st.session_state.selected_idx = idx
+                            st.rerun()
+                else:
+                    c_btn, c_spacer = st.columns([3, 1])
+                    with c_btn:
+                        type_ = "primary" if is_selected else "secondary"
+                        if st.button(label, key=f"msg_{idx}", type=type_, use_container_width=True):
+                            st.session_state.selected_idx = idx
+                            st.rerun()
 
-        try:
-            st.divider()
-            st.markdown("#### Summary / Q&A")
-            qa_df = df[(df['m-type'].isin(['Question', 'Answer'])) | (df['m-type'].isna())]
-            qa_df = qa_df[qa_df['m-type'] != 'text']
-            for _, r in qa_df.iterrows():
-                mtype = r.get('m-type', 'Short Answer')
-                st.text(f"[{mtype}] {r.get('text', '')}")
-        except:
-            pass
+            # Include Summary inside the scrollable area (optional)
+            try:
+                st.divider()
+                st.markdown("#### Summary / Q&A")
+                qa_df = df[(df['m-type'].isin(['Question', 'Answer'])) | (df['m-type'].isna())]
+                qa_df = qa_df[qa_df['m-type'] != 'text']
+                for _, r in qa_df.iterrows():
+                    mtype = r.get('m-type', 'Short Answer')
+                    st.text(f"[{mtype}] {r.get('character', '?')}: {r.get('text', '')}")
+            except:
+                pass
 
     # --- RIGHT: DETAILS ---
     with col_details:
@@ -279,29 +282,37 @@ def main():
             st.divider()
             
             # Metadata Grid
-            c1, c2, c3 = st.columns(3)
+            c1, c2, c3, c4 = st.columns(4)
             c1.markdown(f"**Frame Choice**\n\n{row.get('frame_choice', '-')}")
             c2.markdown(f"**Frame Meta**\n\n{row.get('frame_meta', '-')}")
             c3.markdown(f"**Relation**\n\n{row.get('relation', '-')}")
+            c4.markdown(f"**Extracted Triplets**\n\n{row.get('extracted_triplets', '-')}")
             
             # Prompts
             st.divider()
-            cc1, cc2, cc3 = st.columns(3)
+            cc1, cc2, cc3, cc4 = st.columns(4)
             with cc1:
+                st.markdown("**Frame ID**")
+                val = row.get('frame_id')
+                if pd.notna(val) and val != "": 
+                    st.caption(val)
+                else:
+                    st.text("-")
+            with cc2:
                 st.markdown("**Imagery**")
                 val = row.get('imagery')
                 if pd.notna(val) and val != "": 
                     st.caption(val)
                 else:
                     st.text("-")
-            with cc2:
+            with cc3:
                 st.markdown("**Initial Prompt**")
                 val = row.get('initial_prompt')
                 if pd.notna(val) and val != "":
                     st.caption(val)
                 else:
                     st.text("-")
-            with cc3:
+            with cc4:
                 st.markdown("**Final Prompt**")
                 val = row.get('final_prompt')
                 if pd.notna(val) and val != "":
