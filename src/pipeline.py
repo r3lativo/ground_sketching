@@ -296,26 +296,54 @@ class AugmentationPipeline:
             current_context_image = state['current_image_b64']
             t_logger.info(f"[RENDER] Index {index}: [CONTINUE] frame detected. ID: {current_frame_id_str}, Seq {state['seq_idx']}.")
 
-        # --- 3. REFINE PROMPT ---
-        # We only refine if we have visual context (CONTINUE mode).
-        # If NEW, we have no prior visual context.
-        final_prompt = initial_prompt
+        # --- 3. REFINE PROMPT (FIXED LOGIC) ---
+        # We must handle multi-step prompts ($$$) BEFORE refinement.
+        # Otherwise, the VLM sees a giant string and might destroy the separators.
         
-        if current_context_image and not is_new_frame:
+        raw_sub_prompts = [p.strip() for p in initial_prompt.split("$$$") if p.strip()]
+        refined_sub_prompts = []
+        
+        # Check if we should refine (Visual Context exists + Not a New Frame)
+        should_refine = (current_context_image is not None) and (not is_new_frame)
+        
+        if should_refine:
             async with vlm_sem:
                 mm_decision = await self.client.get_meta_and_strategy(is_oracle=oracle, has_images=True)
+                
                 if mm_decision.strategy:
-                    t_logger.info(f"[RENDER] Index {index}: Refining prompt with visual context...")
-                    refined = await self.client.execute_vlm_strategy(
-                        mm_decision.strategy, initial_prompt, images=[current_context_image]
-                    )
-                    if refined: final_prompt = refined
-                    t_logger.log_trace(index, "refinement", {"before": initial_prompt, "after": final_prompt})
+                    t_logger.info(f"[RENDER] Index {index}: Refining {len(raw_sub_prompts)} sub-prompts with visual context...")
+                    
+                    for i, sub_p in enumerate(raw_sub_prompts):
+                        # Special handling: Don't refine structural commands like [ZOOM_OUT]
+                        if "[ZOOM_OUT]" in sub_p.upper():
+                            refined_sub_prompts.append(sub_p)
+                            continue
 
+                        # Refine the specific segment
+                        refined_segment = await self.client.execute_vlm_strategy(
+                            mm_decision.strategy, sub_p, images=[current_context_image]
+                        )
+                        
+                        if refined_segment:
+                            refined_sub_prompts.append(refined_segment)
+                            t_logger.log_trace(index, f"refinement_step_{i+1}", {"before": sub_p, "after": refined_segment})
+                        else:
+                            # Fallback if VLM fails
+                            refined_sub_prompts.append(sub_p)
+                else:
+                    # Strategy lookup failed, keep original
+                    refined_sub_prompts = raw_sub_prompts
+        else:
+            # No refinement needed
+            refined_sub_prompts = raw_sub_prompts
+
+        # Reconstruct the final prompt string for the CSV
+        final_prompt = " $$$ ".join(refined_sub_prompts)
         await dm.update_cell(index, 'final_prompt', final_prompt)
 
         # --- 4. GENERATE & VERIFY LOOP ---
-        sub_prompts = [p.strip() for p in final_prompt.split("$$$") if p.strip()]
+        # Now we use the list we just built, preserving the order and separation
+        sub_prompts = refined_sub_prompts
         updates = False
 
         for sub_prompt in sub_prompts:
