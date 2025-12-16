@@ -2,8 +2,9 @@
 
 import httpx
 import logging
+import json
 from dataclasses import dataclass
-from typing import List, Optional, Dict, Any, Tuple, Union
+from typing import List, Optional, Dict, Any, Tuple, Union, Type
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from PIL import Image
 from tenacity import (
@@ -13,6 +14,7 @@ from tenacity import (
     retry_if_exception,
     before_sleep_log
 )
+from pydantic import BaseModel, ValidationError, Field, TypeAdapter
 
 from src.utils import load_config, pil_to_base64
 from src.strategies import (
@@ -66,6 +68,29 @@ class Action:
     NEW = '[NEW]'
     CONTINUE = '[CONTINUE]'
     SKIP = '[SKIP]'
+
+# --- PYDANTIC SCHEMAS ---
+
+class MetaResponse(BaseModel):
+    """Schema for the Meta Extraction strategy"""
+    frame_meta: Optional[str] = None
+    action: str  # Mandatory
+    relation: Optional[str] = None
+    imagery: Optional[str] = None
+
+class VerificationFact(BaseModel):
+    """Schema for a single verification item"""
+    fact: str
+    verdict: bool
+    box: Optional[List[int]] = None
+
+class Triplet(BaseModel):
+    """Schema for Triplet Extraction"""
+    subject: str
+    predicate: str
+    object: str
+
+# ----------------------------
 
 @dataclass
 class StrategyDecision:
@@ -177,14 +202,17 @@ class APIClient:
             )
         # 2. Fetch Meta Information (Network Call)
         try:
-            response_data = await self._fetch_meta_info(utterance, context, previous_prompts, timeout)
+            # Pass the Pydantic model
+            response_data = await self._fetch_meta_info(
+                utterance, context, previous_prompts, 
+                timeout=timeout, 
+                schema=MetaResponse 
+            )
         except Exception as e:
-            logger.error(f"[API] Meta Extraction failed after retries: {e}")
+            logger.error(f"[API] Meta Extraction failed: {e}")
             return StrategyDecision()
 
-        if not response_data:
-            return StrategyDecision()
-
+        # If we get here, response_data is GUARANTEED to be a valid dict matching the schema
         action = response_data.get('action')
 
         # 3. Determine Strategy Name dynamically
@@ -207,23 +235,30 @@ class APIClient:
         )
 
     @get_retry_config(min_wait=2, max_wait=10)
-    async def _fetch_meta_info(self, utterance, context, previous_prompts, timeout: Optional[float] = None) -> Optional[Dict]:
+    async def _fetch_meta_info(self, utterance, context, previous_prompts, timeout: Optional[float] = None, schema=None) -> Optional[Dict]:
         """Helper to handle the specific Meta Extraction API call."""
         strategy = self.strategies['meta_extraction']
         client_config = self.config.get("vlm_client", {})
-        endpoint = f"{self.vllm_api_url}{strategy.endpoint_suffix}"
-
-        payload = strategy.build_payload(utterance=utterance, config=client_config, context=context, previous_prompts=previous_prompts)
         
-        response = await self.client.post(endpoint, json=payload, timeout=timeout)
-        response.raise_for_status() # Raises Error -> Caught by @retry -> Retried if 500
-        return strategy.process_response(response.json().get("text"))
+        # We reuse the generic execution method which now supports validation
+        return await self.execute_vlm_strategy(
+            strategy=strategy,
+            utterance=utterance,
+            context=context,
+            previous_prompts=previous_prompts,
+            config=client_config,
+            timeout=timeout,
+            validation_schema=schema # Pass the schema down
+        )
 
+    # --- CORE LOGIC UPDATE: Validation & Reflection Loop ---
     @get_retry_config(min_wait=5, max_wait=30)
     async def execute_vlm_strategy(
         self, strategy: PromptStrategy, utterance: Optional[str] = "",
         context: Optional[List[str]] = None, previous_prompts: Optional[List[str]] = None,
-        images: Optional[List[str]] = None, timeout: Optional[float] = None, **kwargs
+        images: Optional[List[str]] = None, timeout: Optional[float] = None, 
+        validation_schema: Any = None, max_correction_attempts: int = 2,
+        **kwargs
     ) -> Optional[Any]:
         
         if not self.client: raise RuntimeError("Client not initialized.")
@@ -235,12 +270,50 @@ class APIClient:
         endpoint = f"{self.vllm_api_url}{strategy.endpoint_suffix}"
         payload = strategy.build_payload(utterance=utterance, config=client_config, context=context, previous_prompts=previous_prompts, images=images, **kwargs)
 
-        response = await self.client.post(endpoint, json=payload, timeout=timeout)
-        response.raise_for_status()
+        current_payload = payload
         
-        resp_json = response.json()
-        raw_text = resp_json.get("text", resp_json.get("content", ""))
-        return strategy.process_response(raw_text)
+        for attempt in range(max_correction_attempts + 1):
+            response = await self.client.post(endpoint, json=current_payload, timeout=timeout)
+            response.raise_for_status()
+            
+            resp_json = response.json()
+            raw_text = resp_json.get("text", resp_json.get("content", ""))
+            parsed_data = strategy.process_response(raw_text)
+
+            if not validation_schema:
+                return parsed_data
+
+            try:
+                # A. Handle Lists (using TypeAdapter)
+                if isinstance(validation_schema, TypeAdapter):
+                    # For lists (Triplets, Facts), validation happens here
+                    validated = validation_schema.validate_python(parsed_data)
+                    # Return pure Python list of dicts (or list of strings)
+                    if isinstance(validated, list) and len(validated) > 0 and hasattr(validated[0], 'model_dump'):
+                         return [v.model_dump() for v in validated]
+                    return validated
+
+                # B. Handle Dicts (MetaResponse)
+                if hasattr(validation_schema, 'model_validate'):
+                    validated = validation_schema.model_validate(parsed_data)
+                    return validated.model_dump()
+                
+                # C. Fallback
+                validated = validation_schema(**parsed_data)
+                return validated.dict()
+
+            except ValidationError as e:
+                if attempt < max_correction_attempts:
+                    logger.warning(f"[API] Validation failed ({strategy.__class__.__name__}) Attempt {attempt+1}. Asking model to fix...")
+                    messages = current_payload['messages']
+                    messages.append({"role": "assistant", "content": raw_text})
+                    messages.append({"role": "user", "content": f"Your response format is incorrect.\nError: {e.json()}\nPlease correct it and return ONLY valid JSON."})
+                    current_payload['messages'] = messages
+                else:
+                    logger.error(f"[API] Validation failed after retries: {e}")
+                    raise e 
+
+        return parsed_data
 
     @get_retry_config(min_wait=5, max_wait=60)
     async def call_image_gen(
@@ -272,21 +345,30 @@ class APIClient:
 
     @get_retry_config(min_wait=5, max_wait=30)
     async def call_prompt_summarizer(self, context: List[str], timeout: Optional[float] = None) -> List[str]:
+        # Validate that we get a List[str]
+        list_validator = TypeAdapter(List[str]) if TypeAdapter else None
+        
         result = await self.execute_vlm_strategy(
             strategy=self.strategies['summarize'],
-            utterance="", context=context, timeout=timeout
+            utterance="", context=context, timeout=timeout,
+            validation_schema=list_validator
         )
         return result if isinstance(result, list) else []
 
     @get_retry_config(min_wait=5, max_wait=30)
     async def call_visual_verifier(self, facts: List[str], base64_image: str, timeout: Optional[float] = None) -> List[Dict]:
-        """
-        Verifies a list of facts against an image.
-        Returns a detailed list of dicts: {'fact': str, 'box': [y,x,y,x], 'verdict': bool}
-        """
+        
+        # Prepare the List Schema Validator
+        list_validator = None
+        if TypeAdapter:
+            list_validator = TypeAdapter(List[VerificationFact])
+            
         result = await self.execute_vlm_strategy(
             strategy=self.strategies['fact_check'],
-            utterance=str(facts), images=[base64_image], timeout=timeout
+            utterance=str(facts), 
+            images=[base64_image], 
+            timeout=timeout,
+            validation_schema=list_validator # Pass the list validator
         )
         return result if isinstance(result, list) else []
 
@@ -324,13 +406,23 @@ class APIClient:
         verification_results = await self.call_visual_verifier(facts, base64_image, timeout=timeout)
         if not verification_results: return 0.0, []
 
-        true_count = sum(1 for item in verification_results if item.get("verdict") is True)
+        # Add isinstance check to prevent crash on malformed lists
+        true_count = sum(
+            1 for item in verification_results 
+            if isinstance(item, dict) and item.get("verdict") is True
+        )
+        
         return (true_count / len(facts)), verification_results
 
     @get_retry_config(min_wait=5, max_wait=30)
-    async def call_triplets_extraction(self, utterance: str, context: dict, timeout: Optional[float] = None) -> List[Tuple[str]]:
-        """Tries to extract triplets from a relation and the given context."""
+    async def call_triplets_extraction(self, utterance: str, context: dict, timeout: Optional[float] = None) -> List[Dict]:
+        """Tries to extract triplets, enforcing the Triplet schema."""
+        
+        # Enforce List[Triplet]
+        list_validator = TypeAdapter(List[Triplet]) if TypeAdapter else None
+
         return await self.execute_vlm_strategy(
             strategy=self.strategies['triplets_extraction'],
-            utterance=utterance, context=context, timeout=timeout
+            utterance=utterance, context=context, timeout=timeout,
+            validation_schema=list_validator
         )

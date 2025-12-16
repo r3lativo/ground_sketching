@@ -182,8 +182,8 @@ class SummarizeStrategy(PromptStrategy):
     def _parse_answer(self, answer_text: str) -> List[str]:
         parsed = json_parser(answer_text)
         if isinstance(parsed, dict):
-            return parsed.get("facts", [])
-        return []
+            return parsed.get("facts")
+        return answer_text
 
 
 class CaptionStrategy(MultimodalEditStrategy):
@@ -223,8 +223,8 @@ class FactCheckStrategy(MultimodalEditStrategy):
         # Returns the list of verification dicts: [{'fact':..., 'verdict':...}]
         parsed = json_parser(answer_text)
         if isinstance(parsed, dict):
-            return parsed.get("verification", [])
-        return []
+            return parsed.get("verification")
+        return answer_text
 
 
 class TripletsExtractionStrategy(PromptStrategy):
