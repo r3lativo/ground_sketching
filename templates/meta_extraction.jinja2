@@ -17,7 +17,7 @@ Use these prompts to get an idea of the current state of context for the current
 Your goal is to decide whether the new information presented in the <target> utterance contains any 'imagery' information that needs to be added to the mental imagery (either added to the current imagery or create a NEW frame) or to the 'meta' information.
 
 In order to do this you have to perform four tasks:
-1. Frame Meta: Select non-visual information from the <target> that applies to the *current* frame/location. This is information that cannot be depicted in the mental imagery but is important for the specific room or situation.
+1. Frame Meta: **Identify the scene**. Generate a 1-3 word label capturing the gist of the current location (e.g., "Kitchen"). Additionally, include any non-visual information that applies to the current situation (e.g., "smells like pizza").
 2. Relation Meta: Select information from the <target> that describes a *relation* or *transition* between frames. This helps navigate the space (e.g., movement commands like "going inside", "going left", or other relationships to previous frames).
 3. Imagery: Select the visual information from the <target> that should be added as part of the mental imagery frame (if any). This information will later be used to generate the mental image corresponding to the target utterance. Hence, it should be a contextualized version of the visual aspects of the target utterance.
 4. Action: Decide if the information selected in the Imagery should be added to the current mental imagery frame, to a new blank frame, or be skipped altogether. If the visual information present in the <target> should be represented in a new, clean frame, output `[NEW]`; else if it should be represented in the current mental imagery, output `[CONTINUE]`; else if there is no visual information to be represented as mental imagery then output `[SKIP]`.
@@ -33,34 +33,37 @@ Here's the output template:
 ```
 
 Where:
-- [FRAME_META] -> Optional[str]: Should be empty if no non-visual frame information is present.
-- [RELATION_META] -> Optional[str]: Should be empty if no navigational/relational information is present.
-- [IMAGERY] -> Optional[str]: Should be empty if no imagery information is present.
-- [ACTION] -> str: `[NEW]`, `[CONTINUE]`, or `[SKIP]`.
 
+  - [FRAME_META] -> Optional[str]: "Scene Label: Non-visual info" (e.g., "bathroom: smells like lavender").
+  - [RELATION_META] -> Optional[str]: Should be empty if no navigational/relational information is present.
+  - [IMAGERY] -> Optional[str]: Should be empty if no imagery information is present.
+  - [ACTION] -> str: `[NEW]`, `[CONTINUE]`, or `[SKIP]`.
 
 Strictly adhere to these rules:
 
 A. META INFORMATION Rules:
-1. [FRAME_META]: Populate this only if there is information about the *current* situation that cannot be visualized (e.g., "The door is locked" -> visually it is a door, but 'locked' might be meta info if not visually distinct; "It smells like pizza").
-2. [RELATION_META]: Populate this if the utterance indicates movement, direction, or a connection to a previous frame/location (e.g., "I am moving North", "I went to the left", "This is next to the kitchen"). This creates the edge connecting the previous frame to the current/next one.
-3. Keep in mind that all the information in the mental imagery frame is visual. If there is any information that cannot be visualized or describes navigation, store it inside the appropriate Meta tag.
+1.  [FRAME_META]: **Format: "Scene Label: Non-visual info"**.
+      * First, identify the **gist** of the location in 1-3 words (e.g., "kitchen", "temple", "office", ...).
+      * Second, append any non-visual details about the *current* situation (e.g., smells, temperature, abstract feelings like "door is locked", "it is cold").
+      * **Example:** "bathroom: smells like lavender".
+      * If there is no non-visual info, just return the Scene Label (e.g., "kitchen").
+2.  [RELATION_META]: Populate this if the utterance indicates movement, direction, or a connection to a previous frame/location (e.g., "I am moving North", "I went to the left", "This is next to the kitchen"). This creates the edge connecting the previous frame to the current/next one.
+3.  Keep in mind that all the information in the mental imagery frame is visual. If there is any information that cannot be visualized or describes navigation, store it inside the appropriate Meta tag.
 
 B. IMAGERY Rules:
-1. [IMAGERY] should be about the information inside the <target> utterance that can be visualized.
-2. [IMAGERY] should be in the same tone as the <target> i.e. it should be like an utterance spoken by the speaker.
-3. [IMAGERY] should try to contextualize the <target>. For example, if in the context there is 'A: do you see a black chair?' and the target is 'B: no', then the [IMAGERY] should be 'I don't see a black chair in my room'.
-4. Theory of Mind (ToM): [IMAGERY] should also contextualize the <target> using ToM whenever necessary. For example, if 'A: i am in front of a restaurant', and the target is 'B: me too. Next to a shopping complex?", we can assume that B is just seeing a restaurant next to a shopping complex. Hence, the [IMAGERY] should be 'I am in front of a restaurant next to a shopping complex'.
+4.  [IMAGERY] should be about the information inside the <target> utterance that can be visualized.
+5.  [IMAGERY] should be in the same tone as the <target> i.e. it should be like an utterance spoken by the speaker.
+6.  [IMAGERY] should try to contextualize the <target>. For example, if in the context there is 'A: do you see a black chair?' and the target is 'B: no', then the [IMAGERY] should be 'I don't see a black chair in my room'.
+7.  Theory of Mind (ToM): [IMAGERY] should also contextualize the <target> using ToM whenever necessary. For example, if 'A: i am in front of a restaurant', and the target is 'B: me too. Next to a shopping complex?", we can assume that B is just seeing a restaurant next to a shopping complex. Hence, the [IMAGERY] should be 'I am in front of a restaurant next to a shopping complex'.
 
 C. ACTION Rules:
-1. If <previous> is 'None', [ACTION] can **only** be either [NEW] or [SKIP]. It can **never** be [CONTINUE].
-2. If [IMAGERY] is not empty then the [ACTION] can **only** be either [NEW] or [CONTINUE]. It can never be [SKIP].
-3. If [IMAGERY] is not empty and the <previous> frame has different information (i.e., the visual information in the <target> is different and unrelated to the information in <previous>), return [ACTION] -> `[NEW]`. If the <previous> frame has not changed and the <target> information can be added to the same frame, return [ACTION] -> `[CONTINUE]`.
-4. If <target> does not contain [IMAGERY] i.e. [IMAGERY] is empty (e.g., <target> is acknowledgments like "Okay," "Got it," "I see," or conversational filler), then return [ACTION] -> `[SKIP]`.
-5. If <context> contains `<scene_change>` marker, it means that the scene in which the the current <target> utterance's speaker changed at that moment. Use this information to decide the [ACTION], keeping in mind that `<scene_change>` does *not* always mean [ACTION] -> `[NEW]`, as the participants might continue talking about previous information.
-
-
+1.  If <previous> is 'None', [ACTION] can **only** be either [NEW] or [SKIP]. It can **never** be [CONTINUE].
+2.  If [IMAGERY] is not empty then the [ACTION] can **only** be either [NEW] or [CONTINUE]. It can never be [SKIP].
+3.  If [IMAGERY] is not empty and the <previous> frame has different information (i.e., the visual information in the <target> is different and unrelated to the information in <previous>), return [ACTION] -> `[NEW]`. If the <previous> frame has not changed and the <target> information can be added to the same frame, return [ACTION] -> `[CONTINUE]`.
+4.  If <target> does not contain [IMAGERY] i.e. [IMAGERY] is empty (e.g., <target> is acknowledgments like "Okay," "Got it," "I see," or conversational filler), then return [ACTION] -> `[SKIP]`.
+5.  If <context> contains `<scene_change>` marker, it means that the scene in which the the current <target> utterance's speaker changed at that moment. Use this information to decide the [ACTION], keeping in mind that `<scene_change>` does *not* always mean [ACTION] -> `[NEW]`, as the participants might continue talking about previous information.
 --- Examples ---
+
 #### Example 1
 <context>
 [
@@ -74,11 +77,12 @@ C. ACTION Rules:
 "None"
 </previous>
 <think>
-I need to analyze the utterance spoken by Nathan 'going to the left'. First, let me check if there is any information in this utterance that can be visualized. There is nothing to be depicted in a mental imagery frame, so [IMAGERY] is empty. However, 'going to the left' is a navigational action describing movement from the previous state. Thus, I will store 'Nathan is going to the left from the temple' as [RELATION_META]. There is no specific non-visual info about the frame itself, so [FRAME_META] is empty. Finally, since there is no mental imagery to be added, I will output [ACTION] -> [SKIP].
+I need to analyze the utterance spoken by Nathan 'going to the left'.
+First, let me check if there is any information in this utterance that can be visualized. There is nothing to be depicted in a mental imagery frame, so [IMAGERY] is empty. However, 'going to the left' is a navigational action describing movement from the previous state. Thus, I will store 'Nathan is going to the left from the temple' as [RELATION_META]. For [FRAME_META], the context implies the location is still near the "temple". There is no non-visual info. Finally, since there is no mental imagery to be added, I will output [ACTION] -> [SKIP].
 </think>
 ```json
 {
-  "frame_meta": "",
+  "frame_meta": "temple",
   "relation": "Nathan is going to the left from the temple.",
   "imagery": "",
   "action": "[SKIP]"
@@ -100,11 +104,14 @@ I need to analyze the utterance spoken by Nathan 'going to the left'. First, let
 ]
 </previous>
 <think>
-I need to analyze the utterance 'going to the left brought me to a garden'. 'brought me to a garden' is information that can be visualized. Hence, [IMAGERY] will be 'I am at a garden'. regarding meta information: 'going to the left' is navigational information describing how he arrived there, so I will store 'Nathan went to the left of the temple and reached a garden.' in [RELATION_META]. There is no non-visual attribute of the garden mentioned, so [FRAME_META] is empty. Finally, since the mental imagery frame created from the <previous> prompts (temple) is very different from the visual information of a garden, I will output [ACTION] -> [NEW].
+I need to analyze the utterance 'going to the left brought me to a garden'.
+'brought me to a garden' is information that can be visualized. Hence, [IMAGERY] will be 'I am at a garden'. regarding meta information: 'going to the left' is navigational information describing how he arrived there, so I will store 'Nathan went to the left of the temple and reached a garden.'
+in [RELATION_META]. For [FRAME_META], the new location is explicitly "garden".
+Finally, since the mental imagery frame created from the <previous> prompts (temple) is very different from the visual information of a garden, I will output [ACTION] -> [NEW].
 </think>
 ```json
 {
-  "frame_meta": "",
+  "frame_meta": "garden",
   "relation": "Nathan went to the left of the temple and reached a garden.",
   "imagery": "I am at a garden.",
   "action": "[NEW]"
@@ -125,7 +132,8 @@ I need to analyze the utterance 'going to the left brought me to a garden'. 'bro
 "None"
 </previous>
 <think>
-I need to analyze the utterance "How are you? it's a lovely day". The phrase is a conversational inquiry and contains no physical descriptions to visualize. Therefore, [IMAGERY] will be empty. The utterance does not contain any navigational information ([RELATION_META]) nor specific non-visual frame attributes ([FRAME_META]). Therefore, according to Rule 4 of Action rules, the action is [SKIP].
+I need to analyze the utterance "How are you? it's a lovely day". The phrase is a conversational inquiry and contains no physical descriptions to visualize. Therefore, [IMAGERY] will be empty. The utterance does not contain any navigational information ([RELATION_META]). For [FRAME_META], the location is ambiguous/undefined. I will leave it empty.
+Therefore, according to Rule 4 of Action rules, the action is [SKIP].
 </think>
 ```json
 {
@@ -154,11 +162,12 @@ I need to analyze the utterance "How are you? it's a lovely day". The phrase is 
 ]
 </previous>
 <think>
-I need to analyze the utterance "Oh, wait. The first aid station is actually on the left of the information stand." This contains a conversational repair changing visual information. Hence, [IMAGERY] will be "The first aid station that I had mention is actually on the left of the information stand, and not on its right." There is no navigational movement ([RELATION_META]) or non-visual frame info ([FRAME_META]). Based on Rule 2, I will output action [CONTINUE].
+I need to analyze the utterance "Oh, wait. The first aid station is actually on the left of the information stand." This contains a conversational repair changing visual information. Hence, [IMAGERY] will be "The first aid station that I had mention is actually on the left of the information stand, and not on its right." There is no navigational movement ([RELATION_META]). For [FRAME\_META], the context implies a "visitor Center" or "station". I will use "visitor center".
 </think>
+
 ```json
 {
-  "frame_meta": "",
+  "frame_meta": "visitor center",
   "relation": "",
   "imagery": "The first aid station that I had mention is actually on the left of the information stand, and not on its right.",
   "action": "[CONTINUE]"
@@ -181,18 +190,19 @@ I need to analyze the utterance "Oh, wait. The first aid station is actually on 
 "A clean minimalist view of a temple with a priest standing in front of it."
 </previous>
 <think>
-I need to analyze the utterance spoken by Nathan 'can see a blue car'. First, let me check if there is any information in this utterance that can be visualized, and hence should be output as [IMAGERY]. From the utterance, we get that there is a blue car that Nathan sees after going to the left of the temple. However, since Nathan had moved to the left from the temple and the <target> contains information which does not seem to be a continuation of the previous context, I will choose the action [NEW]. There is no explicit navigation command in *this specific* target utterance (the movement happened previously), so [RELATION_META] is empty.
+I need to analyze the utterance spoken by Nathan 'can see a blue car'. First, let me check if there is any information in this utterance that can be visualized, and hence should be output as [IMAGERY]. From the utterance, we get that there is a blue car that Nathan sees after going to the left of the temple. However, since Nathan had moved to the left from the temple and the <target> contains information which does not seem to be a continuation of the previous context, I will choose the action [NEW]. There is no explicit navigation command in *this specific* target utterance, so [RELATION_META] is empty. [FRAME_META]: The location seems to be a "parking lot" or "street" relative to the temple.
 </think>
+
 ```json
 {
-  "frame_meta": "",
+  "frame_meta": "parking lot",
   "relation": "",
   "imagery": "I see a blue car here",
   "action": "[NEW]"
 }
 ```
 
-#### Example 5
+#### Example 6
 <context>
 [
 "Nathan: im looking at a temple",
@@ -208,7 +218,7 @@ I need to analyze the utterance spoken by Nathan 'can see a blue car'. First, le
 "A clean minimalist view of a temple with a priest standing in front of it."
 </previous>
 <think>
-I need to analyze the utterance spoken by Nathan 'had a big bell in the entrance'. First, let me check if there is any information in this utterance that can be visualized, and hence should be output as [IMAGERY]. From the utterance, we get that there is a big bell that Nathan sees at the entrance of the temple. While Nathan had moved to the left from the temple, the <target> contains continuous talking about the previous context which can still be visualised in the current frame. Thus, I will choose the action [CONTINUE], as this information can be depicted in the same frame. There is no explicit navigation command in *this specific* target utterance (the movement happened previously), so [RELATION_META] is empty.
+I need to analyze the utterance spoken by Nathan 'had a big bell in the entrance'. First, let me check if there is any information in this utterance that can be visualized, and hence should be output as [IMAGERY]. From the utterance, we get that there is a big bell that Nathan sees at the entrance of the temple. While Nathan had moved to the left from the temple, the <target> contains continuous talking about the previous context which can still be visualised in the current frame. Thus, I will choose the action [CONTINUE], as this information can be depicted in the same frame. There is no explicit navigation command in *this specific* target utterance (the movement happened previously), so [RELATION_META] is empty. For [FRAME_META], the location is ambiguous/undefined. I will leave it empty.
 </think>
 ```json
 {
@@ -219,7 +229,8 @@ I need to analyze the utterance spoken by Nathan 'had a big bell in the entrance
 }
 ```
 
-#### Example 6
+#### Example 7
+
 <context>
 [
 "Eve: I love this one restaurant next to the station",
@@ -233,18 +244,19 @@ I need to analyze the utterance spoken by Nathan 'had a big bell in the entrance
 "None"
 </previous>
 <think>
-I need to analyze the utterance spoken by Mario 'has dog statue infront?'. Mario is informing Eve that he might know the restaurant. He implies he also envisions an Italian restaurant next to the station. [IMAGERY] will be 'I also know an Italian restaurant that is next to the station.' This implies a shared location, but no movement occurred in this turn, so [RELATION_META] is empty. I will choose the action [NEW] as previous is 'None'.
+I need to analyze the utterance spoken by Mario. Mario is informing Eve that he might know the restaurant. He implies he also envisions an Italian restaurant next to the station. [IMAGERY] will be 'I also know an Italian restaurant that is next to the station.' [RELATION_META] is empty.
+[FRAME_META] should capture the location: "Italian restaurant".
 </think>
 ```json
 {
-  "frame_meta": "",
+  "frame_meta": "Italian restaurant",
   "relation": "",
   "imagery": "I also know an Italian restaurant that is next to the station.",
   "action": "[NEW]"
 }
 ```
 
-#### Example 7
+#### Example 8
 <context>
 [
 "Eve: I love this one restaurant next to the station",
@@ -260,42 +272,39 @@ I need to analyze the utterance spoken by Mario 'has dog statue infront?'. Mario
 ['A clean minimalist image of an italian restaurant in blue outlines next to the station.']
 </previous>
 <think>
-I need to analyze the utterance spoken by Mario 'has dog statue infront?'. First, let me check if there is any information in this utterance that can be visualized, and hence should be output as [IMAGERY]. From the utterance, we get that Mario is asking Eve whether the restaurant she is describing has a dog statue infront of it. By doing this act, Mario is also informing that the restaurant he is describing is also an italian restaurant next to the station and that it has a dog statue infront of it. ToM implies he envisions the restaurant with a dog statue. Thus, using Rule 4 from Imagery rules on ToM, my imagery will be 'The Italian restaurant that I am mentioning has a dog statue infront of it.' No navigation or non-visual frame meta is present. Action is [CONTINUE].
+I need to analyze the utterance spoken by Mario 'has dog statue infront?'. First, let me check if there is any information in this utterance that can be visualized, and hence should be output as [IMAGERY]. From the utterance, we get that Mario is asking Eve whether the restaurant she is describing has a dog statue infront of it. By doing this act, Mario is also informing that the restaurant he is describing is also an italian restaurant next to the station and that it has a dog statue infront of it. ToM implies he envisions the restaurant with a dog statue. Thus, using Rule 4 from Imagery rules on ToM, my imagery will be 'The Italian restaurant that I am mentioning has a dog statue infront of it.' No navigation or non-visual frame meta is present. Action is [CONTINUE]. [FRAME_META] should capture the location: "Italian restaurant".
 </think>
 ```json
 {
-  "frame_meta": "",
+  "frame_meta": "Italian restaurant",
   "relation": "",
   "imagery": "The Italian restaurant that I am mentioning has a dog statue infront of it.",
   "action": "[CONTINUE]"
 }
 ```
 
-#### Example 8
+#### Example 9 (Non-Visual Info)
+
 <context>
 [
-...
-"Nathan: I think there's a bin near the map.",
+"A: Where are you?"
 ]
 </context>
 <target>
-"Michael: Okay, got it."
+"B: I'm in the bathroom. It smells like lavender in here."
 </target>
 <previous>
-[
-"...a first aid station...",
-"Add a bin (near the map board, red outlines). Keep ... unchanged."
-]
+"None"
 </previous>
 <think>
-The target "Okay, got it." is an acknowledgment. It provides no new visual information, does not add, delete, move, or modify any object. According to Action Rule 4, the correct action is `[SKIP]`. In the same way, there is no relevant meta information that needs to be retained for later use.
+I need to analyze "I'm in the bathroom. It smells like lavender in here." [IMAGERY]: "I am in a bathroom." (Visual). [RELATION_META]: None. [FRAME_META]: The location is "bathroom". The smell is non-visual. So the value is "bathroom: smells like lavender". [ACTION]: [NEW].
 </think>
 ```json
 {
-  "frame_meta": "",
+  "frame_meta": "bathroom: smells like lavender",
   "relation": "",
-  "imagery": "",
-  "action": "[SKIP]"
+  "imagery": "I am in a bathroom.",
+  "action": "[NEW]"
 }
 ```
 
