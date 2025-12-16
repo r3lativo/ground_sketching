@@ -50,10 +50,9 @@ class AugmentationPipeline:
         sorted_indices = sorted(data_manager.df.index.tolist())
         
         # --- STATE TRACKING ---
-        # frame_idx: Increments on [NEW]. Represents a distinct scene/image ID.
-        # seq_idx: Increments on [CONTINUE] or sub-prompts ($$$). Represents steps within a scene.
+        # frame_idx: No longer manually tracked for ID generation, but kept for logging/filename logic if needed.
+        # seq_idx: Increments on [CONTINUE] or sub-prompts ($$$).
         state = {
-            'frame_idx': 0,
             'seq_idx': 1,
             'current_image_b64': None,
             'prev_image_path': None
@@ -135,7 +134,7 @@ class AugmentationPipeline:
 
     async def _phase_create(self, dm, index, user, oracle, vlm_sem, t_logger):
         """
-        Handles Logic: VLM Decision -> Strategy Execution -> Prompt Update
+        Handles Logic: VLM Decision -> Strategy Execution -> Prompt Update -> Frame ID Generation
         """
         row = dm.df.loc[index]
 
@@ -207,6 +206,16 @@ class AugmentationPipeline:
         # Write Metadata
         await self._update_cells(dm, index, decision)
 
+        # --- IMMEDIATE FRAME ID GENERATION ---
+        # If this is a [NEW] frame, we must calculate and assign the ID immediately
+        # so subsequent steps (Render/Relations) can find it.
+        if decision.action == Action.NEW:
+            # We call the DataManager to recalculate IDs for this user up to this point
+            dm.ensure_frame_ids(user)
+            # Retrieve the newly generated ID for logging purposes
+            new_id = dm.df.at[index, 'frame_id']
+            t_logger.info(f"[CREATE] Index {index}: Generated Frame ID: {new_id}")
+
         ### INITIAL PROMPT PHASE ###
         # 5. Execute Strategy
         new_prompt = ""
@@ -250,10 +259,8 @@ class AugmentationPipeline:
                      state['current_image_b64'] = loaded
                      state['prev_image_path'] = str(existing_img_path)
                      
-                 # If this was a [NEW] frame, we must increment the frame index 
-                 # to keep the numbering consistent with the file.
+                 # Reset sequence logic if NEW
                  if Action.NEW in str(row.get('frame_choice', '')):
-                     state['frame_idx'] += 1
                      state['seq_idx'] = 1
                  else:
                      state['seq_idx'] += 1
@@ -262,18 +269,32 @@ class AugmentationPipeline:
 
         # --- 2. UPDATE STATE (Frame & Seq) ---
         is_new_frame = (Action.NEW in frame_choice)
+
+        # [NEW LOGIC] Retrieve the actual Frame ID string (e.g., "A_1") from the DataManager
+        current_frame_id_str = row.get('frame_id')
         
+        # Fallback: If for some reason ID is missing (should be fixed by _phase_create), 
+        # try to parse it or log warning.
+        if not dm._is_not_empty_val(current_frame_id_str) and is_new_frame:
+             t_logger.warning(f"[RENDER] Index {index}: [NEW] frame missing 'frame_id'. Attempting repair.")
+             dm.ensure_frame_ids(user)
+             current_frame_id_str = dm.df.at[index, 'frame_id']
+
+        # Extract number for filename (optional, depends on your naming convention)
+        # Assuming format "USER_NUMBER"
+        try:
+            frame_num = int(str(current_frame_id_str).split('_')[-1])
+        except (ValueError, IndexError):
+            # Fallback for logging if parsing fails
+            frame_num = "Unknown"
+
         if is_new_frame:
-            # NEW: Increment frame, reset sequence, clear visual context
-            state['frame_idx'] += 1
             state['seq_idx'] = 1
             current_context_image = None
-            t_logger.info(f"[RENDER] Index {index}: [NEW] frame detected. Starting Frame {state['frame_idx']}.")
+            t_logger.info(f"[RENDER] Index {index}: [NEW] frame detected. ID: {current_frame_id_str}.")
         else:
-            # CONTINUE: Keep frame, continue sequence, keep visual context
-            # (seq_idx is implicitly continued from previous loop)
             current_context_image = state['current_image_b64']
-            t_logger.info(f"[RENDER] Index {index}: [CONTINUE] frame detected. Continuing Frame {state['frame_idx']}, Seq {state['seq_idx']}.")
+            t_logger.info(f"[RENDER] Index {index}: [CONTINUE] frame detected. ID: {current_frame_id_str}, Seq {state['seq_idx']}.")
 
         # --- 3. REFINE PROMPT ---
         # We only refine if we have visual context (CONTINUE mode).
@@ -298,7 +319,9 @@ class AugmentationPipeline:
         updates = False
 
         for sub_prompt in sub_prompts:
-            img_filename = f"{user}_{state['frame_idx']}_seq{state['seq_idx']}.png"
+            # [NEW LOGIC] Use the actual Frame ID string in the filename
+            # Filename: User_FrameIdNumber_SeqX.png (e.g., A_1_seq1.png)
+            img_filename = f"{user}_{frame_num}_seq{state['seq_idx']}.png"
             save_file = out_path / img_filename
             
             # Increment sequence for the *next* image (or next sub-prompt)
@@ -325,7 +348,7 @@ class AugmentationPipeline:
             async with vlm_sem:
                  visual_facts = await self.client.call_prompt_summarizer(full_history)
             
-            # Step B.2: Pipelined Loop
+            # Step B.2: Loop
             best_candidate_b64 = None
             best_score = -1.0
             best_verification_details = []
@@ -343,13 +366,9 @@ class AugmentationPipeline:
                 # We define the generation step as a coroutine here.
                 # It will run concurrently with the verification of the PREVIOUS image.
                 async def _gen_step():
-                    # Stop generating if we have hit the requested count (cleanup phase)
-                    if i >= actual_loops: 
-                        return None
-                    
+                    if i >= actual_loops: return None
                     t_logger.info(f"[RENDER] Generating Candidate {i+1}/{actual_loops}...")
                     candidate_seed = random.randint(0, 2**32 - 1)
-                    
                     async with img_sem:
                         imgs_payload = [current_context_image] if current_context_image else None
                         return await self.client.call_image_gen(
@@ -373,7 +392,6 @@ class AugmentationPipeline:
                 # 2. Result of Verification (Index 1, if it existed)
                 if verification_task:
                     score, details = results[1]
-                    
                     t_logger.info(f"[RENDER] Candidate Score: {score:.2f}")
 
                     if score > best_score:
@@ -387,10 +405,7 @@ class AugmentationPipeline:
                         break
 
                 # --- PREPARE FOR NEXT LOOP ---
-                
-                # If we are in the extra cleanup loop (i >= actual_loops) and no new image was generated, we are done.
-                if new_b64 is None:
-                    break
+                if new_b64 is None: break
 
                 if visual_facts:
                     # If we have facts, we queue the NEW image for verification in the NEXT loop
@@ -405,7 +420,6 @@ class AugmentationPipeline:
 
             # Step B.3: Finalize Winner
             if best_candidate_b64:
-                # Log the reasoning for the winner
                 t_logger.log_trace(index, "verification_winner", {
                     "score": best_score, 
                     "details": best_verification_details
@@ -417,7 +431,6 @@ class AugmentationPipeline:
                 if processed_b64:
                     state['current_image_b64'] = processed_b64
                     state['prev_image_path'] = str(save_file)
-                    # Important: Update local context so subsequent sub-prompts (splits) use this image
                     current_context_image = processed_b64 
                     updates = True
             else:
@@ -443,8 +456,10 @@ class AugmentationPipeline:
         if not dm._is_not_empty_val(relation_raw):
             return False
 
-        # 1. Ensure Frame IDs
-        dm.ensure_frame_ids(user)
+        # 1. [NEW LOGIC] Frame IDs are already ensured in _phase_create.
+        # However, for safety (e.g. running relations on an old CSV), we can check quickly.
+        if not dm._is_not_empty_val(row.get('frame_id')):
+             dm.ensure_frame_ids(user)
 
         # 2. Retrieve Neighborhood
         neighborhood = dm.get_frame_neighborhood(index, user)
@@ -463,7 +478,6 @@ class AugmentationPipeline:
 
         # 3. Prepare Prompt
         text_combined = f"{row['character']}: {row['text']}"
-        
         extracted_data = None
         
         # 4. Execute
@@ -481,26 +495,19 @@ class AugmentationPipeline:
             clean_triplets = []
             
             # A. Attempt Strict Cleaning
-            # We only iterate if the parser successfully returned a LIST
             if isinstance(extracted_data, list):
                 for item in extracted_data:
-                    # Check if items conform to the schema
                     if isinstance(item, dict) and all(k in item for k in ['subject', 'predicate', 'object']):
                         clean_triplets.append((item['subject'], item['predicate'], item['object']))
             
             # B. Decide what to save
-            # Case 1: We successfully extracted valid triplets -> Save the clean list
             if clean_triplets:
                 final_value = str(clean_triplets)
                 t_logger.info(f"[RELATIONS] Extracted {len(clean_triplets)} triplets.")
-            
-            # Case 2: The model returned something (e.g. raw text, malformed dict), but strict cleaning failed.
-            # We save the raw 'extracted_data' so you don't lose the information.
             else:
                 final_value = str(extracted_data)
                 t_logger.warning(f"[RELATIONS] Extraction format invalid. Saving raw output: {final_value[:50]}...")
 
-            # Save whatever we decided on
             await dm.update_cell(index, 'extracted_triplets', final_value)
             return True
 
