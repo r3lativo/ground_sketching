@@ -16,7 +16,7 @@ from tenacity import (
 )
 from pydantic import BaseModel, ValidationError, Field, TypeAdapter
 
-from src.utils import load_config, pil_to_base64
+from src.utils import load_config, pil_to_base64, thinking_parser
 from src.strategies import (
     PromptStrategy, 
     TextCreateStrategy, 
@@ -179,6 +179,45 @@ class APIClient:
             logger.error(f"[API CLIENTS] Strategies Init Failed: {e}", exc_info=True)
             raise
 
+    def _sanitize_bad_response(self, raw_text: str) -> str:
+        """
+        Truncates runaway 'thinking' loops or massive hallucinations 
+        to prevent 400 Bad Request errors on the next turn.
+        """
+        if not raw_text: return ""
+        
+        THINK_LIMIT = 10000
+        ANSWER_LIMIT = 2000
+
+        # Use the utility parser to split components
+        parsed = thinking_parser(raw_text)
+        thinking = parsed.get("thinking", "")
+        answer = parsed.get("answer", "")
+        
+        # Case 1: Malformed (No thinking separation found) -> Treat all as answer
+        if not thinking and not "<think>" in raw_text:
+            if len(raw_text) > ANSWER_LIMIT:
+                logger.warning(f"[API] Truncating massive malformed output ({len(raw_text)} chars).")
+                return raw_text[:ANSWER_LIMIT] + "... [TRUNCATED]"
+            return raw_text
+
+        # Case 2: Thinking exists -> Truncate components separately
+        reconstructed = ""
+        
+        if thinking:
+            if len(thinking) > THINK_LIMIT:
+                logger.warning(f"[API] Truncating massive thought loop ({len(thinking)} chars).")
+                thinking = thinking[:THINK_LIMIT] + "... [TRUNCATED]"
+            reconstructed += f"<think>{thinking}</think>\n"
+            
+        if answer:
+            if len(answer) > ANSWER_LIMIT:
+                logger.warning(f"[API] Truncating massive answer ({len(answer)} chars).")
+                answer = answer[:ANSWER_LIMIT] + "... [TRUNCATED]"
+            reconstructed += answer
+            
+        return reconstructed
+
     # --- Core Logic ---
 
     async def get_meta_and_strategy(
@@ -201,12 +240,16 @@ class APIClient:
                 strategy_name='multimodal_edit'
             )
         # 2. Fetch Meta Information (Network Call)
+        meta_validator = TypeAdapter(MetaResponse) if TypeAdapter else None
+
         try:
-            # Pass the Pydantic model
-            response_data = await self._fetch_meta_info(
-                utterance, context, previous_prompts, 
-                timeout=timeout, 
-                schema=MetaResponse 
+            response_data = await self.execute_vlm_strategy(
+                strategy=self.strategies['meta_extraction'],
+                utterance=utterance,
+                context=context,
+                previous_prompts=previous_prompts,
+                timeout=timeout,
+                validation_schema=meta_validator
             )
         except Exception as e:
             logger.error(f"[API] Meta Extraction failed: {e}")
@@ -232,23 +275,6 @@ class APIClient:
             frame_meta=response_data.get('frame_meta'),
             relation=response_data.get('relation'),
             imagery=response_data.get('imagery')
-        )
-
-    @get_retry_config(min_wait=2, max_wait=10)
-    async def _fetch_meta_info(self, utterance, context, previous_prompts, timeout: Optional[float] = None, schema=None) -> Optional[Dict]:
-        """Helper to handle the specific Meta Extraction API call."""
-        strategy = self.strategies['meta_extraction']
-        client_config = self.config.get("vlm_client", {})
-        
-        # We reuse the generic execution method which now supports validation
-        return await self.execute_vlm_strategy(
-            strategy=strategy,
-            utterance=utterance,
-            context=context,
-            previous_prompts=previous_prompts,
-            config=client_config,
-            timeout=timeout,
-            validation_schema=schema # Pass the schema down
         )
 
     # --- CORE LOGIC UPDATE: Validation & Reflection Loop ---
@@ -284,29 +310,32 @@ class APIClient:
                 return parsed_data
 
             try:
-                # A. Handle Lists (using TypeAdapter)
+                # Validation Logic (TypeAdapter vs Pydantic Model)
                 if isinstance(validation_schema, TypeAdapter):
-                    # For lists (Triplets, Facts), validation happens here
                     validated = validation_schema.validate_python(parsed_data)
-                    # Return pure Python list of dicts (or list of strings)
-                    if isinstance(validated, list) and len(validated) > 0 and hasattr(validated[0], 'model_dump'):
-                         return [v.model_dump() for v in validated]
+                    if isinstance(validated, list):
+                        return [v.model_dump() if hasattr(v, 'model_dump') else v for v in validated]
+                    if hasattr(validated, 'model_dump'):
+                        return validated.model_dump()
                     return validated
 
-                # B. Handle Dicts (MetaResponse)
                 if hasattr(validation_schema, 'model_validate'):
                     validated = validation_schema.model_validate(parsed_data)
                     return validated.model_dump()
                 
-                # C. Fallback
                 validated = validation_schema(**parsed_data)
                 return validated.dict()
 
             except ValidationError as e:
                 if attempt < max_correction_attempts:
-                    logger.warning(f"[API] Validation failed ({strategy.__class__.__name__}) Attempt {attempt+1}. Asking model to fix...")
+                    logger.warning(f"[API] Validation failed (Attempt {attempt+1}). Sanitizing & Retrying...")
+                    
+                    # Sanitize output before sending back
+                    sanitized_text = self._sanitize_bad_response(raw_text)
+                    
                     messages = current_payload['messages']
-                    messages.append({"role": "assistant", "content": raw_text})
+                    # Append the SANITIZED response, not the raw infinite loop
+                    messages.append({"role": "assistant", "content": sanitized_text})
                     messages.append({"role": "user", "content": f"Your response format is incorrect.\nError: {e.json()}\nPlease correct it and return ONLY valid JSON."})
                     current_payload['messages'] = messages
                 else:
@@ -357,11 +386,8 @@ class APIClient:
 
     @get_retry_config(min_wait=5, max_wait=30)
     async def call_visual_verifier(self, facts: List[str], base64_image: str, timeout: Optional[float] = None) -> List[Dict]:
-        
         # Prepare the List Schema Validator
-        list_validator = None
-        if TypeAdapter:
-            list_validator = TypeAdapter(List[VerificationFact])
+        list_validator = TypeAdapter(List[VerificationFact]) if TypeAdapter else None
             
         result = await self.execute_vlm_strategy(
             strategy=self.strategies['fact_check'],
