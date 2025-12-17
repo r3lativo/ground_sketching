@@ -25,7 +25,7 @@ class PromptStrategy(ABC):
     @property
     @abstractmethod
     def endpoint_suffix(self) -> str:
-        """Returns the URL suffix (e.g., '/generate' or '/edit')."""
+        """Returns the URL suffix."""
         pass
 
     @abstractmethod
@@ -134,7 +134,7 @@ class TextEditStrategy(PromptStrategy):
 class MultimodalEditStrategy(PromptStrategy):
     @property
     def endpoint_suffix(self) -> str:
-        return "/edit"
+        return "/generate"
 
     def build_user_content(self, utterance, context=None, previous_prompts=None, images=None, **kwargs) -> List[Dict[str, Any]]:
         content = []
@@ -206,7 +206,7 @@ class FactCheckStrategy(MultimodalEditStrategy):
 
     @property
     def endpoint_suffix(self) -> str:
-        return "/edit"
+        return "/generate"
 
     def build_user_content(self, utterance, context=None, previous_prompts=None, images=None, **kwargs) -> List[Dict[str, Any]]:
         content = []

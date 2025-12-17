@@ -231,35 +231,6 @@ async def handle_generation(request: GenerateRequest):
     # Call the backend and wait for the response
     result_text = await call_vllm_backend(openai_payload)
     return {"text": result_text}
-
-
-@app.post("/edit")
-async def handle_edit(request: GenerateRequest):
-    """
-    This endpoint is identical to /generate; it just provides a different
-    path for semantic clarity (e.g., in logs or for future logic).
-    """
-    logger.debug(f"[VLLM_G] Received /edit request")
-        
-    try:
-        openai_messages = _parse_messages_for_openai(request.messages)
-        if not openai_messages or openai_messages[-1]["role"] != "assistant":
-            openai_messages.append({"role": "assistant", "content": None})
-    except Exception as e:
-        logger.error(f"[VLLM_G] Error processing input: {e}", exc_info=True)
-        raise HTTPException(status_code=400, detail=f"Failed to process input messages: {e}")
-
-    openai_payload = {
-        "model": VLLM_CONFIG.backend.model_id,
-        "messages": openai_messages,
-        "max_tokens": request.max_tokens,
-        "temperature": request.temperature,
-        "top_p": request.top_p,
-        "seed": request.seed
-    }
-
-    result_text = await call_vllm_backend(openai_payload)
-    return {"text": result_text}
     
 
 # --- Main Execution Guard ---

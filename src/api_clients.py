@@ -227,7 +227,7 @@ class APIClient:
         context: Optional[List[str]] = None,
         previous_prompts: Optional[List[str]] = None,
         has_images: Optional[bool] = False,
-        timeout: Optional[float] = None
+        timeout: Optional[float] = 480
     ) -> StrategyDecision:
         
         if not self.client: raise RuntimeError("Client not initialized.")
@@ -282,7 +282,7 @@ class APIClient:
     async def execute_vlm_strategy(
         self, strategy: PromptStrategy, utterance: Optional[str] = "",
         context: Optional[List[str]] = None, previous_prompts: Optional[List[str]] = None,
-        images: Optional[List[str]] = None, timeout: Optional[float] = None, 
+        images: Optional[List[str]] = None, timeout: Optional[float] = 480, 
         validation_schema: Any = None, max_correction_attempts: int = 2,
         **kwargs
     ) -> Optional[Any]:
@@ -347,7 +347,7 @@ class APIClient:
     @get_retry_config(min_wait=5, max_wait=60)
     async def call_image_gen(
         self, prompt: str, base64_images: Optional[List[str]],
-        seed: Optional[int] = None, timeout: Optional[float] = None
+        seed: Optional[int] = None, timeout: Optional[float] = 120
     ) -> Optional[str]:
         if not self.client: raise RuntimeError("Client not initialized.")
 
@@ -373,7 +373,7 @@ class APIClient:
     # --- VISUAL VERIFICATION & FAITHFULNESS ---
 
     @get_retry_config(min_wait=5, max_wait=30)
-    async def call_prompt_summarizer(self, context: List[str], timeout: Optional[float] = None) -> List[str]:
+    async def call_prompt_summarizer(self, context: List[str], timeout: Optional[float] = 480) -> List[str]:
         # Validate that we get a List[str]
         list_validator = TypeAdapter(List[str]) if TypeAdapter else None
         
@@ -385,7 +385,7 @@ class APIClient:
         return result if isinstance(result, list) else []
 
     @get_retry_config(min_wait=5, max_wait=30)
-    async def call_visual_verifier(self, facts: List[str], base64_image: str, timeout: Optional[float] = None) -> List[Dict]:
+    async def call_visual_verifier(self, facts: List[str], base64_image: str, timeout: Optional[float] = 480) -> List[Dict]:
         # Prepare the List Schema Validator
         list_validator = TypeAdapter(List[VerificationFact]) if TypeAdapter else None
             
@@ -399,7 +399,7 @@ class APIClient:
         return result if isinstance(result, list) else []
 
     @get_retry_config(min_wait=5, max_wait=30)
-    async def call_image_captioner(self, base64_images: List[str], timeout: Optional[float] = None) -> Optional[str]:
+    async def call_image_captioner(self, base64_images: List[str], timeout: Optional[float] = 480) -> Optional[str]:
         """Captions the provided images."""
         return await self.execute_vlm_strategy(
             strategy=self.strategies['caption'],
@@ -441,7 +441,7 @@ class APIClient:
         return (true_count / len(facts)), verification_results
 
     @get_retry_config(min_wait=5, max_wait=30)
-    async def call_triplets_extraction(self, utterance: str, context: dict, timeout: Optional[float] = None) -> List[Dict]:
+    async def call_triplets_extraction(self, utterance: str, context: dict, timeout: Optional[float] = 480) -> List[Dict]:
         """Tries to extract triplets, enforcing the Triplet schema."""
         
         # Enforce List[Triplet]
