@@ -184,46 +184,55 @@ class APIClient:
             logger.error(f"[API CLIENTS] Strategies Init Failed: {e}", exc_info=True)
             raise
 
-    def _sanitize_bad_response(self, raw_text: str) -> str:
-        """
-        Truncates runaway 'thinking' loops or massive hallucinations 
-        to prevent 400 Bad Request errors on the next turn.
-        """
-        if not raw_text: return ""
-        
-        THINK_LIMIT = 10000
-        ANSWER_LIMIT = 2000
+    # --- Sanitization & Parsing ---
 
-        # Use the utility parser to split components
+    def _sanitize_for_reflection(self, raw_text: str, max_preview_length: int = 2000) -> str:
+        """
+        Prepares a malformed response for the reflection step.
+        Handles the specific case where 'thinking' is unclosed.
+        """
+        if not raw_text: 
+            return "[EMPTY RESPONSE]"
+        
+        # 1. Check for Runaway Thought (Unclosed Tag)
+        # If <think> exists but </think> does not, the model timed out or rambled.
+        # We must NOT treat the thought as the answer.
+        if "<think>" in raw_text and "</think>" not in raw_text:
+            return "[ERROR: Generation truncated. You started <think> but never finished. No answer found.]"
+
+        # 2. Standard Parse
         parsed = thinking_parser(raw_text)
-        thinking = parsed.get("thinking", "")
-        answer = parsed.get("answer", "")
-        
-        # Case 1: Malformed (No thinking separation found) -> Treat all as answer
-        if not thinking and not "<think>" in raw_text:
-            if len(raw_text) > ANSWER_LIMIT:
-                logger.warning(f"[API] Truncating massive malformed output ({len(raw_text)} chars).")
-                return raw_text[:ANSWER_LIMIT] + "... [TRUNCATED]"
-            return raw_text
+        answer = parsed.get("answer", "").strip()
 
-        # Case 2: Thinking exists -> Truncate components separately
-        reconstructed = ""
-        
-        if thinking:
-            if len(thinking) > THINK_LIMIT:
-                logger.warning(f"[API] Truncating massive thought loop ({len(thinking)} chars).")
-                thinking = thinking[:THINK_LIMIT] + "... [TRUNCATED]"
-            reconstructed += f"<think>{thinking}</think>\n"
-            
-        if answer:
-            if len(answer) > ANSWER_LIMIT:
-                logger.warning(f"[API] Truncating massive answer ({len(answer)} chars).")
-                answer = answer[:ANSWER_LIMIT] + "... [TRUNCATED]"
-            reconstructed += answer
-            
-        return reconstructed
+        # 3. Fallback: If parser failed to find separation
+        if not answer and not parsed.get("thinking"):
+            answer = raw_text
 
-    # --- Core Logic ---
+        # 4. Truncate huge answers to save context
+        if len(answer) > max_preview_length:
+            answer = answer[:max_preview_length] + "... [TRUNCATED]"
+            
+        return answer if answer else "[NO ANSWER FOUND]"
+
+    def _validate_output(self, parsed_data: Any, schema: Any) -> Any:
+        """
+        Unified validation helper for Pydantic V1/V2 & TypeAdapter.
+        """
+        if not schema:
+            return parsed_data
+
+        if isinstance(schema, TypeAdapter):
+            validated = schema.validate_python(parsed_data)
+            if isinstance(validated, list):
+                return [v.model_dump() if hasattr(v, 'model_dump') else v for v in validated]
+            return validated.model_dump() if hasattr(validated, 'model_dump') else validated
+
+        if hasattr(schema, 'model_validate'):
+            return schema.model_validate(parsed_data).model_dump()
+            
+        # Legacy Pydantic V1
+        return schema(**parsed_data).dict()
+
 
     async def get_meta_and_strategy(
         self,
@@ -286,7 +295,6 @@ class APIClient:
             validation_schema=TypeAdapter(TextResponse) if TypeAdapter else None
         )
 
-    # --- CORE LOGIC UPDATE: Validation & Reflection Loop ---
     @get_retry_config(min_wait=5, max_wait=30)
     async def execute_vlm_strategy(
         self, strategy: PromptStrategy, utterance: Optional[str] = "",
@@ -298,60 +306,76 @@ class APIClient:
         
         if not self.client: raise RuntimeError("Client not initialized.")
         
+        # 0. Setup Configuration
         client_config = self.config.get("vlm_client", {})
         if hasattr(strategy, 'default_params'):
             client_config.update(strategy.default_params)
-
         endpoint = f"{self.vllm_api_url}{strategy.endpoint_suffix}"
-        payload = strategy.build_payload(utterance=utterance, config=client_config, context=context, previous_prompts=previous_prompts, images=images, **kwargs)
-
-        current_payload = payload
         
+        # 1. Build Base Payload (Snapshot)
+        base_payload = strategy.build_payload(
+            utterance=utterance, config=client_config, context=context, 
+            previous_prompts=previous_prompts, images=images, **kwargs
+        )
+        current_payload = base_payload.copy()
+        current_payload['messages'] = [dict(m) for m in base_payload['messages']]
+
         for attempt in range(max_correction_attempts + 1):
-            response = await self.client.post(endpoint, json=current_payload, timeout=timeout)
-            response.raise_for_status()
-            
-            resp_json = response.json()
-            raw_text = resp_json.get("text", resp_json.get("content", ""))
-            parsed_data = strategy.process_response(raw_text)
-
-            if not validation_schema:
-                return parsed_data
-
             try:
-                # Validation Logic (TypeAdapter vs Pydantic Model)
-                if isinstance(validation_schema, TypeAdapter):
-                    validated = validation_schema.validate_python(parsed_data)
-                    if isinstance(validated, list):
-                        return [v.model_dump() if hasattr(v, 'model_dump') else v for v in validated]
-                    if hasattr(validated, 'model_dump'):
-                        return validated.model_dump()
-                    return validated
-
-                if hasattr(validation_schema, 'model_validate'):
-                    validated = validation_schema.model_validate(parsed_data)
-                    return validated.model_dump()
+                # A. Network Request
+                response = await self.client.post(endpoint, json=current_payload, timeout=timeout)
+                response.raise_for_status()
                 
-                validated = validation_schema(**parsed_data)
-                return validated.dict()
+                resp_json = response.json()
+                raw_text = resp_json.get("text", resp_json.get("content", ""))
 
-            except ValidationError as e:
-                if attempt < max_correction_attempts:
-                    logger.warning(f"[API] Validation failed (Attempt {attempt+1}). Sanitizing & Retrying...")
-                    
-                    # Sanitize output before sending back
-                    sanitized_text = self._sanitize_bad_response(raw_text)
-                    
-                    messages = current_payload['messages']
-                    # Append the SANITIZED response, not the raw infinite loop
-                    messages.append({"role": "assistant", "content": sanitized_text})
-                    messages.append({"role": "user", "content": f"Your response format is incorrect.\nError: {e.json()}\nPlease correct it and return ONLY valid JSON."})
-                    current_payload['messages'] = messages
+                # --- Runaway Thought Check ---
+                # Before parsing, check if we hit the "infinite thinking" bug.
+                # If <think> is unclosed, strategies.process_response will fail or return garbage.
+                if "<think>" in raw_text and "</think>" not in raw_text:
+                    raise ValidationError("Runaway thought detected (Unclosed <think> tag).")
+
+                # B. Parsing
+                parsed_data = strategy.process_response(raw_text)
+
+                # C. Validation
+                return self._validate_output(parsed_data, validation_schema)
+
+            except (ValidationError, json.JSONDecodeError, ValueError) as e:
+                # Safe Error Extraction
+                try: error_msg = e.json()
+                except: error_msg = str(e)
+                
+                logger.warning(f"[API] Validation Failed (Attempt {attempt+1}): {error_msg}")
+
+                if attempt >= max_correction_attempts:
+                    logger.error("[API] Max retries exhausted.")
+                    return None
+
+                # --- RETRY LOGIC ---
+                
+                # Strategy 1: Reflection (Gentle Correction)
+                if attempt == 0:
+                    sanitized_answer = self._sanitize_for_reflection(raw_text)
+                    current_payload['messages'].append({
+                        "role": "assistant", 
+                        "content": sanitized_answer 
+                    })
+                    current_payload['messages'].append({
+                        "role": "user", 
+                        "content": f"Your response was invalid.\nError: {error_msg}\nCorrect the format and output valid answer."
+                    })
+
+                # Strategy 2: Fresh Start (Hard Reset)
                 else:
-                    logger.error(f"[API] Validation failed after retries: {e}")
-                    raise e 
+                    logger.info("[API] Pivoting to Fresh Start (History Wipe).")
+                    current_payload['messages'] = [dict(m) for m in base_payload['messages']]
+                    current_payload['messages'].append({
+                        "role": "user", 
+                        "content": f"Previous attempts failed.\nRequirement: {error_msg}\nIgnore previous thoughts. Output ONLY valid answer."
+                    })
 
-        return parsed_data
+        return None
 
     @get_retry_config(min_wait=5, max_wait=60)
     async def call_image_gen(
@@ -359,7 +383,6 @@ class APIClient:
         seed: Optional[int] = None, timeout: Optional[float] = 120
     ) -> Optional[str]:
         if not self.client: raise RuntimeError("Client not initialized.")
-
         endpoint = f"{self.image_gen_url}/img_generate"
         cfg = self.config.get('image_gen_client', {})
         current_seed = seed if seed is not None else cfg.get("seed")
