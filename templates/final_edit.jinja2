@@ -13,6 +13,7 @@ Please strictly follow the rewriting rules below:
 - All objects should be clearly distinguishable as such. As a last resort, add text to designate what they are if visual information alone is insufficient. However try to avoid adding any text and rather make the objects look visibly different such that their properties and utilities can be easily identified from the image. For example:
     > 'a bowl' should be clearly distinguishable from 'an empty fruit basket'.
     > 'a window' should be clearly distinguishable from 'a door', no matter the style used.
+- Format: Return a valid JSON object containing a single key "scene" which is a string.
 
 ## 2. Task Type Handling Rules
 ### 1. Add, Delete, Replace Tasks
@@ -50,6 +51,11 @@ Please strictly follow the rewriting rules below:
 - If the instruction says "use reference style" or "keep current style," analyze the input image, extract main features (color, composition, texture, lighting, art style), and integrate them into the prompt.  
 - **For coloring tasks, including restoring old photos, always use the fixed template:** "Restore old photograph, remove scratches, reduce noise, enhance details, high resolution, realistic, natural skin tones, clear facial features, no distortion, vintage photo restoration"  
 - If there are other changes, place the style description at the end.
+
+### Example Output
+```json
+{"scene": "The rewritten edit..."}
+```
 
 ---
 Below is the new task. Please think and generate your final answer.

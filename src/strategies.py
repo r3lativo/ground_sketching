@@ -114,7 +114,10 @@ class TextCreateStrategy(PromptStrategy):
         return f"{ctx_str}Target Utterance:\n{utterance}\n"
 
     def _parse_answer(self, answer_text: str) -> str:
-        return answer_text.strip().replace("\n", " ")
+        parsed = json_parser(answer_text)
+        if isinstance(parsed, dict):
+            return parsed.get("scene", answer_text).strip().replace("\n", " ")
+        return str(parsed).strip()
 
 
 class TextEditStrategy(PromptStrategy):
@@ -128,7 +131,10 @@ class TextEditStrategy(PromptStrategy):
         return f"{ctx_str}Target Utterance:\n{utterance}\n{hist_str}"
 
     def _parse_answer(self, answer_text: str) -> str:
-        return answer_text.strip().replace("\n", " ")
+        parsed = json_parser(answer_text)
+        if isinstance(parsed, dict):
+            return parsed.get("scene", answer_text).strip().replace("\n", " ")
+        return str(parsed).strip()
 
 
 class MultimodalEditStrategy(PromptStrategy):
@@ -147,7 +153,10 @@ class MultimodalEditStrategy(PromptStrategy):
         return content
 
     def _parse_answer(self, answer_text: str) -> str:
-        return answer_text.strip().replace("\n", " ")
+        parsed = json_parser(answer_text)
+        if isinstance(parsed, dict):
+            return parsed.get("scene", answer_text).strip().replace("\n", " ")
+        return str(parsed).strip()
 
 
 class MetaStrategy(TextEditStrategy):
@@ -203,10 +212,6 @@ class FactCheckStrategy(MultimodalEditStrategy):
     @property
     def default_params(self) -> Dict[str, Any]:
         return {"temperature": 0.6}
-
-    @property
-    def endpoint_suffix(self) -> str:
-        return "/generate"
 
     def build_user_content(self, utterance, context=None, previous_prompts=None, images=None, **kwargs) -> List[Dict[str, Any]]:
         content = []

@@ -71,6 +71,9 @@ class Action:
 
 # --- PYDANTIC SCHEMAS ---
 
+class TextResponse(BaseModel):
+    scene: str
+
 class MetaResponse(BaseModel):
     """Schema for the Meta Extraction strategy"""
     frame_meta: Optional[str] = None
@@ -101,6 +104,7 @@ class StrategyDecision:
     frame_meta: Optional[str] = None
     relation: Optional[str] = None
     imagery: Optional[str] = None
+    validation_schema: Optional = None
 
     def to_dict(self):
         return {
@@ -108,7 +112,8 @@ class StrategyDecision:
             "strategy_name": self.strategy_name,
             "frame_meta": self.frame_meta,
             "relation": self.relation,
-            "imagery": self.imagery
+            "imagery": self.imagery,
+            "validation_schema": self.validation_schema
         }
 
 # --- Main Client ---
@@ -232,14 +237,14 @@ class APIClient:
         
         if not self.client: raise RuntimeError("Client not initialized.")
 
-        # 1. Immediate Short-circuit: Multimodal
+        # Immediate Short-circuit: Multimodal
         if has_images:
             return StrategyDecision(
                 action='multimodal_edit', 
                 strategy=self.strategies['multimodal_edit'], 
                 strategy_name='multimodal_edit'
             )
-        # 2. Fetch Meta Information (Network Call)
+        # Fetch Meta Information
         meta_validator = TypeAdapter(MetaResponse) if TypeAdapter else None
 
         try:
@@ -255,10 +260,13 @@ class APIClient:
             logger.error(f"[API] Meta Extraction failed: {e}")
             return StrategyDecision()
 
-        # If we get here, response_data is GUARANTEED to be a valid dict matching the schema
+        # Safety
+        if not response_data:
+            return StrategyDecision(action=Action.SKIP)
+
         action = response_data.get('action')
 
-        # 3. Determine Strategy Name dynamically
+        # Determine Strategy Name dynamically
         strategy_name = None
         prefix = "oracle" if is_oracle else "real"
         
@@ -274,7 +282,8 @@ class APIClient:
             strategy_name=strategy_name,
             frame_meta=response_data.get('frame_meta'),
             relation=response_data.get('relation'),
-            imagery=response_data.get('imagery')
+            imagery=response_data.get('imagery'),
+            validation_schema=TypeAdapter(TextResponse) if TypeAdapter else None
         )
 
     # --- CORE LOGIC UPDATE: Validation & Reflection Loop ---
@@ -359,8 +368,10 @@ class APIClient:
             dummy_image = Image.new('RGB', (1024, 1024), color='white')
             base64_images = [pil_to_base64(dummy_image)]
 
+        clean_prompt = prompt[:2000] if len(prompt) > 2000 else prompt
+
         payload = {
-            "prompt": prompt, "images": base64_images, "seed": current_seed,
+            "prompt": clean_prompt, "images": base64_images, "seed": current_seed,
             "true_cfg_scale": cfg.get("true_cfg_scale"), "negative_prompt": cfg.get("negative_prompt"),
             "num_inference_steps": cfg.get("num_inference_steps"),
         }
@@ -403,7 +414,9 @@ class APIClient:
         """Captions the provided images."""
         return await self.execute_vlm_strategy(
             strategy=self.strategies['caption'],
-            utterance="Now describe this image in detail.", images=base64_images, timeout=timeout
+            utterance="Now describe this image in detail.",
+            images=base64_images,
+            timeout=timeout
         )
 
     # No decorator here because it handles logic, not direct IO

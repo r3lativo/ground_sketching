@@ -23,6 +23,7 @@ Please strictly follow the rewriting rules below:
 - Some information in the context might belong to a previous scene experienced by the user in <target>. If the utterance contains information that was part of the previous scene, then do not add that information to the current scene. Only add the information present in the <target> and any other information from the <context> if it complements the <target> information. 'Complementary information' means that both the informations belong to the same scene.
 - If <context> contains `<scene_change>` marker, it means that the scene in which the the current <target> utterance's speaker changed at that moment. Keep in mind that `<scene_change>` does *not* always mean that it's a new scene, as the participants might continue talking about previous information.
 - You **must** make sure that present objects with black outline are *not* edited, unless the <target> utterance explicitly requires an edit on them.
+- Format: Return a valid JSON object containing a single key "scene" which is a string.
 
 ## 2. Task Type Handling Rules
 
@@ -89,8 +90,9 @@ A clean, minimalist, iconic scene. In a zoo visitor services area, a first aid s
 <think>
 A map board and brown brick wall are mentioned. Both are explicit and certain ("directly on"), so they get black outlines. I must also state that all previous objects remain unchanged.
 </think>
-Add a brown brick wall (black outlines) with a map board. Keep the first aid station (black outline), the information stand (blue outline), the toilet box (blue outline), and the bench (blue outline) unchanged.
-
+```json
+{"scene": "Add a brown brick wall (black outlines) with a map board. Keep the first aid station (black outline), the information stand (blue outline), the toilet box (blue outline), and the bench (blue outline) unchanged."}
+```
 #### Example 2 (Add with Ambiguous Position)
 <context>
 [
@@ -110,7 +112,9 @@ Add a brown brick wall (black outlines) with a map board. Keep the first aid sta
 <think>
 A bin is mentioned, however the utterance contains "I think" (uncertainty -> blue) and "near the map" (unclear position -> red). The rule for unclear position is a stronger visual instruction, so I will use red outlines.
 </think>
-Add a bin (near the map board, red outlines). Keep the first aid station (black outline), the information stand (blue outline), the toilet box (blue outline), the bench (blue outline), and and the brown brick wall with a map (black outline) unchanged.
+```json
+{"scene": "Add a bin (near the map board, red outlines). Keep the first aid station (black outline), the information stand (blue outline), the toilet box (blue outline), the bench (blue outline), and and the brown brick wall with a map (black outline) unchanged."}
+```
 
 #### Example 3 (Move Object - Multi-Step)
 <context>
@@ -132,7 +136,9 @@ Add a bin (near the map board, red outlines). Keep the first aid station (black 
 <think>
 This is a MOVE task. The first aid station is moving from the "right" to the "left". I must use the DELETE $$$ ADD pattern. The object was "black" (certain) but it has now moved ("actually is"), so the new one will also be "black outline". I also need to extract the key features of the first aid station so that I can add them again. It is pink in color and has a brown door.
 </think>
-Remove the first aid station on the right of the information stand. Keep the information stand, toilet box, and bench unchanged. $$$ Add a pink colored first aid station with a brown door (in black outline) to the left of the information stand. Keep the information stand, toilet box, and bench unchanged.
+```json
+{"scene": "Remove the first aid station on the right of the information stand. Keep the information stand, toilet box, and bench unchanged. $$$ Add a pink colored first aid station with a brown door (in black outline) to the left of the information stand. Keep the information stand, toilet box, and bench unchanged."}
+```
 
 #### Example 4 (Add Two New Relational Objects)
 <context>
@@ -152,7 +158,9 @@ Remove the first aid station on the right of the information stand. Keep the inf
 <think>
 The target "I see a vending machine near the children's play zone" introduces two objects: a vending machine and a children's play zone. Checking the previous prompts, neither object exists. Rule 2.B (Relational Objects) says I must add both. The vending machine is explicitly "seen" (certain), so it gets black outline; however the children's play zone exists in relation to the vending machine and its position is uncertain ('near'), so it will get a red outline.
 </think>
-Add a vending machine (in black outline) and a children's play zone (in red outline). Position the vending machine near the children's play zone. Keep the information desk (blue outline) and checkout lane (blue outline) unchanged.
+```json
+{"scene": "Add a vending machine (in black outline) and a children's play zone (in red outline). Position the vending machine near the children's play zone. Keep the information desk (blue outline) and checkout lane (blue outline) unchanged."}
+```
 
 #### Example 5 (Details)
 <context>
@@ -174,7 +182,9 @@ Add a vending machine (in black outline) and a children's play zone (in red outl
 <think>
 Okay, the target "There's also a wooden footwear removal bench nearby." introduces one new object, that is a wooden bench. To depict that it is a footwear removal bench, I will also add some shoes nearby it and a shoe horn to remove shoes.
 </think>
-Add a wooden bench (in black outline). On the bench there is a shoe horn, and some shoes and a box are placed near the bench. Keep the metal detector (blue outline), the queue of people (blue outline), the display showing the departures (blue outline), and the security desk (black outline) unchanged.
+```json
+{"scene": "Add a wooden bench (in black outline). On the bench there is a shoe horn, and some shoes and a box are placed near the bench. Keep the metal detector (blue outline), the queue of people (blue outline), the display showing the departures (blue outline), and the security desk (black outline) unchanged."}
+```
 
 #### Example: Handling Colored Walls (Rule: Wall ≠ Background)
 <context>
@@ -193,7 +203,9 @@ Add a wooden bench (in black outline). On the bench there is a shoe horn, and so
 <think>
 Target Analysis: The user explicitly changes the wall color of the room to "pink". We have to solve a conflict: the user wants "pink walls"; the Global Rule requires "solid white background". According to the 'Canvas vs. Architecture' rule, a "wall" is an **object**, not the canvas itself. So, I will add a "wall section" (behind the current objects) as a physical object representing the room and color it pink. The canvas edges will remain white. "Pink walls" are explicit, so they will get a black outline.
 </think>
-Add a section of a wall of the room painted pink (in black outline). Keep the ladder (blue outline) and the paint bucket (blue outline) unchanged.
+```json
+{"scene": "Add a section of a wall of the room painted pink (in black outline). Keep the ladder (blue outline) and the paint bucket (blue outline) unchanged."}
+```
 
 ---
 Below is the new task. Please think and generate your final answer.

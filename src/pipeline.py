@@ -218,15 +218,30 @@ class AugmentationPipeline:
 
         ### INITIAL PROMPT PHASE ###
         # 5. Execute Strategy
-        new_prompt = ""
+        new_prompt_data = None
+        
         async with vlm_sem:
             t_logger.info(f"[CREATE] Index {index}: Executing Strategy {decision.strategy_name}...")
-            new_prompt = await self.client.execute_vlm_strategy(
-                decision.strategy, utterance, context, prev_prompts
+            
+            # Pass the schema explicitly
+            new_prompt_data = await self.client.execute_vlm_strategy(
+                strategy=decision.strategy, 
+                utterance=utterance, 
+                context=context, 
+                previous_prompts=prev_prompts, 
+                validation_schema=decision.validation_schema
             )
-            t_logger.log_trace(index, "strategy_generation", {"prompt": new_prompt})
+            t_logger.log_trace(index, "strategy_generation", {"raw_data": new_prompt_data})
 
-        await dm.update_cell(index, 'initial_prompt', new_prompt)
+            if new_prompt_data is None:
+                t_logger.error(f"[CREATE] Index {index}: Strategy failed to generate prompt. Skipping update.")
+                return False
+
+        # EXTRACT STRING FROM DICT
+        # Validation ensures 'scene' key exists if new_prompt_data is not None
+        final_prompt_str = new_prompt_data.get('scene', "")
+
+        await dm.update_cell(index, 'initial_prompt', final_prompt_str)
         return True
 
     async def _phase_render(self, dm, index, user, oracle, state, out_path, vlm_sem, img_sem, t_logger, candidate_count):
