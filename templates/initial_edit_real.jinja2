@@ -12,12 +12,11 @@ Please strictly follow the rewriting rules below:
 ## 1. General Principles
 - Your edit instruction must be **concise and clear**.
 - The edit must *only* reflect the information in the Target Utterance and what it implies.
-- All added/modified objects must align with the existing **minimalist, iconic style** (solid white background, no shadows, no textures, colors in objects only if specified).
-- **CRITICAL: Distinguish 'Canvas' from 'Architecture'.**
-    * The **"Background"** refers *only* to the empty void/canvas surrounding the scene. This must ALWAYS be solid white.
-    * **Walls, Floors, and Ceilings** are **OBJECTS**, not the background.
-    * If the target mentions a color for them (e.g., "blue walls"), you **MUST** generate a specific, bounded object (e.g., "a section of a blue wall") and apply the color *only* to that object.
-    * **NEVER** fill the entire image with color. The edges of the final image must remain white.
+- All added/modified objects must align with the existing **minimalist, iconic style** (no shadows, no textures, colors in objects only if specified).
+- **Background vs. Architecture:**
+    * **The Canvas:** The *global* background must be **Solid White**. The edges of the image must be white (representing blank/empty) unless specified.
+    * **The Architecture:** All objects mentioned in the prompt that can be visualized (including walls, floors, and ceilings) should be distinguishable.
+    * **Structural Pairing of Background Objects:** If a specific **background element** is mentioned (e.g., wall, floor, ceiling, ground, sky, etc.), you must include its logical structural pair to ground the scene (e.g., 'wall assumes floor', 'ceiling assumes wall', 'sky assumes ground'). These assumed structural pairs must remain white unless a color is explicitly specified (and in blue outline as they are assumed). These are necessary to make the mentioned background objects distinguishable.
 - Find and retain the fundamental details of the objects: If expressible trough images, do so; else, add some text to represent that information.
 - If the position of a particular object is specified, retain it in the final output.
 - Some information in the context might belong to a previous scene experienced by the user in <target>. If the utterance contains information that was part of the previous scene, then do not add that information to the current scene. Only add the information present in the <target> and any other information from the <context> if it complements the <target> information. 'Complementary information' means that both the informations belong to the same scene.
@@ -186,25 +185,27 @@ Okay, the target "There's also a wooden footwear removal bench nearby." introduc
 {"scene": "Add a wooden bench (in black outline). On the bench there is a shoe horn, and some shoes and a box are placed near the bench. Keep the metal detector (blue outline), the queue of people (blue outline), the display showing the departures (blue outline), and the security desk (black outline) unchanged."}
 ```
 
-#### Example: Handling Colored Walls (Rule: Wall ≠ Background)
+#### Example: Handling Colored Walls
+
 <context>
 [
-"A: I'm renovating."
+"A: I'm in a bedroom."
 ]
 </context>
 <target>
-"A: I am painting the walls pink."
+"A: The walls pink."
 </target>
 <previous>
 [
-"A clean, minimalist, iconic scene. In a room, a ladder (in blue outline) and a paint bucket (in blue outline). Solid white background."
+"A clean, minimalist, iconic scene. In a room, a bed (in blue outline) and a sidetable next to the bed (in blue outline). Solid white background."
 ]
 </previous>
 <think>
-Target Analysis: The user explicitly changes the wall color of the room to "pink". We have to solve a conflict: the user wants "pink walls"; the Global Rule requires "solid white background". According to the 'Canvas vs. Architecture' rule, a "wall" is an **object**, not the canvas itself. So, I will add a "wall section" (behind the current objects) as a physical object representing the room and color it pink. The canvas edges will remain white. "Pink walls" are explicit, so they will get a black outline.
+The target utterance explicitly mentions the color of the "walls" to be "pink". This requires adding walls to the scene. We are dealing with a background object ("wall").
+According to the structural pairing rule, since "walls" are mentioned, I must ensure that a "floor" (the structural pair) exists too in the scene. Since the target does not specify a color for the floor, it must remain white (with blue outline).
 </think>
 ```json
-{"scene": "Add a section of a wall of the room painted pink (in black outline). Keep the ladder (blue outline) and the paint bucket (blue outline) unchanged."}
+{"scene": "Add a wall and a floor in the scene. The wall is pink. The floor is white. The outline of the floor is blue (which distinguishes it from the wall). Keep the bed (blue outline) and sidetable (blue outline) unchanged."}
 ```
 
 ---
