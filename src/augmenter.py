@@ -40,10 +40,10 @@ def parse_arguments():
     
     parser.add_argument("--fake_servers", action='store_true', help="Use Mock Clients but run full pipeline logic")
     
-    return parser.parse_args()
+    return parser, parser.parse_args()
 
 async def main():
-    args = parse_arguments()
+    parser, args = parse_arguments()
     
     now = datetime.now()
     date_time = now.strftime("%m%d_%H%M%S")
@@ -51,8 +51,9 @@ async def main():
     # 1. Load directories
     in_dir = Path(args.input_dir)
     out_dir = Path(args.output_dir)
-    out_dir = out_dir / 'fake' if args.fake_servers else out_dir
-    out_dir = out_dir / date_time
+    if out_dir == 'output/':
+        out_dir = out_dir / 'fake' if args.fake_servers else out_dir
+        out_dir = out_dir / date_time
 
     if not in_dir.exists():
         logger.error(f"Input directory does not exist: {in_dir}")
@@ -62,7 +63,7 @@ async def main():
     verify_services(args)
 
     # 3. Discovery
-    csv_files = [f for f in in_dir.glob("*.csv") if not f.name.startswith(".")]
+    csv_files = [f for f in in_dir.rglob("*.csv") if not f.name.startswith(".")]
     total_files = len(csv_files)
     if not csv_files:
         logger.warning(f"No CSV files found in {in_dir}")
@@ -101,6 +102,10 @@ async def main():
         logger.info(f"Randomly selected {len(csv_files)} files.")
     else:
         logger.info(f"Processing all {total_files} files.")
+
+    if not any([args.create_aug, args.gen_images_from_aug, args.relation_triplets]):
+        parser.error("No action selected. Please specify at least one of --create_aug, --gen_images_from_aug, or --relation_triplets.")
+
     async with api_client:
         for csv_file in csv_files:
 
@@ -113,7 +118,7 @@ async def main():
             (csv_out_dir / "images").mkdir(parents=True, exist_ok=True)
 
             # Output CSV path
-            aug_csv_path = csv_out_dir / f"{csv_file.stem}_augmented.csv"
+            aug_csv_path = csv_out_dir / f"{csv_file.stem}_aug.csv"
             
             # Create DataManager
             dm = ConversationDataManager(str(csv_file), str(aug_csv_path))

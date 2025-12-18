@@ -231,7 +231,7 @@ async def handle_generation(request: GenerateRequest):
     # Call the backend and wait for the response
     result_text = await call_vllm_backend(openai_payload)
     return {"text": result_text}
-    
+
 
 # --- Main Execution Guard ---
 if __name__ == "__main__":
