@@ -3,6 +3,7 @@
 import asyncio
 import random
 from pathlib import Path
+from pydantic import TypeAdapter
 
 from src.utils import (
     load_existing_image,
@@ -10,8 +11,7 @@ from src.utils import (
     process_generated_image,
     is_not_empty_val
 )
-from src.api_clients import Action
-
+from src.api_clients import Action, TextResponse
 
 class AugmentationPipeline:
     def __init__(self, api_client):
@@ -237,9 +237,13 @@ class AugmentationPipeline:
                 t_logger.error(f"[CREATE] Index {index}: Strategy failed to generate prompt. Skipping update.")
                 return False
 
-        # EXTRACT STRING FROM DICT
+        # SAFE EXTRACT STRING FROM DICT
         # Validation ensures 'scene' key exists if new_prompt_data is not None
-        final_prompt_str = new_prompt_data.get('scene', "")
+        final_prompt_str = ""
+        if isinstance(new_prompt_data, dict):
+            final_prompt_str = new_prompt_data.get('scene', "")
+        elif isinstance(new_prompt_data, str):
+            final_prompt_str = new_prompt_data
 
         await dm.update_cell(index, 'initial_prompt', final_prompt_str)
         return True
@@ -334,16 +338,20 @@ class AugmentationPipeline:
                             refined_sub_prompts.append(sub_p)
                             continue
 
-                        # Refine the specific segment
-                        refined_segment = await self.client.execute_vlm_strategy(
-                            mm_decision.strategy, sub_p, images=[current_context_image]
+                        # EXECUTE
+                        refined_data = await self.client.execute_vlm_strategy(
+                            mm_decision.strategy, sub_p, images=[current_context_image],
+                            validation_schema=TypeAdapter(TextResponse)
                         )
+                        
+                        # EXTRACT
+                        refined_segment = ""
+                        if refined_data and isinstance(refined_data, dict):
+                            refined_segment = refined_data.get('scene', "")
                         
                         if refined_segment:
                             refined_sub_prompts.append(refined_segment)
-                            t_logger.log_trace(index, f"refinement_step_{i+1}", {"before": sub_p, "after": refined_segment})
                         else:
-                            # Fallback if VLM fails
                             refined_sub_prompts.append(sub_p)
                 else:
                     # Strategy lookup failed, keep original

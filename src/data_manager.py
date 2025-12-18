@@ -225,44 +225,81 @@ class ConversationDataManager:
         curr_text = self._get_text_window(user, curr_num, utterance=current_utterance_text)
         next_text = self._get_text_window(user, next_num)
 
+        prev_frame_meta = self._get_frame_meta_info(user, prev_num)
+        curr_frame_meta = self._get_frame_meta_info(user, curr_num)
+        next_frame_meta = self._get_frame_meta_info(user, next_num)
+
         return {
             'current_frame_id': curr_id_str,
             'prev_frame_id': prev_id_str,
             'next_frame_id': next_id_str,
             'prev_text': prev_text,
             'curr_text': curr_text,
-            'next_text': next_text
+            'next_text': next_text,
+            'prev_frame_meta': prev_frame_meta,
+            'curr_frame_meta': curr_frame_meta,
+            'next_frame_meta': next_frame_meta
         }
 
-    def _get_text_window(self, user, target_num, utterance=None):
+    def _get_mask_with_frame_num(self, user, target_num):
         """
-        Helper to extract text by finding global boundaries
+        Get the boolean mask for where a frame id starts and ends.
         """
-        if target_num <= 0: return None
+        if target_num <= 0: 
+            return None
+            
         if target_num == 1:
-            # Frame 1 is special: it catches everything from the very top of the file
+            # Frame 1 catches everything from the start
             start_idx = 0
         else:
-            # For Frame 2+, the start is the first occurrence of this frame ID
+            # Start is the first occurrence of this frame ID
             curr_slice = self.df[self.df['frame_id'] == f"{user}_{target_num}"]
-            if curr_slice.empty: return None 
+            if curr_slice.empty: 
+                return None 
             start_idx = curr_slice.index.min()
 
-        next_slice = self.df[self.df['frame_id'] == f"{user}_{target_num+1}"]
+        # Find where the NEXT frame starts to define the end of THIS frame
+        next_slice = self.df[self.df['frame_id'] == f"{user}_{target_num + 1}"]
+        
         if not next_slice.empty:
-            # Go up to the index immediately before the next frame starts
+            # End immediately before the next frame starts
             end_idx = next_slice.index.min() - 1
         else:
             # If no next frame, go to the end of the file
             end_idx = self.df.index.max()
 
+        # Create boolean mask
         mask = (self.df.index >= start_idx) & (self.df.index <= end_idx)
+        return mask
 
-        # Retrieve text for BOTH speakers in this window
+    def _get_frame_meta_info(self, user, target_num):
+        """
+        Constructs mask and retrieves metadata from the last row of the frame window.
+        """
+        mask = self._get_mask_with_frame_num(user, target_num)
+        if mask is None: return None
+
+        frame_rows = self.df.loc[mask]
+        if frame_rows.empty: return None
+
+        # Use .iloc[-1] to get the last row of this slice safely
+        last_row_of_frame_id = frame_rows.iloc[-1]
+
+        # Ensure the column exists before accessing
+        if 'frame_meta' in last_row_of_frame_id:
+            return last_row_of_frame_id['frame_meta']
+        return None
+
+    def _get_text_window(self, user, target_num, utterance=None):
+        """
+        Helper to extract text by finding global boundaries.
+        """
+        mask = self._get_mask_with_frame_num(user, target_num)
+        if mask is None: return ""
+
         subset = self.df.loc[mask].copy()
 
         def format_row(row):
-            # Check if this row's text matches the utterance we want to highlight
             suffix = " <---" if (utterance is not None and str(row['text']) == str(utterance)) else ""
             return f"{row['character']}: {row['text']}{suffix}"
 

@@ -11,6 +11,7 @@ You will receive:
     - `PREV_FRAME` (The scene immediately preceding the current one).
     - `CURR_FRAME` (The current scene being discussed).
     - `NEXT_FRAME` (The scene immediately following, if any).
+3. The information in FRAME_META is the scene information corresponding to the respective Frame ID.
 
 ### Goal
 You must generate a list of triplets in the format `(Subject, Predicate, Object)` that mathematically represents the relationship described in the directive.
@@ -19,11 +20,9 @@ You must generate a list of triplets in the format `(Subject, Predicate, Object)
 Return a strict JSON list of objects:
 ```json
 [
-  {
-    "subject": "{FRAME_ID}",
-    "predicate": "{RELATION_TYPE}",
-    "object": "{FRAME_ID}"
-  }
+  "triplets": [
+    {"subject": "{FRAME_ID}", "predicate": "{RELATION_TYPE}", "object": "{FRAME_ID}"}
+  ]
 ]
 ````
 
@@ -35,7 +34,9 @@ Return a strict JSON list of objects:
 
 **2. Directionality:**
   - Ensure the triplet flows logically.
-  - "I went North from A to B" implies: `B is_north_of A` (or `A is_south_of B`).
+  - "I went North from X to Y" implies: `Y is_north_of X` (or `X is_south_of Y`).
+  - We will connect the relative Frame IDs to build the final triplet.
+    - E.g., `B_3` is the frame ID of X, `B_4` is the Frame ID of Y, hence: `{"subject": "B_4", "predicate": "is_north_of", "object": "B_3"}`.
   - "The kitchen is next to the hall" implies: `hall is_next_to kitchen`.
 
 **3. Ambiguity:**

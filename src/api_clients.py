@@ -71,9 +71,6 @@ class Action:
 
 # --- PYDANTIC SCHEMAS ---
 
-class TextResponse(BaseModel):
-    scene: str
-
 class MetaResponse(BaseModel):
     """Schema for the Meta Extraction strategy"""
     frame_meta: Optional[str] = None
@@ -92,6 +89,21 @@ class Triplet(BaseModel):
     subject: str
     predicate: str
     object: str
+
+class TextResponse(BaseModel):
+    scene: str
+
+class SummarizeResponse(BaseModel):
+    facts: List[str]
+
+class FactCheckResponse(BaseModel):
+    verification: List[VerificationFact]
+
+class CaptionResponse(BaseModel):
+    caption: str
+
+class TripletResponse(BaseModel):
+    triplets: List[Triplet]
 
 # ----------------------------
 
@@ -112,8 +124,7 @@ class StrategyDecision:
             "strategy_name": self.strategy_name,
             "frame_meta": self.frame_meta,
             "relation": self.relation,
-            "imagery": self.imagery,
-            "validation_schema": self.validation_schema
+            "imagery": self.imagery
         }
 
 # --- Main Client ---
@@ -184,6 +195,65 @@ class APIClient:
             logger.error(f"[API CLIENTS] Strategies Init Failed: {e}", exc_info=True)
             raise
 
+    def _generate_friendly_error_msg(self, e: ValidationError, schema: Any, raw_text: str) -> str:
+        """
+        Translates Pydantic errors into clear instructions for the LLM.
+        Also reconstructs a simple schema example so the model knows what to fix.
+        """
+        error_report = []
+        
+        # 1. Analyze the Errors
+        for err in e.errors():
+            loc = " -> ".join([str(x) for x in err['loc']])
+            msg = err['msg']
+            
+            # Case A: Root Level Error (Model returned raw text instead of JSON)
+            if err['type'] == 'model_type' and not loc:
+                error_report.append(f"CRITICAL: You returned a raw string, but a JSON Object is required.")
+                
+            # Case B: Missing Field (Model used wrong key)
+            elif err['type'] == 'missing':
+                error_report.append(f"MISSING KEY: The JSON is missing the required field '{loc}'.")
+                
+            # Case C: Generic Field Error
+            else:
+                target = f"Field '{loc}'" if loc else "Response"
+                error_report.append(f"FORMAT ERROR: {target} - {msg}")
+
+        # 2. Dynamic Schema Explanation
+        # We assume 'schema' is either a TypeAdapter or a BaseModel class
+        try:
+            # Handle TypeAdapter vs BaseModel differences
+            if isinstance(schema, TypeAdapter):
+                json_schema = schema.json_schema()
+            elif hasattr(schema, 'model_json_schema'):
+                json_schema = schema.model_json_schema()
+            else:
+                json_schema = {}
+
+            # Extract Properties to show the model what is valid
+            properties = json_schema.get('properties', {})
+            required = json_schema.get('required', [])
+            
+            schema_desc = "REQUIRED JSON STRUCTURE:\n{"
+            for prop, details in properties.items():
+                is_req = " (REQUIRED)" if prop in required else ""
+                prop_type = details.get('type', 'any')
+                schema_desc += f'\n  "{prop}": <{prop_type}>{is_req},'
+            schema_desc += "\n}"
+            
+        except Exception:
+            schema_desc = "Required Format: Valid JSON matching the requested schema."
+
+        # 3. Construct Final Message
+        final_msg = (
+            f"Your response failed validation.\n"
+            f"{'\n'.join(error_report)}\n\n"
+            f"{schema_desc}\n\n"
+            f"Output a valid answer in JSON format."
+        )
+        return final_msg
+
     # --- Sanitization & Parsing ---
 
     def _sanitize_for_reflection(self, raw_text: str, max_preview_length: int = 2000) -> str:
@@ -198,7 +268,12 @@ class APIClient:
         # If <think> exists but </think> does not, the model timed out or rambled.
         # We must NOT treat the thought as the answer.
         if "<think>" in raw_text and "</think>" not in raw_text:
-            return "[ERROR: Generation truncated. You started <think> but never finished. No answer found.]"
+            help_text = (
+                "[ERROR: Generation truncated. You started <think> but never finished. No answer found.]\n"
+                "[RETRY: BE SHORTER IN THINKING. Use a maximum of 500 tokens. Make sure to output the final thinking token </think>!]\n"
+                "[BE DECISIVE: Once you have decided something, DO NOT GO BACK ON IT.]"
+            )
+            return help_text
 
         # 2. Standard Parse
         parsed = thinking_parser(raw_text)
@@ -342,15 +417,22 @@ class APIClient:
                 return self._validate_output(parsed_data, validation_schema)
 
             except (ValidationError, json.JSONDecodeError, ValueError) as e:
-                # Safe Error Extraction
-                try: error_msg = e.json()
-                except: error_msg = str(e)
+                # Capture technical error for logs
+                try: error_json = e.json()
+                except: error_json = str(e)
                 
-                logger.warning(f"[API] Validation Failed (Attempt {attempt+1}): {error_msg}")
+                logger.warning(f"[API] Validation Failed (Attempt {attempt+1}): {error_json}")
 
                 if attempt >= max_correction_attempts:
                     logger.error("[API] Max retries exhausted.")
                     return None
+
+                # --- GENERATE FRIENDLY MESSAGE ---
+                # Translate the error into Natural Language + Context
+                friendly_error_msg = error_json # Fallback
+                
+                if isinstance(e, ValidationError) and validation_schema:
+                    friendly_error_msg = self._generate_friendly_error_msg(e, validation_schema, raw_text)
 
                 # --- RETRY LOGIC ---
                 
@@ -361,18 +443,22 @@ class APIClient:
                         "role": "assistant", 
                         "content": sanitized_answer 
                     })
+                    # Send the FRIENDLY message instead of the raw technical dump
                     current_payload['messages'].append({
                         "role": "user", 
-                        "content": f"Your response was invalid.\nError: {error_msg}\nCorrect the format and output valid answer."
+                        "content": friendly_error_msg 
                     })
 
                 # Strategy 2: Fresh Start (Hard Reset)
                 else:
-                    logger.info("[API] Pivoting to Fresh Start (History Wipe).")
                     current_payload['messages'] = [dict(m) for m in base_payload['messages']]
                     current_payload['messages'].append({
                         "role": "user", 
-                        "content": f"Previous attempts failed.\nRequirement: {error_msg}\nIgnore previous thoughts. Output ONLY valid answer."
+                        "content": (
+                            f"Previous attempts failed.\n"
+                            f"{friendly_error_msg}\n"
+                            "Ignore previous thoughts. Output ONLY valid JSON."
+                        )
                     })
 
         return None
@@ -408,39 +494,49 @@ class APIClient:
 
     @get_retry_config(min_wait=5, max_wait=30)
     async def call_prompt_summarizer(self, context: List[str], timeout: Optional[float] = 480) -> List[str]:
-        # Validate that we get a List[str]
-        list_validator = TypeAdapter(List[str]) if TypeAdapter else None
+        validator = TypeAdapter(SummarizeResponse)
         
         result = await self.execute_vlm_strategy(
             strategy=self.strategies['summarize'],
             utterance="", context=context, timeout=timeout,
-            validation_schema=list_validator
+            validation_schema=validator
         )
-        return result if isinstance(result, list) else []
+        
+        if result and isinstance(result, dict):
+            return result.get('facts', [])
+        return []
 
     @get_retry_config(min_wait=5, max_wait=30)
     async def call_visual_verifier(self, facts: List[str], base64_image: str, timeout: Optional[float] = 480) -> List[Dict]:
-        # Prepare the List Schema Validator
-        list_validator = TypeAdapter(List[VerificationFact]) if TypeAdapter else None
+        validator = TypeAdapter(FactCheckResponse)
             
         result = await self.execute_vlm_strategy(
             strategy=self.strategies['fact_check'],
             utterance=str(facts), 
             images=[base64_image], 
             timeout=timeout,
-            validation_schema=list_validator # Pass the list validator
+            validation_schema=validator
         )
-        return result if isinstance(result, list) else []
+        
+        if result and isinstance(result, dict):
+            return result.get('verification', [])
+        return []
 
     @get_retry_config(min_wait=5, max_wait=30)
     async def call_image_captioner(self, base64_images: List[str], timeout: Optional[float] = 480) -> Optional[str]:
-        """Captions the provided images."""
-        return await self.execute_vlm_strategy(
+        validator = TypeAdapter(CaptionResponse)
+        
+        result = await self.execute_vlm_strategy(
             strategy=self.strategies['caption'],
             utterance="Now describe this image in detail.",
             images=base64_images,
-            timeout=timeout
+            timeout=timeout,
+            validation_schema=validator
         )
+        
+        if result and isinstance(result, dict):
+            return result.get('caption')
+        return None
 
     # No decorator here because it handles logic, not direct IO
     async def verify_image_faithfulness(
@@ -478,13 +574,14 @@ class APIClient:
 
     @get_retry_config(min_wait=5, max_wait=30)
     async def call_triplets_extraction(self, utterance: str, context: dict, timeout: Optional[float] = 480) -> List[Dict]:
-        """Tries to extract triplets, enforcing the Triplet schema."""
-        
-        # Enforce List[Triplet]
-        list_validator = TypeAdapter(List[Triplet]) if TypeAdapter else None
+        validator = TypeAdapter(TripletResponse)
 
-        return await self.execute_vlm_strategy(
+        result = await self.execute_vlm_strategy(
             strategy=self.strategies['triplets_extraction'],
             utterance=utterance, context=context, timeout=timeout,
-            validation_schema=list_validator
+            validation_schema=validator
         )
+        
+        if result and isinstance(result, dict):
+            return result.get('triplets', [])
+        return []

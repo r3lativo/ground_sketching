@@ -23,10 +23,8 @@ class PromptStrategy(ABC):
         return {}
 
     @property
-    @abstractmethod
     def endpoint_suffix(self) -> str:
-        """Returns the URL suffix."""
-        pass
+        return "/generate"
 
     @abstractmethod
     def build_user_content(
@@ -99,49 +97,27 @@ class PromptStrategy(ABC):
         # 2. Strategy-specific parsing
         return self._parse_answer(answer_part.strip())
 
-    @abstractmethod
     def _parse_answer(self, answer_text: str) -> Any:
-        pass
+        return json_parser(answer_text)
 
 
 class TextCreateStrategy(PromptStrategy):
-    @property
-    def endpoint_suffix(self) -> str:
-        return "/generate"
-
     def build_user_content(self, utterance, context=None, previous_prompts=None, images=None, **kwargs) -> str:
         ctx_str = f"Conversation Context:\n{context}\n" if context else ""
         return f"{ctx_str}Target Utterance:\n{utterance}\n"
 
     def _parse_answer(self, answer_text: str) -> str:
-        parsed = json_parser(answer_text)
-        if isinstance(parsed, dict):
-            return parsed.get("scene", answer_text).strip().replace("\n", " ")
-        return str(parsed).strip()
+        return json_parser(answer_text)
 
 
 class TextEditStrategy(PromptStrategy):
-    @property
-    def endpoint_suffix(self) -> str:
-        return "/generate"
-
     def build_user_content(self, utterance, context=None, previous_prompts=None, images=None, **kwargs) -> str:
         ctx_str = f"Conversation Context:\n{context}\n" if context else ""
         hist_str = f"Previous Prompts:\n{previous_prompts}\n" if previous_prompts else ""
         return f"{ctx_str}Target Utterance:\n{utterance}\n{hist_str}"
 
-    def _parse_answer(self, answer_text: str) -> str:
-        parsed = json_parser(answer_text)
-        if isinstance(parsed, dict):
-            return parsed.get("scene", answer_text).strip().replace("\n", " ")
-        return str(parsed).strip()
-
 
 class MultimodalEditStrategy(PromptStrategy):
-    @property
-    def endpoint_suffix(self) -> str:
-        return "/generate"
-
     def build_user_content(self, utterance, context=None, previous_prompts=None, images=None, **kwargs) -> List[Dict[str, Any]]:
         content = []
         if images:
@@ -152,24 +128,14 @@ class MultimodalEditStrategy(PromptStrategy):
         content.append({"type": "text", "text": utterance})
         return content
 
-    def _parse_answer(self, answer_text: str) -> str:
-        parsed = json_parser(answer_text)
-        if isinstance(parsed, dict):
-            return parsed.get("scene", answer_text).strip().replace("\n", " ")
-        return str(parsed).strip()
 
-
-class MetaStrategy(TextEditStrategy):
+class MetaStrategy(PromptStrategy):
     def build_user_content(self, utterance, context=None, previous_prompts=None, images=None, **kwargs) -> str:
         ctx_str = f"Conversation Context <context>:\n{context if context else 'None'}"
         hist_str = f"Previous Prompts <previous>:\n{previous_prompts if previous_prompts else 'None'}"
         target_str = f"Target Utterance <target>:\n{utterance}"
         return f"{ctx_str}\n{hist_str}\n{target_str}"
 
-    def _parse_answer(self, answer_text: str) -> Dict[str, Optional[str]]:
-        return json_parser(answer_text)
-
-# --- UPDATED STRATEGIES ---
 
 class SummarizeStrategy(PromptStrategy):
     """
@@ -180,19 +146,9 @@ class SummarizeStrategy(PromptStrategy):
     def default_params(self) -> Dict[str, Any]:
         return {"temperature": 0.6}
 
-    @property
-    def endpoint_suffix(self) -> str:
-        return "/generate"
-
     def build_user_content(self, utterance, context=None, previous_prompts=None, images=None, **kwargs) -> str:
         prompts_str = "\n".join(context) if context else str(context)
         return f"Here are the prompts:\n{prompts_str}\n"
-
-    def _parse_answer(self, answer_text: str) -> List[str]:
-        parsed = json_parser(answer_text)
-        if isinstance(parsed, dict):
-            return parsed.get("facts")
-        return answer_text
 
 
 class CaptionStrategy(MultimodalEditStrategy):
@@ -203,7 +159,7 @@ class CaptionStrategy(MultimodalEditStrategy):
     pass
 
 
-class FactCheckStrategy(MultimodalEditStrategy):
+class FactCheckStrategy(PromptStrategy):
     """
     Verifies a list of facts against an image (Multimodal).
     Expects 'utterance' to be the JSON string of facts.
@@ -224,21 +180,11 @@ class FactCheckStrategy(MultimodalEditStrategy):
         content.append({"type": "text", "text": f"Facts to Check:\n{utterance}"})
         return content
 
-    def _parse_answer(self, answer_text: str) -> List[Dict[str, Any]]:
-        # Returns the list of verification dicts: [{'fact':..., 'verdict':...}]
-        parsed = json_parser(answer_text)
-        if isinstance(parsed, dict):
-            return parsed.get("verification")
-        return answer_text
-
 
 class TripletsExtractionStrategy(PromptStrategy):
     """
     Extracts triplets (Frame_A, Relation, Frame_B) based on a relation directive and temporal context.
     """
-    @property
-    def endpoint_suffix(self) -> str:
-        return "/generate"
 
     def build_user_content(
         self, 
@@ -269,14 +215,15 @@ class TripletsExtractionStrategy(PromptStrategy):
         p_id = ctx.get('prev_frame_id')
         c_id = ctx.get('current_frame_id')
         n_id = ctx.get('next_frame_id')
+
+        prev_frame_meta = ctx.get('prev_frame_meta')
+        curr_frame_meta = ctx.get('curr_frame_meta')
+        next_frame_meta = ctx.get('next_frame_meta')
         
         # 3. Build Prompt
         prompt = f"RELATION: '{relation_text}'\n\n--- CONTEXT ---\n"
-        if p_id: prompt += f"[PREVIOUS SCENE ID: {p_id}]:\n{prev_txt}\n\n"
-        if c_id: prompt += f"[CURRENT SCENE ID: {c_id}]:\n{curr_txt}\n\n"
-        if n_id: prompt += f"[NEXT SCENE ID: {n_id}]:\n{next_txt}"
-        
-        return prompt
+        if p_id: prompt += f"[PREV_FRAME: ID {p_id}, FRAME_META '{prev_frame_meta}']:\n{prev_txt}\n\n"
+        if c_id: prompt += f"[CURR_FRAME: ID {c_id}, FRAME_META '{curr_frame_meta}']:\n{curr_txt}\n\n"
+        if n_id: prompt += f"[NEXT_FRAME: ID {n_id}, FRAME_META '{next_frame_meta}']:\n{next_txt}"
 
-    def _parse_answer(self, answer_text: str):
-        return json_parser(answer_text)
+        return prompt

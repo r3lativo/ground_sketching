@@ -51,8 +51,8 @@ async def main():
     # 1. Load directories
     in_dir = Path(args.input_dir)
     out_dir = Path(args.output_dir)
-    if out_dir == 'output/':
-        out_dir = out_dir / 'fake' if args.fake_servers else out_dir
+    out_dir = out_dir / 'fake' if args.fake_servers else out_dir
+    if args.output_dir == 'output/':
         out_dir = out_dir / date_time
 
     if not in_dir.exists():
@@ -182,7 +182,7 @@ async def main():
         for dm in data_managers:
             await dm.save()
 
-    logger.info("Experiment Completed Successfully.")
+    logger.info(f"Experiment Completed Successfully. Saved at: '{out_dir}'")
 
 if __name__ == "__main__":
     try:
