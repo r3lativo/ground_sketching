@@ -31,7 +31,7 @@ vlm_service:
     tensor_parallel_size: 2
     gpu_memory_utilization: 0.9
     dtype: "bfloat16"
-    max_model_len: 30000  # TOTAL limit (input+output)
+    max_model_len: 32768  # TOTAL limit (input+output)
     trust_remote_code: true
     vllm_seed: 0
 
@@ -39,4 +39,4 @@ vlm_client:
   seed: 0
   top_p: 0.95
   temperature: 0.8
-  max_tokens: 15000  # OUTPUT limit
+  max_tokens: 16384  # OUTPUT limit
