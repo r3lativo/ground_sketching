@@ -121,5 +121,5 @@ module load cuda/12.4.1
 Once the servers are running, you can run the augmenter, that takes a conversation and creates prompts to "render" to images via the diffusion model.
 
 ```bash
-python -m src.augmenter --input_dir "data/test/" --create_aug --gen_images_from_aug --relation_triplets --fake_servers #[OPTIONAL --oracle]
+python -m src.augmenter --input_dir "data/test_fake/" --create_aug --gen_images_from_aug --relation_triplets --fake_servers #[OPTIONAL --oracle]
 ```

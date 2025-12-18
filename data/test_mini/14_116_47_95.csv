@@ -1,0 +1,18 @@
+msg,time,user,A_type,B_type,m-type,receiver,A_inst,B_inst,userID,DU ID,Grounding Act,Opened CGUs,Grounded CGUs,Degree,m_type
+Hello ,0:00:06,A,/d/dining_room,/c/casino/outdoor,text,All,/d/dining_room/ADE_train_00007065.jpg,/c/casino/outdoor/ADE_train_00005216.jpg,176.0,,,,,,
+In the dining room now,0:00:13,A,/d/dining_room,/c/casino/outdoor,text,All,/d/dining_room/ADE_train_00007065.jpg,/c/casino/outdoor/ADE_train_00005216.jpg,176.0,[1],['Initiate'],[1],[],[],
+hi,0:00:16,B,/d/dining_room,/c/casino/outdoor,text,All,/d/dining_room/ADE_train_00007065.jpg,/c/casino/outdoor/ADE_train_00005216.jpg,177.0,,,,,,
+Will meet at the wine cellar,0:00:22,A,/d/dining_room,/w/wine_cellar/bottle_storage,text,All,/d/dining_room/ADE_train_00007065.jpg,/w/wine_cellar/bottle_storage/ADE_train_00000969.jpg,176.0,[2],['Initiate'],[2],[],[],
+"are there two bottom rectangle shelves, and some diamond ones on top",0:01:04,B,/w/wine_cellar/bottle_storage,/w/wine_cellar/bottle_storage,text,All,/w/wine_cellar/bottle_storage/ADE_train_00020063.jpg,/w/wine_cellar/bottle_storage/ADE_train_00000969.jpg,177.0,"[4, 8]","['Use', 'Initiate']",[8],[4],['medium'],
+let me change the room.,0:01:04,B,/w/wine_cellar/bottle_storage,/w/wine_cellar/bottle_storage,text,All,/w/wine_cellar/bottle_storage/ADE_train_00020063.jpg,/w/wine_cellar/bottle_storage/ADE_train_00000969.jpg,177.0,"[4, 8]","['Use', 'Initiate']",[8],[4],['medium'],
+Im on the farm,0:01:04,A,/k/kennel/outdoor,/g/game_room,text,All,/k/kennel/outdoor/ADE_train_00010105.jpg,/g/game_room/ADE_train_00008406.jpg,393.0,[101],['Initiate'],[101],[101],[],
+I'm in the game room,0:01:10,B,/k/kennel/outdoor,/g/game_room,text,All,/k/kennel/outdoor/ADE_train_00010105.jpg,/g/game_room/ADE_train_00008406.jpg,394.0,"[101, 102]","['Move', 'Initiate']",[102],"[102, 103]",['low'],
+I can try heading North,0:01:35,B,/d/dining_room,/g/game_room,text,All,/d/dining_room/ADE_train_00006952.jpg,/g/game_room/ADE_train_00008406.jpg,394.0,[103],['Initiate'],[103],,[],
+I made it to a dining area,0:01:44,A,/d/dining_room,/l/living_room,text,All,/d/dining_room/ADE_train_00006952.jpg,/l/living_room/ADE_train_00011432.jpg,393.0,"[102, 103, 104]","['Move', 'Move', 'Initiate']",[104],,"['low', 'low']",
+I'm heading to a new location.,0:01:44,A,/d/dining_room,/l/living_room,text,All,/d/dining_room/ADE_train_00006952.jpg,/l/living_room/ADE_train_00011432.jpg,393.0,"[102, 103, 104]","['Move', 'Move', 'Initiate']",[104],,"['low', 'low']",
+i am in the bathroom,0:01:44,A,/b/bathroom,/a/apartment_building/outdoor,text,All,/b/bathroom/ADE_train_00002739.jpg,/a/apartment_building/outdoor/ADE_train_00001414.jpg,172.0,[201],['Initiate'],[201],[201],[],
+where are you at?,0:01:55,A,/b/bathroom,/a/apartment_building/outdoor,text,All,/b/bathroom/ADE_train_00002739.jpg,/a/apartment_building/outdoor/ADE_train_00001414.jpg,172.0,[202],['Initiate'],[202],[203],[],
+I'm outside. Let's move around a bit.,0:01:59,B,/b/bathroom,/a/apartment_building/outdoor,text,All,/b/bathroom/ADE_train_00002739.jpg,/a/apartment_building/outdoor/ADE_train_00001414.jpg,173.0,"[201, 203]","['Move', 'Initiate']",[203],[204],['low'],
+What was the color of the stair in my basement like?,0:07:12,B,,,Question,,,,,,,,,,
+It was white in color,0:07:16,A,,,Answer,,,,,,,,,,
+white,,,,,,,,,,,,,,,answer_line

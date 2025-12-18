@@ -1,14 +1,14 @@
 #!/bin/bash
 # run_experiment.sh
 
-#SBATCH --job-name=visual_augmentation
+#SBATCH --job-name=va_temporal
 #SBATCH --output=/lustre/fswork/projects/rech/bgp/upa38qy/ground_sketching/slurm_logs/%j.out 
 #SBATCH --error=/lustre/fswork/projects/rech/bgp/upa38qy/ground_sketching/slurm_logs/%j.err 
 #SBATCH --constraint=a100
 #SBATCH --nodes=1
 #SBATCH --gres=gpu:3
 #SBATCH --cpus-per-task=16
-#SBATCH --time=08:00:00
+#SBATCH --time=16:00:00
 #SBATCH --account=bgp@a100
 
 cd $SLURM_SUBMIT_DIR
@@ -102,15 +102,15 @@ echo "All services are healthy. Proceeding..."
 # 4. Run Experiment
 
 # Define Input Folder
-# INPUT_DIR="/lustre/fswork/projects/rech/bgp/ucm29gh/code/jeanzay-rl/data/IndiRef/meetup_final/Spatial"
-INPUT_DIR="output/1216_105810/73_33_347_264"
+INPUT_DIR="/lustre/fswork/projects/rech/bgp/ucm29gh/code/jeanzay-rl/data/IndiRef/meetup_final/Temporal"
 
 python -m src.augmenter \
     --input_dir "$INPUT_DIR" \
+    --output_dir "output/Temporal_VA" \
     --create_aug \
     --gen_images_from_aug \
     --relation_triplets \
-    --n_files 1
+    --n_files 200
 
 # 4. Cleanup
 echo "--- CLEANING UP ---"
