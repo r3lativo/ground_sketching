@@ -34,8 +34,8 @@ def parse_arguments():
     parser.add_argument("--relation_triplets", action='store_true', help="Run Stage 3: Create triplets from relations")
     parser.add_argument("--candidate_count", type=int, default=3, help="How many images to generate and check?")
 
-    parser.add_argument("--vlm_concurrency", type=int, default=8, help="VLM Max Concurrent API Requests")
-    parser.add_argument("--img_concurrency", type=int, default=4, help="IMG Max Concurrent API Requests")
+    parser.add_argument("--vlm_concurrency", type=int, default=35, help="VLM Max Concurrent API Requests")
+    parser.add_argument("--img_concurrency", type=int, default=1, help="IMG Max Concurrent API Requests")
     parser.add_argument("--oracle", action='store_true', help="Oracle Context Mode")
     
     parser.add_argument("--fake_servers", action='store_true', help="Use Mock Clients but run full pipeline logic")

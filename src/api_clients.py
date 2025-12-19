@@ -49,7 +49,7 @@ def _should_retry_error(exception: BaseException) -> bool:
         
     return False
 
-def get_retry_config(min_wait=2, max_wait=20, attempts=3):
+def get_retry_config(min_wait=60, max_wait=300, attempts=5):
     """
     Returns a configured decorator.
     Usage: @get_retry_config(min_wait=5)
@@ -316,7 +316,7 @@ class APIClient:
         context: Optional[List[str]] = None,
         previous_prompts: Optional[List[str]] = None,
         has_images: Optional[bool] = False,
-        timeout: Optional[float] = 480
+        timeout: Optional[float] = 1200
     ) -> StrategyDecision:
         
         if not self.client: raise RuntimeError("Client not initialized.")
@@ -370,11 +370,11 @@ class APIClient:
             validation_schema=TypeAdapter(TextResponse) if TypeAdapter else None
         )
 
-    @get_retry_config(min_wait=5, max_wait=30)
+    @get_retry_config()
     async def execute_vlm_strategy(
         self, strategy: PromptStrategy, utterance: Optional[str] = "",
         context: Optional[List[str]] = None, previous_prompts: Optional[List[str]] = None,
-        images: Optional[List[str]] = None, timeout: Optional[float] = 480, 
+        images: Optional[List[str]] = None, timeout: Optional[float] = 1200, 
         validation_schema: Any = None, max_correction_attempts: int = 2,
         **kwargs
     ) -> Optional[Any]:
@@ -463,7 +463,7 @@ class APIClient:
 
         return None
 
-    @get_retry_config(min_wait=5, max_wait=60)
+    @get_retry_config(min_wait=20, max_wait=60)
     async def call_image_gen(
         self, prompt: str, base64_images: Optional[List[str]],
         seed: Optional[int] = None, timeout: Optional[float] = 120
@@ -485,15 +485,15 @@ class APIClient:
             "num_inference_steps": cfg.get("num_inference_steps"),
         }
 
-        logger.info(f"[API] Generating Img: {prompt}... (Seed: {seed})")
+        logger.info(f"[API] Generating Img: {prompt} (Seed: {seed})")
         response = await self.client.post(endpoint, json=payload, timeout=timeout)
         response.raise_for_status()
         return response.json().get("image")
 
     # --- VISUAL VERIFICATION & FAITHFULNESS ---
 
-    @get_retry_config(min_wait=5, max_wait=30)
-    async def call_prompt_summarizer(self, context: List[str], timeout: Optional[float] = 480) -> List[str]:
+    @get_retry_config()
+    async def call_prompt_summarizer(self, context: List[str], timeout: Optional[float] = 1200) -> List[str]:
         validator = TypeAdapter(SummarizeResponse)
         
         result = await self.execute_vlm_strategy(
@@ -506,8 +506,8 @@ class APIClient:
             return result.get('facts', [])
         return []
 
-    @get_retry_config(min_wait=5, max_wait=30)
-    async def call_visual_verifier(self, facts: List[str], base64_image: str, timeout: Optional[float] = 480) -> List[Dict]:
+    @get_retry_config()
+    async def call_visual_verifier(self, facts: List[str], base64_image: str, timeout: Optional[float] = 1200) -> List[Dict]:
         validator = TypeAdapter(FactCheckResponse)
             
         result = await self.execute_vlm_strategy(
@@ -522,8 +522,8 @@ class APIClient:
             return result.get('verification', [])
         return []
 
-    @get_retry_config(min_wait=5, max_wait=30)
-    async def call_image_captioner(self, base64_images: List[str], timeout: Optional[float] = 480) -> Optional[str]:
+    @get_retry_config()
+    async def call_image_captioner(self, base64_images: List[str], timeout: Optional[float] = 1200) -> Optional[str]:
         validator = TypeAdapter(CaptionResponse)
         
         result = await self.execute_vlm_strategy(
@@ -572,8 +572,8 @@ class APIClient:
         
         return (true_count / len(facts)), verification_results
 
-    @get_retry_config(min_wait=5, max_wait=30)
-    async def call_triplets_extraction(self, utterance: str, context: dict, timeout: Optional[float] = 480) -> List[Dict]:
+    @get_retry_config()
+    async def call_triplets_extraction(self, utterance: str, context: dict, timeout: Optional[float] = 1200) -> List[Dict]:
         validator = TypeAdapter(TripletResponse)
 
         result = await self.execute_vlm_strategy(
