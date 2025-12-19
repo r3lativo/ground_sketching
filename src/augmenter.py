@@ -39,7 +39,8 @@ def parse_arguments():
     parser.add_argument("--oracle", action='store_true', help="Oracle Context Mode")
     
     parser.add_argument("--fake_servers", action='store_true', help="Use Mock Clients but run full pipeline logic")
-    
+    parser.add_argument("--text_only", action='store_true', help="Run in Text-Only mode (LLM only, no Image Gen)")
+
     return parser, parser.parse_args()
 
 async def main():
@@ -59,6 +60,9 @@ async def main():
         logger.error(f"Input directory does not exist: {in_dir}")
         sys.exit(1)
 
+    if text_only:
+        args.gen_images_from_aug = False
+
     # 2. Verify Services
     verify_services(args)
 
@@ -77,10 +81,11 @@ async def main():
     else:
         ClientClass = APIClient
 
-    # Initialize Resources
+    # Initialize Resources with text_only flag
     api_client = ClientClass(
         args.server_config_path,
-        args.experiment_config_path
+        args.experiment_config_path,
+        text_only=args.text_only
     )
     
     pipeline = AugmentationPipeline(api_client)
@@ -116,7 +121,8 @@ async def main():
             # Setup Directory Structure
             (csv_out_dir / "logs").mkdir(parents=True, exist_ok=True)
             (csv_out_dir / "traces").mkdir(parents=True, exist_ok=True)
-            (csv_out_dir / "images").mkdir(parents=True, exist_ok=True)
+            if not text_only:
+                (csv_out_dir / "images").mkdir(parents=True, exist_ok=True)
 
             # Output CSV path
             aug_csv_path = csv_out_dir / f"{csv_file.stem}_aug.csv"
@@ -158,7 +164,8 @@ async def main():
                         'oracle': args.oracle,
                         'relation_triplets': args.relation_triplets,
                         'candidate_count': args.candidate_count,
-                        'img_output_dir': csv_out_dir / "images"
+                        'img_output_dir': csv_out_dir / "images",
+                        'text_only': args.text_only
                     }
                     
                     tasks.append(

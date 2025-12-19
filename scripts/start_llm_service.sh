@@ -4,7 +4,7 @@ set -e # Exit immediately if any command fails
 
 CONFIG_FILE="config/server_config.yaml"
 CONFIG_GATEWAY="gateway"
-CONFIG_BACKEND="vlm_service"
+CONFIG_BACKEND="llm_service"
 
 echo "--- 1. Reading configuration from $CONFIG_FILE ---"
 # Use 'yq' to parse the YAML config file and set shell variables
@@ -52,7 +52,6 @@ vllm serve \
     --trust-remote-code \
     --host "$VLLM_HOST" \
     --port $VLLM_PORT \
-    --limit_mm_per_prompt  '{"images": 1, "videos": 0, "audios": 0}'\
     2>&1 | tee -a "logs/vllm_serve.log" & # Appends to the log file
 
 VLLM_PID=$!

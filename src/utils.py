@@ -184,8 +184,8 @@ def verify_services(args):
         failed = []
 
         # Check VLM Gateway
-        vlm = cfg['vlm_service']['gateway']
-        if not check_server(vlm['host'], vlm['port']):
+        gateway = cfg['gateway']
+        if not check_server(gateway['host'], gateway['port']):
             failed.append("Prompt Polisher (VLM)")
 
         # Check Image Gen (only if rendering)

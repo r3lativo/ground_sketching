@@ -1,12 +1,12 @@
 #!/bin/bash
 # run_experiment.sh
 
-#SBATCH --job-name=va_test_m
+#SBATCH --job-name=ta_test_m
 #SBATCH --output=/lustre/fswork/projects/rech/bgp/upa38qy/ground_sketching/slurm_logs/%j.out 
 #SBATCH --error=/lustre/fswork/projects/rech/bgp/upa38qy/ground_sketching/slurm_logs/%j.err 
 #SBATCH --constraint=a100
 #SBATCH --nodes=1
-#SBATCH --gres=gpu:3
+#SBATCH --gres=gpu:2
 #SBATCH --cpus-per-task=16
 #SBATCH --time=4:00:00
 #SBATCH --account=bgp@a100
@@ -24,13 +24,9 @@ export PATH=$HOME/.local/bin:$PATH
 # 2. Start Services
 echo "--- STARTING SERVICES ---"
 
-# Launch VLM (GPUs 0,1)
+# Launch LLM (GPUs 0,1)
 ./scripts/start_vlm_service.sh &
 VLM_SERVICE_PID=$!
-
-# Launch Image Gen (GPU 2)
-./scripts/start_image_gen_service.sh &
-IMG_GEN_SERVICE_PID=$!
 
 
 # --- 3. Wait for Services (Bash + yq) ---
@@ -44,26 +40,19 @@ get_local_host() {
     if [ "$host" == "0.0.0.0" ]; then echo "127.0.0.1"; else echo "$host"; fi
 }
 
-# 1. Extract Image Gen Config
-IMG_HOST_RAW=$(yq -r '.image_gen_service.host' $CONFIG_FILE)
-IMG_PORT=$(yq -r '.image_gen_service.port' $CONFIG_FILE)
-IMG_HOST=$(get_local_host "$IMG_HOST_RAW")
-IMG_URL="http://${IMG_HOST}:${IMG_PORT}/health"
-
-# 2. Extract VLM Gateway Config
+# 1. Extract VLM Gateway Config
 GW_HOST_RAW=$(yq -r '.gateway.host' $CONFIG_FILE)
 GW_PORT=$(yq -r '.gateway.port' $CONFIG_FILE)
 GW_HOST=$(get_local_host "$GW_HOST_RAW")
 GW_URL="http://${GW_HOST}:${GW_PORT}/health"
 
-# 3. Extract VLM Backend (vLLM) Config
-VLLM_HOST_RAW=$(yq -r '.vlm_service.vllm_host' $CONFIG_FILE)
-VLLM_PORT=$(yq -r '.vlm_service.vllm_port' $CONFIG_FILE)
+# 2. Extract VLM Backend (vLLM) Config
+VLLM_HOST_RAW=$(yq -r '.llm_service.vllm_host' $CONFIG_FILE)
+VLLM_PORT=$(yq -r '.llm_service.vllm_port' $CONFIG_FILE)
 VLLM_HOST=$(get_local_host "$VLLM_HOST_RAW")
 VLLM_URL="http://${VLLM_HOST}:${VLLM_PORT}/health"
 
 echo "Target URLs:"
-echo " - Image Gen:   $IMG_URL"
 echo " - VLM Gateway: $GW_URL"
 echo " - VLM Backend: $VLLM_URL"
 
@@ -95,7 +84,6 @@ wait_for_url() {
 # We check Backend first, then Gateway, then Image Gen
 wait_for_url "$VLLM_URL" "vLLM Backend"
 wait_for_url "$GW_URL"   "VLM Gateway"
-wait_for_url "$IMG_URL"  "Image Generation"
 
 echo "All services are healthy. Proceeding..."
 
@@ -108,7 +96,7 @@ python -m src.augmenter \
     --input_dir "$INPUT_DIR" \
     --output_dir "output/test_mini" \
     --create_aug \
-    --gen_images_from_aug \
+    --text_only \
     --relation_triplets \
     --n_files 1
 
