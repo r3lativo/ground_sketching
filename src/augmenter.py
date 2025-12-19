@@ -34,8 +34,8 @@ def parse_arguments():
     parser.add_argument("--relation_triplets", action='store_true', help="Run Stage 3: Create triplets from relations")
     parser.add_argument("--candidate_count", type=int, default=3, help="How many images to generate and check?")
 
-    parser.add_argument("--vlm_concurrency", type=int, default=40, help="VLM Max Concurrent API Requests")
-    parser.add_argument("--img_concurrency", type=int, default=8, help="IMG Max Concurrent API Requests")
+    parser.add_argument("--vlm_concurrency", type=int, default=8, help="VLM Max Concurrent API Requests")
+    parser.add_argument("--img_concurrency", type=int, default=4, help="IMG Max Concurrent API Requests")
     parser.add_argument("--oracle", action='store_true', help="Oracle Context Mode")
     
     parser.add_argument("--fake_servers", action='store_true', help="Use Mock Clients but run full pipeline logic")
@@ -51,7 +51,7 @@ async def main():
     # 1. Load directories
     in_dir = Path(args.input_dir)
     out_dir = Path(args.output_dir)
-    out_dir = out_dir / 'fake' if args.fake_servers else out_dir
+    out_dir = out_dir / '_fake' if args.fake_servers else out_dir
     if args.output_dir == 'output/':
         out_dir = out_dir / date_time
 
@@ -91,6 +91,7 @@ async def main():
     
     # 5. Build Tasks (Collect ALL tasks from ALL files first)
     tasks = [] 
+    task_metadata = []
     data_managers = []
 
     # Accumulator for total steps
@@ -169,13 +170,42 @@ async def main():
                         )
                     )
 
+                    task_metadata.append({"file": Path(dm.source_path).name,"user": user})
+
             # Execute
             results = await asyncio.gather(*tasks, return_exceptions=True)
             
-            # Error reporting
+            # --- Failure Reporting Logic ---
+            failures = []
+            success_count = 0
+            
             for i, res in enumerate(results):
-                    if isinstance(res, Exception):
-                        logger.error(f"Task {i} failed: {res}")
+                if isinstance(res, Exception):
+                    # Match the result index back to the metadata index
+                    meta = task_metadata[i]
+                    failure_entry = f"FILE: {meta['file']} | USER: {meta['user']} | REASON: {str(res)}"
+                    failures.append(failure_entry)
+                    logger.error(f"Task Failed: {failure_entry}")
+                else:
+                    success_count += 1
+
+            # Write Simple Report
+            report_path = out_dir / "failures_report.txt"
+            with open(report_path, "w", encoding="utf-8") as f:
+                f.write(f"--- EXECUTION SUMMARY ---\n")
+                f.write(f"Total Tasks: {len(tasks)}\n")
+                f.write(f"Successful:  {success_count}\n")
+                f.write(f"Failed:      {len(failures)}\n")
+                f.write(f"-------------------------\n\n")
+                
+                if failures:
+                    f.write("--- DETAILED FAILURES ---\n")
+                    for fail in failures:
+                        f.write(f"{fail}\n")
+                else:
+                    f.write("No failures detected.\n")
+            
+            logger.info(f"Failure report saved to: {report_path}")
 
         # 7. Final Save
         logger.info("All tasks done. Performing final save...")
