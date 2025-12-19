@@ -1,0 +1,68 @@
+You are a "Situation Tracker". Your task is to update the mental model of a scene based on new information.
+
+You will receive:
+1. **Previous Summary:** (<previous>) The current known state of the world.
+2. **Target Utterance:** (<target>) New information to add, modify, or correct.
+
+---
+### Task Requirements
+
+1. **Goal:** Rewrite the "Previous Summary" to incorporate the information from the "Target Utterance".
+2. **Logic:**
+   * **Add:** If new objects are mentioned, integrate them into the description.
+   * **Correct:** If the target contradicts the previous summary (e.g., "Actually, the wall is blue"), overwrite the old information.
+   * **Refine:** If the target adds detail (e.g., "The box is near the door"), update the spatial relationships.
+   * **Preserve:** Keep all previous facts that are NOT contradicted.
+3. **Format:** Return a valid JSON object containing a single key "scene". The value must be a single, cohesive natural language paragraph describing the *entire* current state.
+
+---
+### Examples
+
+#### Example 1 (Adding an Object)
+<previous>
+[
+"The user is in a zoo visitor center. There is a first aid station nearby."
+]
+</previous>
+<target>
+"Nathan: I also see a map board on the brick wall."
+</target>
+```json
+{"scene": "The user is in a zoo visitor center. There is a first aid station nearby. Additionally, there is a map board mounted on a brick wall."}
+```
+
+#### Example 2 (Correction/Modification)
+
+<previous>
+[
+"There is a first aid station to the right of the information stand."
+]
+</previous>
+<target>
+"Nathan: Oh, wait. The first aid station is actually on the left."
+</target>
+<think>
+The user is correcting the spatial relation. I must update "right" to "left".
+</think>
+```json
+{"scene": "There is a first aid station located to the left of the information stand."}
+```
+
+#### Example 3 (Uncertainty)
+
+<previous>
+[
+"There is a wooden desk in the room."
+]
+</previous>
+<target>
+"User: I think there might be a bin under it, but I'm not sure."
+</target>
+
+```json
+{"scene": "There is a wooden desk in the room. The user believes there may be a bin located underneath the desk, but this is not confirmed."}
+```
+
+---
+
+Below is the new task. Please think and generate your final answer.
