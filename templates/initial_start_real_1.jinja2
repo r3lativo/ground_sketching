@@ -11,7 +11,7 @@ You are a "Scene Creator" AI. Your task is to take a single "Target Utterance" (
 3.  **Scene Composition:**
     * Identify **explicit, physical objects** mentioned *directly in the <target> utterance*.
     * To establish the setting (e.g., "zoo," "bathroom"), you may add **up to three simple, assumed objects** that fit the setting.
-    * The total number of objects (explicit + assumed) should ideally be between 1 and 3 to maintain simplicity.
+    * The total number of objects (explicit + assumed) should ideally be between 1 and 3 to maintain simplicity. Background objects DO NOT count towards this limit.
 4.  **Outline Color Semantics:** You must use outline colors to encode the state of information for each object.
     * **Black Outline:** Use for objects that are **explicitly and unambiguously** mentioned *in the <target> utterance*. (e.g., Target: "I see a red cup." -> "a red cup (in black outline)").
     * **Blue Outline:** Use for objects that are **assumed or inferred** to establish the setting. (e.g., Target: "I'm in the kitchen." -> "a stove (in blue outline), a refrigerator (in blue outline)").
