@@ -39,7 +39,8 @@ def parse_arguments():
     parser.add_argument("--oracle", action='store_true', help="Oracle Context Mode")
     
     parser.add_argument("--fake_servers", action='store_true', help="Use Mock Clients but run full pipeline logic")
-    
+    parser.add_argument("--text_only", action='store_true', help="Run in Text-Only mode (LLM only, no Image Gen)")
+
     return parser, parser.parse_args()
 
 async def main():
@@ -51,13 +52,21 @@ async def main():
     # 1. Load directories
     in_dir = Path(args.input_dir)
     out_dir = Path(args.output_dir)
-    out_dir = out_dir / '_fake' if args.fake_servers else out_dir
+
+    # Append subdir for fake server modes
+    if args.fake_servers:
+        out_dir = out_dir / ("_fake_text_only" if args.text_only else "_fake")
+
+    # Add timestamp if using the default output root
     if args.output_dir == 'output/':
         out_dir = out_dir / date_time
 
     if not in_dir.exists():
         logger.error(f"Input directory does not exist: {in_dir}")
         sys.exit(1)
+
+    if args.text_only:
+        args.gen_images_from_aug = False
 
     # 2. Verify Services
     verify_services(args)
@@ -77,10 +86,11 @@ async def main():
     else:
         ClientClass = APIClient
 
-    # Initialize Resources
+    # Initialize Resources with text_only flag
     api_client = ClientClass(
         args.server_config_path,
-        args.experiment_config_path
+        args.experiment_config_path,
+        text_only=args.text_only
     )
     
     pipeline = AugmentationPipeline(api_client)
@@ -116,7 +126,8 @@ async def main():
             # Setup Directory Structure
             (csv_out_dir / "logs").mkdir(parents=True, exist_ok=True)
             (csv_out_dir / "traces").mkdir(parents=True, exist_ok=True)
-            (csv_out_dir / "images").mkdir(parents=True, exist_ok=True)
+            if not args.text_only:
+                (csv_out_dir / "images").mkdir(parents=True, exist_ok=True)
 
             # Output CSV path
             aug_csv_path = csv_out_dir / f"{csv_file.stem}_aug.csv"
@@ -158,7 +169,8 @@ async def main():
                         'oracle': args.oracle,
                         'relation_triplets': args.relation_triplets,
                         'candidate_count': args.candidate_count,
-                        'img_output_dir': csv_out_dir / "images"
+                        'img_output_dir': csv_out_dir / "images",
+                        'text_only': args.text_only
                     }
                     
                     tasks.append(

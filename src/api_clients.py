@@ -132,7 +132,7 @@ class StrategyDecision:
 class APIClient:
     """Manages connections to the services."""
 
-    def __init__(self, server_config_path: str, experiment_config_path: str):
+    def __init__(self, server_config_path: str, experiment_config_path: str, text_only: bool):
         self.config = {}
         self.strategies: Dict[str, PromptStrategy] = {}
         self.image_gen_url = ""
@@ -140,6 +140,7 @@ class APIClient:
         self.client: Optional[httpx.AsyncClient] = None
         
         self._load_configurations(server_config_path, experiment_config_path)
+        self.text_only = text_only
         self._init_jinja_and_strategies()
 
     async def __aenter__(self):
@@ -160,7 +161,7 @@ class APIClient:
             self.config = load_config(config_path=server_conf)
             self.config.update(load_config(config_path=exp_conf))
             self.image_gen_url = f"http://{self.config['image_gen_service']['host']}:{self.config['image_gen_service']['port']}"
-            self.vllm_api_url = f"http://{self.config['vlm_service']['gateway']['host']}:{self.config['vlm_service']['gateway']['port']}"
+            self.vllm_api_url = f"http://{self.config['gateway']['host']}:{self.config['gateway']['port']}"
             logger.info(f"[API CLIENTS] Initialized. Img: {self.image_gen_url}, vLLM: {self.vllm_api_url}")
         except Exception as e:
             logger.error(f"[API CLIENTS] Config load failed: {e}", exc_info=True)
@@ -177,15 +178,33 @@ class APIClient:
             def load_strat(cls, template_key):
                 return cls(env.get_template(jinja_conf[template_key]).render())
 
+            # Strategy Switching Logic
+            if self.text_only:
+                # Use "Summary" strategies for Text-Only mode
+                # Ensure you add 'text_only_start' and 'text_only_edit' to your experiment_config.yaml
+                simple_strat = load_strat(TextCreateStrategy, 'text_only_start_r1')
+                create_strat = load_strat(TextCreateStrategy, 'text_only_start_r2')
+                edit_strat   = load_strat(TextEditStrategy,   'text_only_edit')
+            else:
+                # Use "Visual Description" strategies for Standard mode
+                simple_strat = load_strat(TextCreateStrategy, 'initial_start_r1')
+                create_strat = load_strat(TextCreateStrategy, 'initial_start_r2')
+                edit_strat   = load_strat(TextEditStrategy,   'initial_edit_r')
+
             self.strategies = {
                 'meta_extraction': load_strat(MetaStrategy, 'meta_extraction'),
+
                 'oracle_create_context': load_strat(TextCreateStrategy, 'initial_start_o'),
                 'oracle_edit_context': load_strat(TextEditStrategy, 'initial_edit_o'),
                 'oracle_simple': load_strat(TextCreateStrategy, 'final_start_t'),
-                'real_create_context': load_strat(TextCreateStrategy, 'initial_start_r2'),
-                'real_edit_context': load_strat(TextEditStrategy, 'initial_edit_r'),
-                'real_simple': load_strat(TextCreateStrategy, 'initial_start_r1'),
+                
+                # Dynamic Strategies based on mode
+                'real_simple': simple_strat,
+                'real_create_context': create_strat,
+                'real_edit_context': edit_strat,
+
                 'multimodal_edit': load_strat(MultimodalEditStrategy, 'final_edit_t'),
+
                 'summarize': load_strat(SummarizeStrategy, 'summarize_t'),
                 'caption': load_strat(CaptionStrategy, 'caption_t'),
                 'fact_check': load_strat(FactCheckStrategy, 'fact_t'),
@@ -382,7 +401,11 @@ class APIClient:
         if not self.client: raise RuntimeError("Client not initialized.")
         
         # 0. Setup Configuration
-        client_config = self.config.get("vlm_client", {})
+        if self.text_only:
+            client_config = self.config.get("llm_client", {})
+        else:
+            client_config = self.config.get("vlm_client", {})
+        
         if hasattr(strategy, 'default_params'):
             client_config.update(strategy.default_params)
         endpoint = f"{self.vllm_api_url}{strategy.endpoint_suffix}"
@@ -408,7 +431,7 @@ class APIClient:
                 # Before parsing, check if we hit the "infinite thinking" bug.
                 # If <think> is unclosed, strategies.process_response will fail or return garbage.
                 if "<think>" in raw_text and "</think>" not in raw_text:
-                    raise ValidationError("Runaway thought detected (Unclosed <think> tag).")
+                    raise ValueError("Runaway thought detected (Unclosed <think> tag).")
 
                 # B. Parsing
                 parsed_data = strategy.process_response(raw_text)
@@ -420,12 +443,6 @@ class APIClient:
                 # Capture technical error for logs
                 try: error_json = e.json()
                 except: error_json = str(e)
-                
-                logger.warning(f"[API] Validation Failed (Attempt {attempt+1}): {error_json}")
-
-                if attempt >= max_correction_attempts:
-                    logger.error("[API] Max retries exhausted.")
-                    return None
 
                 # --- GENERATE FRIENDLY MESSAGE ---
                 # Translate the error into Natural Language + Context
@@ -433,6 +450,12 @@ class APIClient:
                 
                 if isinstance(e, ValidationError) and validation_schema:
                     friendly_error_msg = self._generate_friendly_error_msg(e, validation_schema, raw_text)
+                
+                logger.warning(f"[API] Validation Failed (Attempt {attempt+1}): {friendly_error_msg}")
+
+                if attempt >= max_correction_attempts:
+                    logger.error("[API] Max retries exhausted.")
+                    return None
 
                 # --- RETRY LOGIC ---
                 

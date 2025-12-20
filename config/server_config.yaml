@@ -4,7 +4,7 @@ image_gen_service:
   host: "0.0.0.0"
   port: 8002
   model_id: "Qwen/Qwen-Image-Edit-2509"
-  lora_path: "Qwen-Image-Lightning/Qwen-Image-Edit-2509/Qwen-Image-Edit-2509-Lightning-8steps-V1.0-fp32.safetensors"
+  lora_path: "/lustre/fswork/projects/rech/bgp/upa38qy/ground_sketching/Qwen-Image-Lightning/Qwen-Image-Edit-2509/Qwen-Image-Edit-2509-Lightning-8steps-V1.0-fp32.safetensors"
 
 image_gen_client:
   seed: 0
@@ -12,28 +12,44 @@ image_gen_client:
   true_cfg_scale: 4.0
   negative_prompt: " "
 
-vlm_service:
+# Settings for the gateway (src/vllm_gateway.py)
+gateway: 
+  host: "0.0.0.0"
+  port: 8001
 
-  # Settings for the gateway (src/vllm_gateway.py)
-  gateway: 
-    host: "0.0.0.0"
-    port: 8001
-  
-  # Settings for the vLLM server (scripts/start_vlm_service.sh)
-  backend: 
-    # model_id: "/lustre/fsmisc/dataset/HuggingFace_Models/Qwen/Qwen2.5-VL-32B-Instruct"
-    #THINKING
-    model_id: "/linkhome/rech/genxzs01/upa38qy/.cache/huggingface/hub/models--Qwen--Qwen3-VL-32B-Thinking/snapshots/7edd10ffd1196091948fb245ff63e406ccb2d4d1"
-    # #INSTRUCT
-    # model_id: "/linkhome/rech/genxzs01/upa38qy/.cache/huggingface/hub/models--Qwen--Qwen3-VL-32B-Instruct/snapshots/0cfaf48183f594c314753d30a4c4974bc75f3ccb"
-    vllm_host: "127.0.0.1"
-    vllm_port: 8008
-    tensor_parallel_size: 2
-    gpu_memory_utilization: 0.9
-    dtype: "bfloat16"
-    max_model_len: 32768  # TOTAL limit (input+output)
-    trust_remote_code: true
-    vllm_seed: 0
+# Settings for the TEXT ONLY vLLM server (scripts/start_llm_service.sh)
+llm_service:
+  model_id: "/lustre/fsmisc/dataset/HuggingFace_Models/Qwen/Qwen3-32B"
+  vllm_host: "127.0.0.1"
+  vllm_port: 8007
+  tensor_parallel_size: 2
+  gpu_memory_utilization: 0.9
+  dtype: "bfloat16"
+  max_model_len: 32768  # TOTAL limit (input+output)
+  trust_remote_code: true
+  vllm_seed: 0
+
+llm_client:
+  seed: 0
+  top_p: 0.95
+  temperature: 0.6
+  max_tokens: 16384  # OUTPUT limit
+
+# Settings for the VISION LANGUAGE vLLM server (scripts/start_vlm_service.sh)
+vlm_service:
+  # model_id: "/lustre/fsmisc/dataset/HuggingFace_Models/Qwen/Qwen2.5-VL-32B-Instruct"
+  #THINKING
+  model_id: "/linkhome/rech/genxzs01/upa38qy/.cache/huggingface/hub/models--Qwen--Qwen3-VL-32B-Thinking/snapshots/7edd10ffd1196091948fb245ff63e406ccb2d4d1"
+  # #INSTRUCT
+  # model_id: "/linkhome/rech/genxzs01/upa38qy/.cache/huggingface/hub/models--Qwen--Qwen3-VL-32B-Instruct/snapshots/0cfaf48183f594c314753d30a4c4974bc75f3ccb"
+  vllm_host: "127.0.0.1"
+  vllm_port: 8008
+  tensor_parallel_size: 2
+  gpu_memory_utilization: 0.9
+  dtype: "bfloat16"
+  max_model_len: 32768  # TOTAL limit (input+output)
+  trust_remote_code: true
+  vllm_seed: 0
 
 vlm_client:
   seed: 0

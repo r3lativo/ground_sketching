@@ -40,6 +40,7 @@ class AugmentationPipeline:
         candidate_count = pipeline_config.get('candidate_count')
         
         img_out_dir = pipeline_config.get('img_output_dir')
+        text_only = pipeline_config.get('text_only')
 
         # Setup Render Path
         user_out_path = None
@@ -86,7 +87,7 @@ class AugmentationPipeline:
             if create:
                 await self._phase_create(
                     data_manager, index, user, oracle,
-                    vlm_semaphore, t_logger
+                    vlm_semaphore, t_logger, text_only
                 )
                 if pbar: pbar.update(1)
 
@@ -135,7 +136,7 @@ class AugmentationPipeline:
         await dm.update_cell(index, 'imagery', decision.imagery)
         await dm.update_cell(index, 'initial_prompt', decision.imagery) # This will be modified in the render phase
 
-    async def _phase_create(self, dm, index, user, oracle, vlm_sem, t_logger):
+    async def _phase_create(self, dm, index, user, oracle, vlm_sem, t_logger, text_only):
         """
         Handles Logic: VLM Decision -> Strategy Execution -> Prompt Update -> Frame ID Generation
         """
@@ -169,8 +170,8 @@ class AugmentationPipeline:
             decision = await self.client.get_meta_and_strategy(
                 is_oracle=oracle,
                 utterance=utterance,
-                context=context,
-                previous_prompts=prev_prompts,
+                context=context, # if not text_only else context[-1:],
+                previous_prompts=prev_prompts if not text_only else prev_prompts[-1:],
                 has_images=False 
             )
 
@@ -249,6 +250,12 @@ class AugmentationPipeline:
             final_prompt_str = new_prompt_data
 
         await dm.update_cell(index, 'initial_prompt', final_prompt_str)
+
+        # [NEW] TEXT-ONLY SHORT CIRCUIT
+        if text_only:
+            # In text-only, the 'initial_prompt' (the summary) IS the final representation.
+            await dm.update_cell(index, 'final_prompt', final_prompt_str)
+
         return True
 
     async def _phase_render(self, dm, index, user, oracle, state, out_path, vlm_sem, img_sem, t_logger, candidate_count):
