@@ -90,6 +90,9 @@ class AugmentationPipeline:
                 )
                 if pbar: pbar.update(1)
 
+                # Save periodically
+                await data_manager.save()
+
             # PHASE 2: RENDER (With Verification)
             if render and user_out_path:
                 await self._phase_render(
@@ -100,8 +103,8 @@ class AugmentationPipeline:
                 )
                 if pbar: pbar.update(1)
             
-            # Save periodically
-            await data_manager.save()
+                # Save periodically
+                await data_manager.save()
 
         # --- B. TRIPLET RELATION ---
         for index in sorted_indices:
@@ -117,8 +120,8 @@ class AugmentationPipeline:
                 )
                 if pbar: pbar.update(1)
 
-            # Save periodically
-            await data_manager.save()
+                # Save periodically
+                await data_manager.save()
 
         # Final save
         await data_manager.save()

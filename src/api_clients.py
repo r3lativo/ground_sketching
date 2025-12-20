@@ -209,7 +209,7 @@ class APIClient:
             
             # Case A: Root Level Error (Model returned raw text instead of JSON)
             if err['type'] == 'model_type' and not loc:
-                error_report.append(f"CRITICAL: You returned a raw string, but a JSON Object is required.")
+                error_report.append(f"CRITICAL: The answer does not match the required JSON format.")
                 
             # Case B: Missing Field (Model used wrong key)
             elif err['type'] == 'missing':
