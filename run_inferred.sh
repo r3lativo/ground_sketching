@@ -51,14 +51,14 @@ IMG_HOST=$(get_local_host "$IMG_HOST_RAW")
 IMG_URL="http://${IMG_HOST}:${IMG_PORT}/health"
 
 # 2. Extract VLM Gateway Config
-GW_HOST_RAW=$(yq -r '.vlm_service.gateway.host' $CONFIG_FILE)
-GW_PORT=$(yq -r '.vlm_service.gateway.port' $CONFIG_FILE)
+GW_HOST_RAW=$(yq -r '.gateway.host' $CONFIG_FILE)
+GW_PORT=$(yq -r '.gateway.port' $CONFIG_FILE)
 GW_HOST=$(get_local_host "$GW_HOST_RAW")
 GW_URL="http://${GW_HOST}:${GW_PORT}/health"
 
 # 3. Extract VLM Backend (vLLM) Config
-VLLM_HOST_RAW=$(yq -r '.vlm_service.backend.vllm_host' $CONFIG_FILE)
-VLLM_PORT=$(yq -r '.vlm_service.backend.vllm_port' $CONFIG_FILE)
+VLLM_HOST_RAW=$(yq -r '.vlm_service.vllm_host' $CONFIG_FILE)
+VLLM_PORT=$(yq -r '.vlm_service.vllm_port' $CONFIG_FILE)
 VLLM_HOST=$(get_local_host "$VLLM_HOST_RAW")
 VLLM_URL="http://${VLLM_HOST}:${VLLM_PORT}/health"
 

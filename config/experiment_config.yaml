@@ -4,36 +4,31 @@ experiment:
   jinja:
     env: 'templates'
 
-    # Originals from https://github.com/QwenLM/Qwen-Image/blob/main/src/examples/tools/prompt_utils.py
-    polish_t: 'polish.jinja2'
-    edit_t: 'polish_edit.jinja2'
-
-    # Modified with style-as-semantics and move/resize commands
-    ## NOT USED AT THE MOMENT
-    mod_polish_t: 'mod_polish.jinja2'
-    mod_polish_edit_t: 'mod_polish_edit.jinja2'
+    # TEXT ONLY SUMMARIES
+    text_only_start_r1: 'text_only/text_only_start_r1.jinja2'
+    text_only_start_r2: 'text_only/text_only_start_r2.jinja2'
+    text_only_edit: 'text_only/text_only_edit.jinja2'
 
     # NEW OR CONTINUE OR SKIP
-    meta_extraction: 'meta_extraction.jinja2'
+    meta_extraction: 'various/meta_extraction.jinja2'
 
     ## FOR AUGMENTER
     # For chunk + utterance to prompt for img generation
     initial_start_o: 'oracle/initial_start_oracle.jinja2'
     initial_edit_o: 'oracle/initial_edit_oracle.jinja2'
 
-    initial_start_r1: 'initial_start_real_1.jinja2'
-    initial_start_r2: 'initial_start_real_2.jinja2'
-    initial_edit_r: 'initial_edit_real.jinja2'
+    initial_start_r1: 'vl/initial_start_real_1.jinja2'
+    initial_start_r2: 'vl/initial_start_real_2.jinja2'
+    initial_edit_r: 'vl/initial_edit_real.jinja2'
 
-    final_start_t: 'final_start.jinja2'
-    final_edit_t: 'final_edit.jinja2'
+    final_start_t: 'vl/final_start.jinja2'
+    final_edit_t: 'vl/final_edit.jinja2'
 
     # NEW STUFF
-    caption_t: 'image_caption.jinja2'
-    summarize_t: 'prompt_summarize.jinja2'
-    fact_t: 'fact_checker.jinja2'
-
-    triplets_extraction_t: 'triplets_extraction.jinja2'
+    caption_t: 'various/image_caption.jinja2'
+    summarize_t: 'various/prompt_summarize.jinja2'
+    fact_t: 'various/fact_checker.jinja2'
+    triplets_extraction_t: 'various/triplets_extraction.jinja2'
 
   meetup:
     datapath:  "/lustre/fswork/projects/rech/bgp/ucm29gh/code/jeanzay-rl/data/IndiRef/meetup_final"
