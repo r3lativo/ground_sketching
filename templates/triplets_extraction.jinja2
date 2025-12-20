@@ -17,14 +17,19 @@ You will receive:
 You must generate a list of triplets in the format `(Subject, Predicate, Object)` that mathematically represents the relationship described in the directive.
 
 ### Output Format
-Return a strict JSON list of objects:
+Return a **single JSON object** containing a key named `"triplets"`. The value should be a list of dictionaries.
+
+**Required JSON Structure:**
 ```json
-[
+{
   "triplets": [
-    {"subject": "{FRAME_ID}", "predicate": "{RELATION_TYPE}", "object": "{FRAME_ID}"}
+    {
+      "subject": "{FRAME_ID}",
+      "predicate": "{RELATION_TYPE}",
+      "object": "{FRAME_ID}"
+    }
   ]
-]
-````
+}
 
 ### Critical Rules
 
