@@ -2,8 +2,8 @@
 # run_experiment.sh
 
 #SBATCH --job-name=ta_test_m
-#SBATCH --output=/lustre/fswork/projects/rech/bgp/upa38qy/ground_sketching/slurm_logs/%j.out 
-#SBATCH --error=/lustre/fswork/projects/rech/bgp/upa38qy/ground_sketching/slurm_logs/%j.err 
+#SBATCH --output=/lustre/fswork/projects/rech/bgp/upa38qy/text_only_pipe/slurm_logs/%j.out 
+#SBATCH --error=/lustre/fswork/projects/rech/bgp/upa38qy/text_only_pipe/slurm_logs/%j.err 
 #SBATCH --constraint=a100
 #SBATCH --nodes=1
 #SBATCH --gres=gpu:2
@@ -25,7 +25,7 @@ export PATH=$HOME/.local/bin:$PATH
 echo "--- STARTING SERVICES ---"
 
 # Launch LLM (GPUs 0,1)
-./scripts/start_vlm_service.sh &
+./scripts/start_llm_service.sh &
 VLM_SERVICE_PID=$!
 
 
@@ -94,7 +94,7 @@ INPUT_DIR="data/test_mini"
 
 python -m src.augmenter \
     --input_dir "$INPUT_DIR" \
-    --output_dir "output/test_mini" \
+    --output_dir "output/text_only_test_mini" \
     --create_aug \
     --text_only \
     --relation_triplets \

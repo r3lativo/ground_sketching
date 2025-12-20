@@ -82,6 +82,6 @@ GATEWAY_PORT=$(yq ".$CONFIG_GATEWAY.port" $CONFIG_FILE)
 echo "The gateway to vllm will be available at http://$GATEWAY_HOST:$GATEWAY_PORT"
 
 # Run the FastAPI gateway Python script in the foreground
-# This keeps this bash script alive and allows the 'trap' to function
 # Run it as a src module with -m
-python3 -m src.vllm_gateway
+# Pass the argument to tell it to load 'llm_service' from config
+python3 -m src.vllm_gateway --service_config_key llm_service

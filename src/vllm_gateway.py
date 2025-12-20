@@ -3,6 +3,7 @@
 # that receives custom API requests. It translates these requests into the
 # standard OpenAI API format and forwards them to a separate vLLM backend server.
 
+import argparse
 import uvicorn
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field, ValidationError
@@ -19,16 +20,12 @@ import sys
 logger = logging.getLogger(__name__)
 
 # --- Configuration Models ---
-# Pydantic models for type-checking and validating the nested 'vlm_service'
-# section in 'server_config.yaml'.
-
-class VLMGatewayConfig(BaseModel):
-    """Validates the 'gateway' subsection (settings for vllm_gateway.py)"""
+class GatewayConfig(BaseModel):
     host: str
     port: int
 
-class VLMBackendConfig(BaseModel):
-    """Validates the 'backend' subsection (settings for the vLLM server)"""
+class BackendConfig(BaseModel):
+    """Generic backend config that fits both LLM and VLM services"""
     model_id: str
     vllm_host: str
     vllm_port: int
@@ -39,44 +36,59 @@ class VLMBackendConfig(BaseModel):
     trust_remote_code: bool
     vllm_seed: int
 
-class VLMServiceConfig(BaseModel):
-    """The main model that parses the entire 'vlm_service' section"""
-    gateway: VLMGatewayConfig
-    backend: VLMBackendConfig
+# We parse args early to determine which config to load
+def parse_args():
+    parser = argparse.ArgumentParser(description="vLLM Gateway")
+    parser.add_argument(
+        "--service_config_key", 
+        type=str, 
+        default="vlm_service", 
+        help="The key in server_config.yaml to use for backend settings (e.g. 'vlm_service' or 'llm_service')"
+    )
+    return parser.parse_known_args()[0]
 
-# --- Configuration ---
-# Load config at the global level so it's available to all functions
+# --- Configuration Loading ---
 try:
-    # We must import these here for config loading
     from .utils import load_config
     
-    # Load the *entire* 'vllm_service' section
-    raw_config_dict = load_config(config_path='config/server_config.yaml').get("vlm_service")
-    if raw_config_dict is None:
-        raise ValueError("'vlm_service' section not found in config/server_config.yaml")
-
-    # This one line validates the entire nested structure
-    VLLM_CONFIG = VLMServiceConfig(**raw_config_dict)
+    # Get the key from CLI
+    args = parse_args()
+    target_backend_key = args.service_config_key
     
-    # Set the backend URL as a global
-    VLLM_OPENAI_URL = f"http://{VLLM_CONFIG.backend.vllm_host}:{VLLM_CONFIG.backend.vllm_port}/v1/chat/completions"
+    # Load full config
+    full_config = load_config(config_path='config/server_config.yaml')
     
-    logger.info("[VLLM_G] Gateway configuration loaded and validated successfully.")
-    logger.info(f"[VLLM_G] Gateway will forward requests to: {VLLM_OPENAI_URL}")
+    # 1. Get the shared 'gateway' section
+    gateway_conf = full_config.get("gateway")
+    if not gateway_conf:
+        raise ValueError("Critical: 'gateway' section missing in server_config.yaml")
 
-except (ValidationError, ValueError, FileNotFoundError) as e:
-    logger.critical(f"[VLLM_G] --- FATAL CONFIGURATION ERROR ---")
-    logger.critical(f"[VLLM_G] Failed to load or validate 'vlm_service' from config/server_config.yaml:")
-    logger.critical(f"\n{e}")
-    sys.exit("Invalid configuration. Please check the log.")
+    # 2. Get the specific backend section (vlm_service OR llm_service)
+    backend_conf = full_config.get(target_backend_key)
+    if not backend_conf:
+        raise ValueError(f"Critical: '{target_backend_key}' section missing in server_config.yaml")
+
+    # Validate
+    GATE_CONF = GatewayConfig(**gateway_conf)
+    BACK_CONF = BackendConfig(**backend_conf)
+
+    # Set global URL
+    VLLM_OPENAI_URL = f"http://{BACK_CONF.vllm_host}:{BACK_CONF.vllm_port}/v1/chat/completions"
+    
+    logger.info(f"[VLLM_G] Mode: {target_backend_key.upper()}")
+    logger.info(f"[VLLM_G] Gateway forwarding to: {VLLM_OPENAI_URL}")
+
 except Exception as e:
-    logger.critical(f"[VLLM_G] FATAL: An unexpected error occurred during config loading: {e}", exc_info=True)
-    sys.exit("Failed to load config.")
+    logger.critical(f"[VLLM_G] FATAL CONFIG ERROR: {e}", exc_info=True)
+    sys.exit("Invalid configuration.")
 
-# --- Request Body Model ---
-# Pydantic model for validating incoming API request bodies
+# ... (The rest of the file: Request Body Model, Client, Lifespan, etc. remains UNCHANGED) ...
+# ...
+# Just ensure 'VLMServiceConfig' usages are updated to 'ServiceConfig' if you renamed the class.
+
+# Request Body Model
 class GenerateRequest(BaseModel):
-    messages: List[Dict[str, Any]] = Field(..., description="List of message objects (e.g., {'role': 'user', 'content': ...})")
+    messages: List[Dict[str, Any]] = Field(..., description="List of message objects")
     seed: int
     top_p: float
     temperature: float
@@ -191,8 +203,8 @@ async def call_vllm_backend(payload: Dict[str, Any]) -> str:
         logger.error(f"[VLLM_G] vLLM backend error: {e.response.text}")
         raise HTTPException(status_code=e.response.status_code, detail=f"vLLM backend error: {e.response.text}")
     except Exception as e:
-        logger.error(f"[VLLM_G] Internal gateway error: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Internal gateway error: {str(e)}")
+        logger.error(f"[VLLM_G] Backend Error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # --- App Creation ---
@@ -220,7 +232,7 @@ async def handle_generation(request: GenerateRequest):
 
     # Build the final JSON payload for the OpenAI-compatible backend
     openai_payload = {
-        "model": VLLM_CONFIG.backend.model_id,
+        "model": BACK_CONF.model_id,
         "messages": openai_messages,
         "max_tokens": request.max_tokens,
         "temperature": request.temperature,
@@ -245,16 +257,16 @@ if __name__ == "__main__":
     # (it will just re-use the existing handlers)
     setup_logging(log_file='logs/vllm_gateway.log')
 
-    # The config (VLLM_CONFIG) is already loaded at the top.
+    # The configs are already loaded at the top.
     # We just need to start the server.
     
     # Use the globally loaded config to start the server
-    logger.info(f"[VLLM_G] Starting FastAPI gateway on http://{VLLM_CONFIG.gateway.host}:{VLLM_CONFIG.gateway.port}")
+    logger.info(f"[VLLM_G] Starting FastAPI gateway on http://{GATE_CONF.host}:{GATE_CONF.port}")
     
     # Start the FastAPI server
     uvicorn.run(
         app,
-        host=VLLM_CONFIG.gateway.host,
-        port=VLLM_CONFIG.gateway.port,
-        log_config=None # Use the root logger we set up
+        host=GATE_CONF.host,
+        port=GATE_CONF.port,
+        log_config=None
     )

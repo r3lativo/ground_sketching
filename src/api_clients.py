@@ -431,7 +431,7 @@ class APIClient:
                 # Before parsing, check if we hit the "infinite thinking" bug.
                 # If <think> is unclosed, strategies.process_response will fail or return garbage.
                 if "<think>" in raw_text and "</think>" not in raw_text:
-                    raise ValidationError("Runaway thought detected (Unclosed <think> tag).")
+                    raise ValueError("Runaway thought detected (Unclosed <think> tag).")
 
                 # B. Parsing
                 parsed_data = strategy.process_response(raw_text)
@@ -443,12 +443,6 @@ class APIClient:
                 # Capture technical error for logs
                 try: error_json = e.json()
                 except: error_json = str(e)
-                
-                logger.warning(f"[API] Validation Failed (Attempt {attempt+1}): {error_json}")
-
-                if attempt >= max_correction_attempts:
-                    logger.error("[API] Max retries exhausted.")
-                    return None
 
                 # --- GENERATE FRIENDLY MESSAGE ---
                 # Translate the error into Natural Language + Context
@@ -456,6 +450,12 @@ class APIClient:
                 
                 if isinstance(e, ValidationError) and validation_schema:
                     friendly_error_msg = self._generate_friendly_error_msg(e, validation_schema, raw_text)
+                
+                logger.warning(f"[API] Validation Failed (Attempt {attempt+1}): {friendly_error_msg}")
+
+                if attempt >= max_correction_attempts:
+                    logger.error("[API] Max retries exhausted.")
+                    return None
 
                 # --- RETRY LOGIC ---
                 

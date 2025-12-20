@@ -52,7 +52,12 @@ async def main():
     # 1. Load directories
     in_dir = Path(args.input_dir)
     out_dir = Path(args.output_dir)
-    out_dir = out_dir / '_fake' if args.fake_servers else out_dir
+
+    # Append subdir for fake server modes
+    if args.fake_servers:
+        out_dir = out_dir / ("_fake_text_only" if args.text_only else "_fake")
+
+    # Add timestamp if using the default output root
     if args.output_dir == 'output/':
         out_dir = out_dir / date_time
 
@@ -60,7 +65,7 @@ async def main():
         logger.error(f"Input directory does not exist: {in_dir}")
         sys.exit(1)
 
-    if text_only:
+    if args.text_only:
         args.gen_images_from_aug = False
 
     # 2. Verify Services
@@ -121,7 +126,7 @@ async def main():
             # Setup Directory Structure
             (csv_out_dir / "logs").mkdir(parents=True, exist_ok=True)
             (csv_out_dir / "traces").mkdir(parents=True, exist_ok=True)
-            if not text_only:
+            if not args.text_only:
                 (csv_out_dir / "images").mkdir(parents=True, exist_ok=True)
 
             # Output CSV path

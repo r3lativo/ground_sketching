@@ -167,8 +167,8 @@ class AugmentationPipeline:
             decision = await self.client.get_meta_and_strategy(
                 is_oracle=oracle,
                 utterance=utterance,
-                context=context if not text_only else [context[-1]],
-                previous_prompts=prev_prompts,
+                context=context, # if not text_only else context[-1:],
+                previous_prompts=prev_prompts if not text_only else prev_prompts[-1:],
                 has_images=False 
             )
 
