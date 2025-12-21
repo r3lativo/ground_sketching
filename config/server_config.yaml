@@ -4,7 +4,7 @@ image_gen_service:
   host: "0.0.0.0"
   port: 8002
   model_id: "Qwen/Qwen-Image-Edit-2509"
-  lora_path: "/lustre/fswork/projects/rech/bgp/upa38qy/ground_sketching/Qwen-Image-Lightning/Qwen-Image-Edit-2509/Qwen-Image-Edit-2509-Lightning-8steps-V1.0-fp32.safetensors"
+  lora_path: "/lustre/fsn1/projects/rech/bgp/ucm29gh/huggingface/hub/models--lightx2v--Qwen-Image-Lightning/snapshots/e74da8d4e71a54b341de86aa9f8d2509165aa513/Qwen-Image-Edit-2509/Qwen-Image-Edit-2509-Lightning-8steps-V1.0-fp32.safetensors"
 
 image_gen_client:
   seed: 0
@@ -39,7 +39,7 @@ llm_client:
 vlm_service:
   # model_id: "/lustre/fsmisc/dataset/HuggingFace_Models/Qwen/Qwen2.5-VL-32B-Instruct"
   #THINKING
-  model_id: "/linkhome/rech/genxzs01/upa38qy/.cache/huggingface/hub/models--Qwen--Qwen3-VL-32B-Thinking/snapshots/7edd10ffd1196091948fb245ff63e406ccb2d4d1"
+  model_id: "/lustre/fsn1/projects/rech/bgp/ucm29gh/huggingface/hub/models--Qwen--Qwen3-VL-32B-Thinking/snapshots/7edd10ffd1196091948fb245ff63e406ccb2d4d1"
   # #INSTRUCT
   # model_id: "/linkhome/rech/genxzs01/upa38qy/.cache/huggingface/hub/models--Qwen--Qwen3-VL-32B-Instruct/snapshots/0cfaf48183f594c314753d30a4c4974bc75f3ccb"
   vllm_host: "127.0.0.1"
