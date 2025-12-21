@@ -2,24 +2,28 @@
 # run_experiment.sh
 
 #SBATCH --job-name=va_temporal
-#SBATCH --output=/lustre/fswork/projects/rech/bgp/upa38qy/ground_sketching/slurm_logs/%j.out 
-#SBATCH --error=/lustre/fswork/projects/rech/bgp/upa38qy/ground_sketching/slurm_logs/%j.err 
-#SBATCH --constraint=a100
+#SBATCH --output=/lustre/fswork/projects/rech/bgp/ucm29gh/code/ground_sketching/slurm_logs/%j.out 
+#SBATCH --error=/lustre/fswork/projects/rech/bgp/ucm29gh/code/ground_sketching/slurm_logs/%j.err 
+#SBATCH --constraint=h100
 #SBATCH --nodes=1
 #SBATCH --gres=gpu:3
 #SBATCH --cpus-per-task=16
 #SBATCH --time=16:00:00
-#SBATCH --account=bgp@a100
+#SBATCH --account=bgp@h100
 
 cd $SLURM_SUBMIT_DIR
 
+export HF_HOME="/lustre/fsn1/projects/rech/bgp/ucm29gh/huggingface"
+export XDG_CACHE_HOME="/lustre/fsn1/projects/rech/bgp/ucm29gh/cache"
+export XDG_DATA_HOME="/lustre/fsn1/projects/rech/bgp/ucm29gh/cache"
+export TORCHINDUCTOR_CACHE_DIR="/lustre/fsn1/projects/rech/bgp/ucm29gh/cache"
+export TRITON_CACHE_DIR=$TORCHINDUCTOR_CACHE_DIR/triton_cache
+
 # 1. Environment
 module purge
-module load arch/a100
-module load pytorch-gpu/py3/2.8.0
-
-# Add the folder where pip installs executable scripts to the system PATH
-export PATH=$HOME/.local/bin:$PATH
+source /lustre/fswork/projects/rech/bgp/ucm29gh/miniconda3/bin/activate rl
+module load arch/h100
+module load cuda/12.4.1
 
 # 2. Start Services
 echo "--- STARTING SERVICES ---"
@@ -71,7 +75,7 @@ echo " - VLM Backend: $VLLM_URL"
 wait_for_url() {
     local url=$1
     local name=$2
-    local max_retries=60
+    local max_retries=120
     local count=0
     
     echo -n "Waiting for $name..."

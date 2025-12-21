@@ -4,12 +4,12 @@
 #SBATCH --job-name=va_test_m
 #SBATCH --output=/lustre/fswork/projects/rech/bgp/ucm29gh/code/ground_sketching/slurm_logs/%j.out 
 #SBATCH --error=/lustre/fswork/projects/rech/bgp/ucm29gh/code/ground_sketching/slurm_logs/%j.err 
-#SBATCH --constraint=a100
+#SBATCH --constraint=h100
 #SBATCH --nodes=1
 #SBATCH --gres=gpu:3
 #SBATCH --cpus-per-task=16
 #SBATCH --time=4:00:00
-#SBATCH --account=bgp@a100
+#SBATCH --account=bgp@h100
 
 cd $SLURM_SUBMIT_DIR
 
@@ -22,8 +22,11 @@ export TRITON_CACHE_DIR=$TORCHINDUCTOR_CACHE_DIR/triton_cache
 # 1. Environment
 module purge
 source /lustre/fswork/projects/rech/bgp/ucm29gh/miniconda3/bin/activate rl
-module load arch/a100
+module load arch/h100
 module load cuda/12.4.1
+
+# Add the folder where pip installs executable scripts to the system PATH
+# export PATH=$HOME/.local/bin:$PATH
 
 # 2. Start Services
 echo "--- STARTING SERVICES ---"
@@ -75,7 +78,7 @@ echo " - VLM Backend: $VLLM_URL"
 wait_for_url() {
     local url=$1
     local name=$2
-    local max_retries=60
+    local max_retries=120
     local count=0
     
     echo -n "Waiting for $name..."

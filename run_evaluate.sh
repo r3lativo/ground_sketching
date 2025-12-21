@@ -11,6 +11,14 @@
 #SBATCH --account=bgp@a100           # H100 accounting
 
 
+export HF_HOME="/lustre/fsn1/projects/rech/bgp/ucm29gh/huggingface"
+export XDG_CACHE_HOME="/lustre/fsn1/projects/rech/bgp/ucm29gh/cache"
+export XDG_DATA_HOME="/lustre/fsn1/projects/rech/bgp/ucm29gh/cache"
+export TORCHINDUCTOR_CACHE_DIR="/lustre/fsn1/projects/rech/bgp/ucm29gh/cache"
+export TRITON_CACHE_DIR=$TORCHINDUCTOR_CACHE_DIR/triton_cache
+export MASTER_ADDR=$(scontrol show hostnames "$SLURM_JOB_NODELIST" | head -n 1)
+export MASTER_PORT=$(expr 10000 + $(echo -n $SLURM_JOBID | tail -c 4))
+
 # Purge and load required modules
 module purge
 module load arch/a100
@@ -19,14 +27,6 @@ source /lustre/fswork/projects/rech/bgp/ucm29gh/miniconda3/bin/activate rl2
 
 nvidia-smi
 nvidia-smi topo
-
-export HF_HOME="/lustre/fswork/projects/rech/bgp/ucm29gh/huggingface"
-export XDG_CACHE_HOME="/lustre/fsn1/projects/rech/bgp/ucm29gh/cache"
-export XDG_DATA_HOME="/lustre/fsn1/projects/rech/bgp/ucm29gh/cache"
-export TORCHINDUCTOR_CACHE_DIR="/lustre/fsn1/projects/rech/bgp/ucm29gh/cache"
-export TRITON_CACHE_DIR=$TORCHINDUCTOR_CACHE_DIR/triton_cache
-export MASTER_ADDR=$(scontrol show hostnames "$SLURM_JOB_NODELIST" | head -n 1)
-export MASTER_PORT=$(expr 10000 + $(echo -n $SLURM_JOBID | tail -c 4))
 
 echo "MASTER_ADDR=$MASTER_ADDR"
 echo "MASTER_PORT=$MASTER_PORT"
