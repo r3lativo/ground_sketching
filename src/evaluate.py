@@ -2,8 +2,6 @@ from typing import *
 import re
 import torch
 from datasets import load_dataset, Dataset, load_from_disk
-from transformers import AutoTokenizer, AutoModelForCausalLM, Qwen3VLForConditionalGeneration, TrainingArguments, TrainerCallback, TrainerState, TrainerControl
-from trl import GRPOConfig, GRPOTrainer, TrlParser
 from dataclasses import dataclass, field
 import os
 import socket
@@ -18,10 +16,21 @@ import gc
 from openai import OpenAI
 from sentence_transformers import SentenceTransformer, util
 from PIL import Image
-from qwen_vl_utils import process_vision_info
+import json
+import logging
+from datetime import datetime
+from transformers import (
+    AutoTokenizer, 
+    AutoProcessor, 
+    TrainingArguments, 
+    TrainerCallback, 
+    TrainerState, 
+    TrainerControl, 
+    HfArgumentParser
+)
 
 import copy
-from templates.reward_prompts import JUDGE_SYSTEM_PROMPT, get_system_prompt_for_planning, REWARD_ANSWER_SYSTEM_PROMPT_FINAL_ANSWER, REWARD_ANSWER_SYSTEM_PROMPT_PROCESS, QUERY_FORMULATION_SYSTEM_PROMPT
+from templates.evaluate_prompts import JUDGE_SYSTEM_PROMPT, get_system_prompt_for_planning, REWARD_ANSWER_SYSTEM_PROMPT_FINAL_ANSWER, REWARD_ANSWER_SYSTEM_PROMPT_PROCESS, QUERY_FORMULATION_SYSTEM_PROMPT
 
 @dataclass
 class ModelArguments:
@@ -45,16 +54,19 @@ class ModelArguments:
         },
     )
 
-    retriever_model: Optional[str] = field(
+    image_searcher_model: Optional[str] = field(
         metadata={
             "help": (
                 "The model checkpoint for weights initialization of the retriever"
             )
         },
     )
-    model_type: Optional[str] = field(
-        default=None,
-        metadata={"help": "If training from scratch, pass a model type from the list: "},
+    output_dir: Optional[str] = field(
+        metadata={
+            "help": (
+                "The path to be used to store final evaluations"
+            )
+        },
     )
     train_dataset_name: Optional[str] = field(
         default="/lustre/fswork/projects/rech/bgp/ucm29gh/code/jeanzay-rl/data/meetup",
@@ -68,9 +80,18 @@ class ModelArguments:
         default="/lustre/fswork/projects/rech/bgp/ucm29gh/code/jeanzay-rl/data/meetup",
         metadata={
             "help": (
-                "The path to the dataset to be trained"
+                "The path to the dataset to be tested"
             )
         },
+    )
+    model_type: Optional[str] = field(
+        default=None,
+        metadata={"help": "If training from scratch, pass a model type from the list: "},
+    )
+
+    relation_type: Optional[str] = field(
+        default=None,
+        metadata={"help": "What is the type of relation that we are trying to test (eg. spatial, temporal etc.). It is for logging purpose."},
     )
     config_overrides: Optional[str] = field(
         default=None,
@@ -95,6 +116,10 @@ class ModelArguments:
     model_revision: str = field(
         default="main",
         metadata={"help": "The specific model version to use (can be a branch name, tag name or commit id)."},
+    )
+    seed: int = field(
+        default=420,
+        metadata={"help": "set the seed"},
     )
     token: str = field(
         default=None,
@@ -172,6 +197,8 @@ class ModelArguments:
         },
     )
 
+
+
     def __post_init__(self):
         if self.config_overrides is not None and (self.config_name is not None or self.model_name_or_path is not None):
             raise ValueError(
@@ -179,11 +206,12 @@ class ModelArguments:
             )
 
 class ImageSearcher:
-    def __init__(self, model_name='sentence-transformers/clip-ViT-L-14', device='cuda'):
+    def __init__(self, model_name='sentence-transformers/clip-ViT-L-14', device='cuda', seed=420):
         self.model = SentenceTransformer(model_name, device=device)
         self.device = device
         self.current_image_paths = []
         self.current_embeddings = None
+        self.seed = seed
 
     def index_images_from_path(self, path_or_paths):
         """
@@ -238,27 +266,26 @@ class InferenceEvaluator:
     """
     Handles the evaluation of model completions by generating answers and using a judge model to score them.
     """
-    def __init__(self, vlm_model, vlm_tokenizer, vlm_processor, vlm_model_name, image_searcher, judge_model, judge_tokenizer, judge_name):
+    def __init__(self, vlm_model, vlm_tokenizer, vlm_processor, vlm_model_name, image_searcher, judge_model, judge_tokenizer, judge_name, seed=420):
         self.vlm_model = vlm_model
         self.vlm_tokenizer = vlm_tokenizer
         self.vlm_processor = vlm_processor
         self.vlm_model_name = vlm_model_name
-        self.embed_model = embed_model
         self.judge_model = judge_model
         self.judge_tokenizer =judge_tokenizer
         self.judge_name = judge_name
         self.latest_sample_for_logging = None
         self.image_searcher = image_searcher
-
+        self.seed = seed
 
     def _reasoning_extract_answer(self, input_string: str):
         if '<answer>' in input_string or '</answer>' in input_string or '</reasoning>' in input_string:
-            return input_string.split('assistant\n')[-1].split('</reasoning>')[-1].split('<answer>')[-1].split("</answer>")[0].strip()
+            return input_string.split('</reasoning>')[-1].split('<answer>')[-1].split("</answer>")[0].strip()
         else:
             return ''
 
     def _extract_answer(self, input_string: str):
-        return input_string.split('assistant\n')[-1].split('<answer>')[-1].split("</answer>")[0].strip()
+        return input_string.split('<answer>')[-1].split("</answer>")[0].strip()
 
     def _encode_image_to_base64(self, image_path):
         """Encodes a local image to a data URL string for the OpenAI API."""
@@ -271,20 +298,7 @@ class InferenceEvaluator:
             
         return f"data:{mime_type};base64,{encoded_string}"
 
-    # def _generate_with_vllm(self, prompts: List[str], max_output_tokens: int, temperature: float = 0.5, stop: List[str] = None):
-    #     if stop is None:
-    #         stop = [self.vlm_tokenizer.eos_token]
-
-    #     response = self.vlm_model.completions.create(
-    #         model=self.vlm_model_name,
-    #         prompt=prompts,
-    #         max_tokens=max_output_tokens,
-    #         temperature=temperature,
-    #         stop=stop,
-    #     )
-    #     return [output.text for output in response.choices]
-
-    def _call_vlm_api(self, text_prompt, image_paths=None, system_prompt="You are a helpful assistant.", temperature: float = 0.7, max_tokens=512):
+    def _call_vlm_api(self, text_prompt, image_paths=None, system_prompt="You are a helpful assistant.", temperature: float = 0.7, max_tokens=2048, seed: int = 42):
         """
         Generic wrapper to call the vLLM server via OpenAI API.
         Handles both text-only (Planning) and multimodal (Answering) requests.
@@ -292,9 +306,6 @@ class InferenceEvaluator:
         messages = [{"role": "system", "content": system_prompt}]
         
         user_content = []
-        
-        # Attach Text
-        user_content.append({"type": "text", "text": text_prompt})
 
         # Attach Images (if any)
         if image_paths:
@@ -307,6 +318,9 @@ class InferenceEvaluator:
                     }
                 })
 
+        # Attach Text
+        user_content.append({"type": "text", "text": text_prompt})
+
         messages.append({"role": "user", "content": user_content})
 
         try:
@@ -315,13 +329,14 @@ class InferenceEvaluator:
                 messages=messages,
                 temperature=temperature,
                 max_tokens=max_tokens,
+                seed=self.seed
             )
             return response.choices[0].message.content
         except Exception as e:
             print(f"Error calling VLM Server: {e}")
             return "Error generating response."
-
-    def _judge_with_vllm(self, prompts: List[str], max_output_tokens: int, temperature: float = 0.5, stop: List[str] = None):
+    
+    def _judge_with_vllm(self, prompts: List[str], max_output_tokens: int, temperature: float = 0.5, stop: List[str] = None, seed: int = 42):
         if stop is None:
             stop = [self.judge_tokenizer.eos_token]
 
@@ -331,6 +346,7 @@ class InferenceEvaluator:
             max_tokens=max_output_tokens,
             temperature=temperature,
             stop=stop,
+            seed=self.seed
         )
         return [output.text for output in response.choices]
     
@@ -339,37 +355,45 @@ class InferenceEvaluator:
         if not working_memory.strip():
             return instruction
 
+        # concrete_query = self._call_vlm_api(
+        #                     text_prompt=f"Context:\n{working_memory}\n\nHigh-Level Instruction:\n{instruction}",
+        #                     image_paths=None,
+        #                     system_prompt=QUERY_FORMULATION_SYSTEM_PROMPT,
+        #                     max_tokens=100
+        #                 ).split('assistant\n')[-1].strip()
         concrete_query = self._call_vlm_api(
                             text_prompt=f"Context:\n{working_memory}\n\nHigh-Level Instruction:\n{instruction}",
                             image_paths=None,
                             system_prompt=QUERY_FORMULATION_SYSTEM_PROMPT,
-                            max_output_tokens=100
-                        )[0].split('assistant\n')[-1].strip()
+                            max_tokens=100,
+                            seed=self.seed
+                        ).strip()
         
         return concrete_query
 
-    def _extract_score(self, text: str) -> str:
+    def _extract_score(self, text: str) -> int:
         # print('score_text', text, flush=True)
         score = text.split("<answer>")[-1]
         score = score.split("</answer>")[0].strip()
-        if 'SAME' in score: 
+        if 'SAME' in score.upper(): 
             return 1
-        elif 'DIFFERENT' in score: 
+        elif 'DIFFERENT' in score.upper(): 
             return 0
         else:
-            print("SCORE NOT IN FORMAT   ", score, flush=True)
+            print("SCORE NOT IN FORMAT   ", score.upper(), flush=True)
             return 0
     
-    def _planned_rag_retrieval(self, image_source_paths, questions: List[str], question_users: List[str]):
+    def _planned_rag_retrieval(self, image_source_paths, questions: List[str], questioners: List[str], answerers: List[str]):
         # Generate the plans (Text-only call to VLM)
         raw_plans = []
         for i in range(len(questions)):
-            plan_prompt = f"\nQuestion (from {question_users[i]}): {questions[i]}\nThink and create your plan here:"
+            plan_prompt = f"\nQuestion from {questioners[i]}: {questions[i]}\nThink and create your plan here:"
             raw_plans.append(
                 self._call_vlm_api(
                     text_prompt=plan_prompt,
                     image_paths=None,
-                    system_prompt=get_system_prompt_for_planning(question_users[i]),
+                    system_prompt=get_system_prompt_for_planning(answerers[i]),
+                    max_tokens=2048
                 )
             )
 
@@ -382,11 +406,15 @@ class InferenceEvaluator:
         for i, plan in enumerate(plans):
             # Each plan has a few steps which need to be broken down
             extracted_plan = [p.strip() for p in plan.split('<item>') if p.strip()]
-            
+            print('extracted_plan', extracted_plan, flush=True)
+            target_user_folder = "A" if " POV: A" in extracted_plan[0] else "B" if "POV: B" in extracted_plan[0] else answerers[i]
+            target_image_source_paths = os.path.join(image_source_paths[i], str(target_user_folder))
+            # Start with ALL images in the folder of the target_user
+            current_context_images = glob(os.path.join(target_image_source_paths, f'*.png')) + \
+                                    glob(os.path.join(target_image_source_paths, "*.jpg"))
+
             working_memory = ""
             retrieved_steps_for_logging = []
-            # Start with ALL images in the folder
-            current_context_images = image_source_paths
 
             for step_instruction in extracted_plan:
                 try:
@@ -415,7 +443,7 @@ class InferenceEvaluator:
 
                     match = re.match(r"RAG\[k=(\d+)\]", command)
                     if match:
-                        k_value = match.group(1)
+                        k_value = int(match.group(1))
                     else:
                         print('COMMAND NO KEY : ', command)
                         k_value = 3
@@ -427,12 +455,12 @@ class InferenceEvaluator:
                     retrieved_steps_for_logging.append({"step": instruction, "executed_query": concrete_query, "result": log_msg})
 
                 elif command == 'FINAL_ANSWER':
-                    processing_prompt = f"Original Question from {question_users[i]} : {questions[i]}.\n\n Final Context:\n{working_memory}\n\nBased on this context, follow this final instruction: {concrete_query}"
+                    processing_prompt = f"Original Question from {questioners[i]} : {questions[i]}.\n\n Final Context:\n{working_memory}\n\nBased on this context, follow this final instruction: {concrete_query}"
                     llm_result = self._call_vlm_api(
                                     text_prompt=processing_prompt,
                                     image_paths=current_context_images,
                                     system_prompt=REWARD_ANSWER_SYSTEM_PROMPT_FINAL_ANSWER
-                                )[0]
+                                )
                     working_memory = llm_result 
                     retrieved_steps_for_logging.append({"step": instruction, "executed_query": concrete_query, "result": llm_result})
 
@@ -440,9 +468,9 @@ class InferenceEvaluator:
                     processing_prompt = f"Current Context:\n{working_memory}\n\nInstruction: {concrete_query}"                    
                     llm_result = self._call_vlm_api(
                                     text_prompt=processing_prompt,
-                                    image_paths=None,
+                                    image_paths=current_context_images,
                                     system_prompt=REWARD_ANSWER_SYSTEM_PROMPT_PROCESS
-                                )[0]
+                                )
 
                     working_memory = f"--- Result of PROCESS step: '{concrete_query}' ---\n{llm_result}\n"
                     retrieved_steps_for_logging.append({"step": instruction, "executed_query": concrete_query, "result": llm_result})
@@ -452,7 +480,7 @@ class InferenceEvaluator:
                 
         return final_answers, all_retrieved_for_logging, plans
 
-    def evaluate(self, questions: List[str], question_users: List[str], correct_answers: List[str], image_path: str):
+    def evaluate(self, questions: List[str], questioners: List[str], answerers: List[str], correct_answers: List[str], image_path: str, datapoint_id: str):
         """
         Performs the full inference and evaluation pipeline for a single data point.
         
@@ -460,13 +488,14 @@ class InferenceEvaluator:
             float: The average score for the given data point.
         """
         llm_answers, retrieved_steps, plans = self._planned_rag_retrieval(
-            questions=[questions],
-            question_users=[question_users],
+            questions=questions,
+            questioners=questioners,
+            answerers=answerers,
             image_source_paths=image_path
         )
 
         llm_answers = [self._reasoning_extract_answer(l) for l in llm_answers]
-        # llm_answers, retrieved_steps, plans = self._retrieval(common_ground, questions, question_users)
+        # llm_answers, retrieved_steps, plans = self._retrieval(common_ground, questions, questioners)
 
         # Use the model as a judge to score the generated answers
         judgement_prompts = []
@@ -474,7 +503,7 @@ class InferenceEvaluator:
             # Extract only the generated part of the response
             judge_user_prompt = f"Question: {questions[i]}\n\nCorrect Response: {correct_answers[i]}\n\nLLM Response: {llm_response}\n\nNow give your judgement keeping in mind the format."
             input_message = [{'role': 'system', 'content': JUDGE_SYSTEM_PROMPT}, {'role': 'user', 'content': judge_user_prompt}]
-            formatted_judge_prompt = self.vlm_tokenizer.apply_chat_template(input_message, tokenize=False, add_generation_prompt=True)
+            formatted_judge_prompt = self.judge_tokenizer.apply_chat_template(input_message, tokenize=False, add_generation_prompt=True)
             judgement_prompts.append(formatted_judge_prompt)
         
         decoded_judge_outputs = self._judge_with_vllm(
@@ -499,19 +528,20 @@ class InferenceEvaluator:
                     "llm_response": llm_answers[i],
                     "judge_response": judge_response_content,
                     "correct_response": correct_answers[i],
-                    "score": score
+                    "score": score,
+                    "datapoint_id": datapoint_id
                 }
 
         gc.collect()
         return mean(scores) if scores else 0.0
 
-def load_meetup_data(meetup_root: str, add_reasoning: bool = True) -> Dataset:
+def load_meetup_data(meetup_root: str) -> Dataset:
     """Load and format Meetup dataset as HF Dataset compatible with GRPOTrainer."""
     data_records = []
 
     # folders = sorted(glob(os.path.join(meetup_root, '*')))
     # for folder in folders:
-    for csv_path in glob(os.path.join(meetup_root, '*.csv')):
+    for csv_path in glob(os.path.join(meetup_root, '**', '*.csv'), recursive=True, include_hidden=False):
         try:
             df = pd.read_csv(csv_path)
     
@@ -519,29 +549,30 @@ def load_meetup_data(meetup_root: str, add_reasoning: bool = True) -> Dataset:
                 continue  # not enough messages for context, question, answer
 
             # Build conversation log from all but last 2 rows
-            df_context = df.iloc[:-2]
+            df_context = df.iloc[:-3]
             conversation_log = "Here is the conversation -\n"
             for _, row in df_context.iterrows():
-                conversation_log += f"Speaker: {row['user']}\nTime: {row['time']}\nMessage: {row['msg']}\n\n"
+                conversation_log += f"Speaker: {row['character']}\nTime: {row['time']}\nMessage: {row['text']}\n\n"
 
-            question_row = df.iloc[-2]
-            question = question_row['msg']
-            question_user = question_row['user']
-            model_answer = df.iloc[-1]['msg']
+            question_row = df.iloc[-3]
+            question = question_row['text']
+            question_user = question_row['character']
+            answer_user = df.iloc[-2]['character']
+            model_answer = df.iloc[-2]['text']
 
-            if add_reasoning:
-                content_prompt = GROUNDING_SYSTEM_PROMPT_REASONING
-            else:
-                content_prompt = GROUNDING_SYSTEM_PROMPT
+            # Get the path where the common ground images generated for this conversation exist
+            base_dir = os.path.dirname(csv_path)
+            image_path = os.path.join(base_dir, 'images')
+            base_name = os.path.basename(csv_path)
+            file_name = os.path.splitext(base_name)[0]
 
             data_records.append({
-                'prompt': [
-                    {'role': 'system', 'content': content_prompt},
-                    {'role': 'user', 'content': conversation_log}
-                ],
                 'question': [question],
-                'question_user': [question_user],
-                'model_answer': [model_answer]
+                'questioner': [question_user],
+                'answerer': [answer_user],
+                'model_answer': [model_answer],
+                'image_path': [image_path],
+                'file_name': [file_name]
             })
 
         except Exception as e:
@@ -549,11 +580,38 @@ def load_meetup_data(meetup_root: str, add_reasoning: bool = True) -> Dataset:
 
     return Dataset.from_list(data_records) 
 
-def main_infer(model_args, training_args):
+def setup_eval_logger(output_dir: str, filename: str = "eval_samples.log") -> logging.Logger:
+    os.makedirs(output_dir, exist_ok=True)
+    log_path = os.path.join(output_dir, filename)
+
+    logger = logging.getLogger("eval_samples")
+    logger.setLevel(logging.INFO)
+    logger.propagate = False  # prevent duplicate logs if root logger is configured elsewhere
+
+    # Avoid adding handlers multiple times if main_infer is called more than once
+    if not logger.handlers:
+        formatter = logging.Formatter(
+            fmt="%(asctime)s | %(levelname)s | %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
+        )
+
+        fh = logging.FileHandler(log_path, mode="a", encoding="utf-8")
+        fh.setLevel(logging.INFO)
+        fh.setFormatter(formatter)
+
+        logger.addHandler(fh)
+
+    # stash the path for convenience
+    logger.log_path = log_path  # type: ignore[attr-defined]
+    return logger
+
+
+def main_infer(model_args):
+    eval_logger = setup_eval_logger(model_args.output_dir, f"{model_args.relation_type}.log")
+    print(f"[Logging] Writing evaluation samples to: {eval_logger.log_path}", flush=True)
+    
     print("Setting up local embedding model for retriever...")
-    model_kwargs = {'device': 'cuda', 'trust_remote_code': True}
-    encode_kwargs = {'normalize_embeddings': True}
-    image_searcher = ImageSearcher(model_name=model_args.retriever_model)
+    image_searcher = ImageSearcher(model_name=model_args.image_searcher_model, seed=model_args.seed)
     try:
         print("Testing the image searcher model...")
         test_vec = image_searcher.model.encode(["query: This is a test."], convert_to_tensor=True)
@@ -586,12 +644,9 @@ def main_infer(model_args, training_args):
     judge_tokenizer.pad_token = judge_tokenizer.eos_token
     judge_tokenizer.padding_side = "left"
 
-    add_reasoning = model_args.add_reasoning
+    eval_dataset = load_meetup_data(model_args.test_dataset_name)
 
-    eval_dataset = load_meetup_data(model_args.test_dataset_name, add_reasoning)
-    # eval_dataset = load_std_data(model_args.test_dataset_name, add_reasoning)
-
-    evaluator = InferenceEvaluator(vlm_model, vlm_tokenizer, vlm_processor, model_args.model_name_or_path, image_searcher, judge_model, judge_tokenizer, model_args.judge_name_or_path)
+    evaluator = InferenceEvaluator(vlm_model, vlm_tokenizer, vlm_processor, model_args.model_name_or_path, image_searcher, judge_model, judge_tokenizer, model_args.judge_name_or_path, seed=model_args.seed)
 
     total_scores = []
     
@@ -599,9 +654,11 @@ def main_infer(model_args, training_args):
         with torch.no_grad():
             score = evaluator.evaluate(
                 questions=sample['question'],
-                question_users=sample['question_user'],
+                questioners=sample['questioner'],
+                answerers=sample['answerer'],
                 correct_answers=sample['model_answer'],
-                image_path=sample['image_path']
+                image_path=sample['image_path'],
+                datapoint_id=sample['file_name']
             )
         total_scores.append(score)
 
@@ -609,27 +666,38 @@ def main_infer(model_args, training_args):
         if i % 1 == 0:
             log_sample = evaluator.latest_sample_for_logging
             if log_sample:
-                print(f"\n--- Logging Evaluation Sample at Step {i+1} ---")
-                print(f"\nQuestion:\n{log_sample['question']}")
-                print(f"\nPlan:\n{log_sample['plan']}")
-                print(f"\nRetrieved Steps:\n{log_sample['retrieved_steps']}")
-                print(f"\n[LLM Response]:\n{log_sample['llm_response']}")
-                print(f"\n[Correct Response]:\n{log_sample['correct_response']}")
-                print(f"\n[Full Output from Judge Model]:\n{log_sample['judge_response']}")
-                print(f"\n[Extracted Score]: {log_sample['score']}")
-                print("--------------------------------------------------\n", flush=True)
+                block = (
+                        f"\n--- Logging Evaluation Sample at Step {i+1} for ID {log_sample['datapoint_id']} ---\n"
+                        f"\nQuestion:\n{log_sample['question']}\n"
+                        f"\nPlan:\n{log_sample['plan']}\n"
+                        f"\nRetrieved Steps:\n{log_sample['retrieved_steps']}\n"
+                        f"\n[LLM Response]:\n{log_sample['llm_response']}\n"
+                        f"\n[Correct Response]:\n{log_sample['correct_response']}\n"
+                        f"\n[Full Output from Judge Model]:\n{log_sample['judge_response']}\n"
+                        f"\n[Extracted Score]: {log_sample['score']}\n"
+                        f"--------------------------------------------------\n"
+                    )
+                
+                print(block, flush=True)
+                eval_logger.info(block)
+
 
     # Calculate and Print Final Accuracy
     average_accuracy = mean(total_scores) if total_scores else 0.0
-    print(f"\n============= Final Results =============")
-    print(f"Total samples evaluated: {len(total_scores)}")
-    print(f"Average Accuracy Score: {average_accuracy:.4f}")
-    print(f"=======================================")
+    avg_blk = (
+        f"\n============= Final Results ============="
+        f"Total samples evaluated: {len(total_scores)}"
+        f"Average Accuracy Score: {average_accuracy:.4f}"
+        f"======================================="
+    )
+
+    print(avg_blk, flush=True)
+    eval_logger.info(avg_blk)
 
 if __name__ == "__main__":
-    parser = TrlParser((ModelArguments,GRPOConfig,))
-    model_args, training_args, = parser.parse_args_and_config()
+    parser = HfArgumentParser((ModelArguments))
+    model_args = parser.parse_args_into_dataclasses()[0]
     
-    main_infer(model_args, training_args)
+    main_infer(model_args)
 
  

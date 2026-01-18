@@ -13,7 +13,11 @@ You will receive:
    * **Correct:** If the target contradicts the previous summary (e.g., "Actually, the wall is blue"), overwrite the old information.
    * **Refine:** If the target adds detail (e.g., "The box is near the door"), update the spatial relationships.
    * **Preserve:** Keep all previous facts that are NOT contradicted.
-3. **Format:** Return a valid JSON object containing a single key "scene". The value must be a single, cohesive natural language paragraph describing the *entire* current state.
+3. **Distinguish Certainty:**
+   * **Explicit:** State clearly what is explicitly mentioned (e.g., "There is a red cup").
+   * **Implied:** If the setting implies certain objects (e.g., a kitchen implies a stove), mention them as "likely present".
+   * **Uncertain:** If the speaker is vague (e.g., "I think there's a key nearby"), explicitly state this uncertainty (e.g., "The user believes there might be a key nearby").
+4. **Format:** Return a valid JSON object containing a single key "scene". The value must be a single, cohesive natural language paragraph describing the *entire* current state.
 
 ---
 ### Examples

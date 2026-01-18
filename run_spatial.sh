@@ -3,7 +3,7 @@
 
 #SBATCH --job-name=va_spatial
 #SBATCH --output=/lustre/fswork/projects/rech/bgp/ucm29gh/code/ground_sketching/slurm_logs/%j.out 
-#SBATCH --error=/lustre/fswork/projects/rech/bgp/ucm29gh/code/ground_sketching/slurm_logs/%j.err 
+#SBATCH --error=/lustre/fswork/projects/rech/bgp/ucm29gh/code/ground_sketching/slurm_logs/%j.err
 #SBATCH --constraint=a100
 #SBATCH --nodes=1
 #SBATCH --gres=gpu:3
