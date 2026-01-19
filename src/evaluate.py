@@ -406,7 +406,6 @@ class InferenceEvaluator:
         for i, plan in enumerate(plans):
             # Each plan has a few steps which need to be broken down
             extracted_plan = [p.strip() for p in plan.split('<item>') if p.strip()]
-            print('extracted_plan', extracted_plan, flush=True)
             target_user_folder = "A" if " POV: A" in extracted_plan[0] else "B" if "POV: B" in extracted_plan[0] else answerers[i]
             target_image_source_paths = os.path.join(image_source_paths[i], str(target_user_folder))
             # Start with ALL images in the folder of the target_user

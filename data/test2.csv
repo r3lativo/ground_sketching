@@ -1,0 +1,86 @@
+chunk_id,position,character,text,prompt
+001,E4,Nathan,"Hey Michael, I'm at the visitor services area in a large zoo. There's a first aid station here.","Create a small, symbolic outline of a visitor services area in the center of a plain white background. Do not add any color. The image should feature only black outline. The style should be clean and symbolic.$$$Add small symbolic animal outlines in the background to show that it is a zoo. Do not add any color. The image should feature only black outline. The style should be clean and symbolic.$$$Add a small, outline of a first-aid station. Do not add any color. The image should feature only black outline. The style should be clean and symbolic."
+001,B2,Michael,Hi Nathan. I'm at the savanna exhibit. There's a waste bin with an open top near the food stall.,"A first person point-of-view image of a savanna exhibit in a zoo. There is a waste bin with an open top near the food stall. Every object is created using only dotted outlines. Have big spaces between each dot. Make the outlines of the waste bin and the food stall solid and nothing else. Do not color anything unless specified for an object. Do not add any additional detail. Keep the image simple."
+001,E4,Nathan,"Yeah, got it. The map board is directly on the brick wall here.","Add a map board on a brick wall. Make the map's outline solid. Keep the objects in the image simple and symbolic. Do not add too much details about the object as they are symbolic. Keep the overall image simple. No text unless specified."
+001,E4,Nathan,"It's actually on the left of the first-aid station on a stand. Not on the wall.", "Duplicate the map to a stand on the left of the first-aid station.$$$Delete the map from the brick wall."
+001,B2,Michael,Right. There's a shade structure with a fabric canopy over the picnic table here.,"Add a picnic table and a shade structure over it. The shade structure is made of fabric canopy."
+001,E4,Nathan,"I also see an emergency exit with a button near it. It's near an exit sign.","Create more space to add an emergency exit with a button near an exit sign. Only add their solid outlines and no color. Keep the objects in the image simple and toy like. Keep the overall image simple. No text unless specified."
+001,E4,Nathan,Got it. I'm heading toward the south gate exit.,"Rescale the image to add a red carpet in front of the visitor service centre."
+001,B2,Michael,Understood. There's a bench with curved legs around the central fountain in my area.,"Add a fountain and a bench around it. The bench has curved legs."
+002,E5,Nathan,I just arrived at the aviary dome from the south gate exit.
+002,E5,Nathan,There's a bird perch made of natural wood attached to a tree branch here.
+002,B2,Michael,Uh-huh.
+002,E5,Nathan,There's an emergency exit with a panic button near the exit sign in my area.
+002,B2,Michael,Got it. I'm moving towards the river otter trail.
+003,C2,Michael,I just arrived at the aquatic zone from the river otter trail.
+003,E5,Nathan,Uh-huh.
+003,C2,Michael,There's a security camera near the entrance here.
+003,E5,Nathan,Got it.
+003,C2,Michael,There's also a water pump next to the maintenance shed.
+003,E5,Nathan,Okay.
+003,C2,Michael,I'm heading back to the river otter trail.
+004,C3,Michael,I just arrived at the savanna exhibit from the main entrance path.
+004,C3,Michael,There's a waste bin with a push flap at the bus stop here.
+004,C3,Michael,It reminds me of a similar bin with an open top near the food stall earlier. Both have benches nearby.
+004,E5,Nathan,Uh-huh. I'm heading to the bird show arena path next.
+004,C3,Michael,The shade structure here has wooden slats covering the guest bench.
+004,C3,Michael,"It's similar to the fabric canopy over the picnic table I saw at the beginning, though this one's over a bench too."
+004,E5,Nathan,Got it. The aviary dome has a bird perch on a tree branch here.
+004,C3,Michael,There's an enclosure fence with cable wire above the rocky outcrop.
+004,E5,Nathan,Okay. I'll take the bird show arena path now.
+004,C3,Michael,The animal shelter here has a double opening through the rock cave.
+004,E5,Nathan,"Alright, I'm moving toward the bird show arena path."
+005,E6,Nathan,I just arrived at the aviary dome from the bird show arena path.  
+005,E6,Nathan,There's a bird perch made of bamboo above the water fountain here.  
+005,C3,Michael,Uh-huh.  
+005,E6,Nathan,The walkway bridge has composite decking connecting two islands.  
+005,C3,Michael,Got it. There's a shade structure with a fabric canopy over the picnic table in my area too.  
+005,E6,Nathan,This bamboo perch reminds me of the natural wood one attached to a tree branch at the south gate. Both had emergency exits nearby.  
+005,C3,Michael,Interesting. I see a bench with curved legs around the central fountain here.  
+005,E6,Nathan,I'm heading back to the bird show arena path now.
+006,F6,Nathan,I just arrived at the visitor services area from the education center path.  
+006,C3,Michael,Uh-huh.  
+006,F6,Nathan,There's a gift shop shelf made of wood here.  
+006,C3,Michael,Got it. There's a bench with curved legs around the central fountain in my area.  
+006,F6,Nathan,There's also a food stall near the gift shop.  
+006,C3,Michael,Okay. I'm heading towards the desert exhibit link now.
+007,D3,Michael,I just arrived at visitor services from the desert exhibit link.
+007,F5,Nathan,"Uh-huh. I'm at visitor services too, from the polar bear pathway."
+007,D3,Michael,There's a gift shop shelf here made of wire.
+007,F5,Nathan,Got it. I see a ticket booth and a restroom sign with an abstract symbol.
+007,D3,Michael,There's also a first aid station near the entrance here.
+007,F5,Nathan,Okay. My charging station has six ports on a wall outlet.
+007,D3,Michael,The gift shop shelf I see is storing t-shirt stacks.
+007,F5,Nathan,My gift shop shelf was holding souvenir items earlier by the education center path.
+007,D3,Michael,Does your first aid station have a red door leading to a medical room?
+007,F5,Nathan,Yes! It does. I saw that at the beginning of my route.
+007,D3,Michael,"Great, we're on the same page. I'm moving toward the desert exhibit link now."
+008,E3,Michael,I just arrived at visitor services from the backstage service route.
+008,F5,Nathan,Uh-huh.
+008,E3,Michael,There's a first aid station here with a blue door next to the staff only area.
+008,F5,Nathan,Got it.
+008,E3,Michael,A red directional arrow points toward the gift shop near the ticket booth.
+008,F5,Nathan,Okay.
+008,E3,Michael,The drinking fountain has a faucet mechanism on the left side.
+008,F5,Nathan,Interesting. I see a bench with curved legs by the central fountain here.
+008,E3,Michael,This blue first aid station reminds me of a green one at the emergency entrance in the desert exhibit. Both had shelves nearby.
+008,F5,Nathan,Right. I'm heading toward the nocturnal house link now.
+009,F4,Nathan,I just arrived at the aquatic zone from the nocturnal house link.  
+009,F4,Nathan,There's a coral replica here.  
+009,E3,Michael,Uh-huh.  
+009,F4,Nathan,There's a display panel with a feeding schedule.  
+009,E3,Michael,Got it.  
+009,F4,Nathan,There's a viewing tunnel.  
+009,E3,Michael,Okay.  
+009,F4,Nathan,I'm heading toward the staff only access road.  
+009,E3,Michael,Understood. I'm moving toward the staff only access road as well.
+010,F3,Nathan,I just arrived at the savanna exhibit from the lemur island bridge.
+010,F3,Nathan,There's a waste bin with a foot pedal near the designated area here.
+010,F3,Michael,Hi Nathan. I'm at the savanna exhibit from the staff only access road.
+010,F3,Michael,"We both see the same waste bin with a foot pedal, right?"
+010,F3,Nathan,Uh-huh. The shade structure has a metal grate above the animal resting area here.
+010,F3,Michael,Got it. The shade structure here also has a metal grate above the animal resting area.
+010,F3,Nathan,The signpost here has three arms pointing towards the gift shop.
+010,F3,Michael,"Yes, the signpost with three arms here points to the gift shop too."
+010,F3,Nathan,So we must be in the same savanna exhibit area then?
+010,F3,Michael,"Yep, looks like we're both here now!"

@@ -76,15 +76,44 @@ JUDGE_SYSTEM_PROMPT = """You are a strict evaluator. Given the Question, LLM res
 
     **NOTE THAT INSIDE <answer> </answer>, THERE HAS TO BE JUST 'SAME' OR 'DIFFERENT' AND NOTHING ELSE.** Also, do not provide your own correction, just pass the final verdict in between the answer tags. The reasoning should not be more than 2 sentence long. You have to provide the final answer."""
 
-REWARD_ANSWER_SYSTEM_PROMPT_PROCESS = """You are a data processing and reasoning engine. You will be given a context of previously retrieved information and a specific instruction. Follow the instruction precisely and output only the requested information, and nothing else. Your output will be used as context for the next step in a pipeline, so it must be clean and concise.
+REWARD_ANSWER_SYSTEM_PROMPT_PROCESS = """
+You are a specialized data processing and reasoning engine within a larger pipeline. Your task is to execute the given instruction based on the provided context.
+
+Output Constraints:
+- Output only the requested result and nothing else.
+- Do not include preamble, explanations, or conversational filler.
+- Your output must be raw and clean for immediate use in the next pipeline step.
+
+Image Interpretation Rules for Objects:
+- Black Outlines: Confirmed objects with known positions.
+- Red Outlines: Confirmed objects with unknown positions.
+- Blue Outlines: Hypothesized or assumed objects.
+
+File Naming & Temporal Logic:
+- Format: Files are named `A_[ImageID]_seq_[SequenceID].png` (e.g., A_1_seq_1.png).
+- Versioning (SequenceID): Within the same ImageID, a higher SequenceID indicates a modification of the previous version. The highest SequenceID is the final, authoritative state for that image.
+- Timeline (ImageID): Different ImageIDs represent distinct events in chronological order (e.g., A_1 occurred before A_2 which itself occurred before A_3).
+- Distinctness: Treat different Image IDs as separate scenes or temporal events; treat different Sequence IDs as updates to a single scene.
 """
 
 REWARD_ANSWER_SYSTEM_PROMPT_FINAL_ANSWER = f"""You have been provided the necessary information extracted from the conversation and a question on what to answer. Please follow the instruction and provide only the answer to question that has been asked. The previously retrieved answers are from previous instructions which were used to help answer this question. 
-    The aim is to get the final answer to an original question which was sub divided into multiple instructions. Carefully observe the question and reason to get the correct answer from the retrieved information from the previous instructions. Also pay attention to the information that has already been retrieved as the previous instructions were designed to make the search for the question narrower. We also provide the original question for a reference on what was initially asked. However, the final question is the sun question that you need to answer using the information extracted from previous sub-questions/instructions.
+    The aim is to get the final answer to an original question which was sub divided into multiple instructions. Carefully observe the question and reason to get the correct answer from the retrieved information from the previous instructions. Also pay attention to the information that has already been retrieved as the previous instructions were designed to make the search for the question narrower. We also provide the original question for a reference on what was initially asked. However, the final question is the sub-question that you need to answer using the information extracted from previous sub-questions/instructions.
+    
+    Image Interpretation Rules for Objects:
+    - Black Outlines: Confirmed objects with known positions.
+    - Red Outlines: Confirmed objects with unknown positions.
+    - Blue Outlines: Hypothesized or assumed objects.
+
+    File Naming & Temporal Logic:
+    - Format: Files are named `A_[ImageID]_seq_[SequenceID].png` (e.g., A_1_seq_1.png).
+    - Versioning (SequenceID): Within the same ImageID, a higher SequenceID indicates a modification of the previous version. The highest SequenceID is the final, authoritative state for that image.
+    - Timeline (ImageID): Different ImageIDs represent distinct events in chronological order (e.g., A_1 occurred before A_2 which itself occurred before A_3).
+    - Distinctness: Treat different Image IDs as separate scenes or temporal events; treat different Sequence IDs as updates to a single scene.
+    
     The final answer should be in the format -
-    <reasoning>
+    <think>
     (your reasoning here. Take all the important information into consideration step by step in your reasoning.)
-    </reasoning>
+    </think>
     <answer>
     (your final answer information here to the plan. DO NOT REASON HERE!!)
     </answer>.
@@ -93,15 +122,14 @@ REWARD_ANSWER_SYSTEM_PROMPT_FINAL_ANSWER = f"""You have been provided the necess
 """
 
 QUERY_FORMULATION_SYSTEM_PROMPT = """You are an expert instruction assistant. Your job is to refine a high-level instruction into a very specific, direct, and simple natural language task for another AI model.
-The AI model will be given a context and your refined instruction. Your instruction should be a command that is easy to execute on the given text. Do not use SQL or any structured query language. If asked for a profile then the query should also ask about the *profile*. And in such profile queries, please add '##' infront of the IDs.
+The AI model will be given a context and your refined instruction. Your instruction should be a command that is easy to execute on the given text. Do not use SQL or any structured query language. If the instruction has 'RAG' in it then you should add convert the instruction such that it helps in finding the image easily.
 
 Example:
 Context:
 --- Result of RAG step: 'rooms with a red bed' ---
-Common Ground Fact from Speaker A: Visited a bedroom <ID 1> with a big red bed...
 
 High-Level Instruction:
 From the retrieved rooms, find the Entity ## ID of the room with a bed described as 'big red'.
 
 Your Output:
-Read the provided context and find the Entity ## ID associated with the 'big red bed'. Output only the Entity ID, like '<ID 1>'."""
+Read the provided context and find the Entity ## ID associated with the 'big red bed'. Output only the Entity ID."""
