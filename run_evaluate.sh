@@ -5,7 +5,7 @@
 #SBATCH --constraint=h100            # Reserve 80 GB H100 GPUs
 #SBATCH --nodes=1                    # Request 2 nodes
 #SBATCH --ntasks-per-node=4          # 1 task per GPU 
-#SBATCH --gres=gpu:3                 # GPUs per node
+#SBATCH --gres=gpu:4                 # GPUs per node
 #SBATCH --cpus-per-task=16           # Reserve 16 CPUs per task
 #SBATCH --time=01:45:00              # Maximum allocation time
 #SBATCH --account=bgp@h100           # H100 accounting
@@ -41,7 +41,7 @@ output_slurm_job_id=$SLURM_JOB_ID
 PROCESSING_LLM="/lustre/fsn1/projects/rech/bgp/ucm29gh/huggingface/hub/models--Qwen--Qwen3-VL-32B-Thinking/snapshots/7edd10ffd1196091948fb245ff63e406ccb2d4d1"
 LLM_Judge='/lustre/fsmisc/dataset/HuggingFace_Models/meta-llama/Llama-3.1-8B-Instruct'
 DATA_DIR='/lustre/fswork/projects/rech/bgp/ucm29gh/code/ground_sketching/output'
-DATA_SUB_DIR='Temporal_VA'
+DATA_SUB_DIR='Attributive_VA'
 echo "DATA_SUB_DIR=$DATA_SUB_DIR"
 Image_Searcher='/lustre/fsn1/projects/rech/bgp/ucm29gh/huggingface/hub/models--sentence-transformers--clip-ViT-L-14/snapshots/1b4b2e899178706d1b9905460ac21de1e0ba86a5/'
 OUTPUT_DIR='/lustre/fswork/projects/rech/bgp/ucm29gh/code/ground_sketching/output/evaluation'
@@ -51,17 +51,17 @@ printenv
 echo "Starting vLLM server..."
 export VLLM_ENFORCE_EAGER=true
 
-CUDA_VISIBLE_DEVICES=0 python -m vllm.entrypoints.openai.api_server --model $PROCESSING_LLM \
-    --host $MASTER_ADDR --port $MASTER_PORT --trust-remote-code --tensor-parallel-size 1 --gpu-memory-utilization 0.95 --max-model-len 14000 &
+CUDA_VISIBLE_DEVICES=0,1 python -m vllm.entrypoints.openai.api_server --model $PROCESSING_LLM \
+    --host $MASTER_ADDR --port $MASTER_PORT --trust-remote-code --tensor-parallel-size 2 --gpu-memory-utilization 0.95 --max-model-len 18000 &
 
-CUDA_VISIBLE_DEVICES=1 python -m vllm.entrypoints.openai.api_server --model $LLM_Judge \
+CUDA_VISIBLE_DEVICES=2 python -m vllm.entrypoints.openai.api_server --model $LLM_Judge \
     --host $MASTER_ADDR --port $JUDGE_PORT --trust-remote-code --tensor-parallel-size 1 --gpu-memory-utilization 0.95 --max-model-len 14000 &
 
 # Give the server time to initialize (adjust as needed)
 sleep 180
 echo "Server is ready!"
 
-CUDA_VISIBLE_DEVICES=2 python -m src.evaluate \
+CUDA_VISIBLE_DEVICES=3 python -m src.evaluate \
     --model_name_or_path $PROCESSING_LLM \
     --judge_name_or_path $LLM_Judge \
     --output_dir $OUTPUT_DIR \
@@ -71,6 +71,8 @@ CUDA_VISIBLE_DEVICES=2 python -m src.evaluate \
     --port $MASTER_PORT \
     --port_judge $JUDGE_PORT \
     --server_ip $MASTER_ADDR \
-    --seed 42
+    --server_ip_judge $MASTER_ADDR \
+    --seed 42 \
+    --alpha 0.7
 
 wait

@@ -2,7 +2,7 @@ def get_system_prompt_for_planning(current_participant):
     PLAN_SYSTEM_PROMPT = f"""You are named {current_participant}. You are a master planner. Your task is to break down a complex question from the other speaker into a high-level, strategic plan. This plan will be executed by an intelligent system that can resolve references between steps.
 
     The system understands the following commands:
-    - 'POV': Whose grounded information to look at. This is the first item of the answer. This helps us narrow down whether the query needs to look at the questioner's provided information or the answerer's information. 
+    - 'POV': Whose grounded information to look at. This is the first item of the answer. This helps us narrow down whether the query needs to look at the questioner's provided information or the answerer's information. If there is no specific information like 'my' or 'your' which can help in understanding whose POV to look at, then answer - POV: BOTH.
     - 'RAG[k=N]': An instruction to retrieve the top 'N' most relevant images from the database for a given query. Use this to gather raw facts and descriptions. Use a smaller 'k' for specific facts and a larger 'k' for broader context. The maximum value of 'k' can be 10.
     - 'PROCESS:' : An instruction to reason about, filter, or transform the information gathered so far.
     - 'FINAL_ANSWER:' : An instruction to formulate the final answer. This must be the LAST command.
@@ -30,6 +30,17 @@ def get_system_prompt_for_planning(current_participant):
     <item> RAG[k=5]: Image containing a 'house'.
     <item> PROCESS: From the retrieved images, find the path of the image of the second house using their image names for finding their sequence order. For example, image A_1_seq2 is temporally before A_3_seq3. Hence, the second house here will be A_3_seq3. Output only this image path.
     <item> FINAL_ANSWER: From the retrieved house image, find the car and state its type. If no type is specified, say so.
+    </answer>
+
+    **Example of BOTH:**
+    Question from A: How many sofas were on the wall in the living room with dark blue walls?
+    <think>
+    The user, Participant A, wants to know the number of sofas in the living room with dark blue walls. Since it doesn't mention anything about the point of views like 'my' or 'your', I will make the POV as BOTH. 
+    ... (continue with the remaining thinking)...
+    </think>
+    <answer>
+    <item> POV: BOTH.
+    ...
     </answer>
     ---
 
@@ -94,10 +105,21 @@ File Naming & Temporal Logic:
 - Versioning (SequenceID): Within the same ImageID, a higher SequenceID indicates a modification of the previous version. The highest SequenceID is the final, authoritative state for that image.
 - Timeline (ImageID): Different ImageIDs represent distinct events in chronological order (e.g., A_1 occurred before A_2 which itself occurred before A_3).
 - Distinctness: Treat different Image IDs as separate scenes or temporal events; treat different Sequence IDs as updates to a single scene.
+
+Knowledge Graph (Triplets):
+- Format: `(Subject, Relation, Object)`
+- Usage: These triplets define established relationships between frames or entities (e.g., spatial layout, temporal order) that may not be visually obvious.
+- Authority: Use these relations to bridge gaps between disjoint images or to confirm spatial logic.
+
+Frame Metadata (Textual Context):
+- Format: Text mapped to specific Frame IDs.
+- Usage: This contains "invisible" state information that cannot be depicted in the image.
+- Authority: Treat this as ground truth for any non-visual attributes or intent.
 """
 
 REWARD_ANSWER_SYSTEM_PROMPT_FINAL_ANSWER = f"""You have been provided the necessary information extracted from the conversation and a question on what to answer. Please follow the instruction and provide only the answer to question that has been asked. The previously retrieved answers are from previous instructions which were used to help answer this question. 
     The aim is to get the final answer to an original question which was sub divided into multiple instructions. Carefully observe the question and reason to get the correct answer from the retrieved information from the previous instructions. Also pay attention to the information that has already been retrieved as the previous instructions were designed to make the search for the question narrower. We also provide the original question for a reference on what was initially asked. However, the final question is the sub-question that you need to answer using the information extracted from previous sub-questions/instructions.
+    If the question is a yes or no type of question then answer in yes or no only. Thus if we find a frame which satisfies the question then instead of naming the frame id, answer 'yes'. Similarly, if no frame_ids satisfy the question then answer 'no'.
     
     Image Interpretation Rules for Objects:
     - Black Outlines: Confirmed objects with known positions.
@@ -110,6 +132,16 @@ REWARD_ANSWER_SYSTEM_PROMPT_FINAL_ANSWER = f"""You have been provided the necess
     - Timeline (ImageID): Different ImageIDs represent distinct events in chronological order (e.g., A_1 occurred before A_2 which itself occurred before A_3).
     - Distinctness: Treat different Image IDs as separate scenes or temporal events; treat different Sequence IDs as updates to a single scene.
     
+    Knowledge Graph (Triplets):
+    - Format: `(Subject, Relation, Object)`
+    - Usage: These triplets define established relationships between frames or entities (e.g., spatial layout, temporal order) that may not be visually obvious.
+    - Authority: Use these relations to bridge gaps between disjoint images or to confirm spatial logic.
+
+    Frame Metadata (Textual Context):
+    - Format: Text mapped to specific Frame IDs.
+    - Usage: This contains "invisible" state information that cannot be depicted in the image.
+    - Authority: Treat this as ground truth for any non-visual attributes or intent.
+
     The final answer should be in the format -
     <think>
     (your reasoning here. Take all the important information into consideration step by step in your reasoning.)

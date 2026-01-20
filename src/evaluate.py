@@ -1,5 +1,6 @@
 from typing import *
 import re
+import ast
 import torch
 from datasets import load_dataset, Dataset, load_from_disk
 from dataclasses import dataclass, field
@@ -61,7 +62,7 @@ class ModelArguments:
             )
         },
     )
-    output_dir: Optional[str] = field(
+    output_dir: str = field(
         metadata={
             "help": (
                 "The path to be used to store final evaluations"
@@ -119,6 +120,10 @@ class ModelArguments:
     )
     seed: int = field(
         default=420,
+        metadata={"help": "set the seed"},
+    )
+    alpha: float = field(
+        default=0.7,
         metadata={"help": "set the seed"},
     )
     token: str = field(
@@ -197,8 +202,6 @@ class ModelArguments:
         },
     )
 
-
-
     def __post_init__(self):
         if self.config_overrides is not None and (self.config_name is not None or self.model_name_or_path is not None):
             raise ValueError(
@@ -206,14 +209,17 @@ class ModelArguments:
             )
 
 class ImageSearcher:
-    def __init__(self, model_name='sentence-transformers/clip-ViT-L-14', device='cuda', seed=420):
+    def __init__(self, model_name='sentence-transformers/clip-ViT-L-14', device='cuda', seed=420, alpha= 0.7):
         self.model = SentenceTransformer(model_name, device=device)
         self.device = device
         self.current_image_paths = []
         self.current_embeddings = None
+        self.current_meta_embeddings = None
+        self.current_meta_mask = []
         self.seed = seed
+        self.alpha = alpha
 
-    def index_images_from_path(self, path_or_paths):
+    def index_images_from_path(self, path_or_paths, frame_meta_dict = None):
         """
         Loads images, embeds them, and stores tensors in memory.
         Accepts: Directory String, Single File String, OR List of Strings.
@@ -234,7 +240,10 @@ class ImageSearcher:
         if not self.current_image_paths:
             print(f"Warning: No images found.")
             self.current_embeddings = None
+            self.current_meta_embeddings = None
             return
+        
+        self.current_meta_mask = []
 
         # Load and Embed
         try:
@@ -243,22 +252,74 @@ class ImageSearcher:
         except Exception as e:
             print(f"Error indexing images: {e}")
             self.current_embeddings = None
+            self.current_meta_mask = []
+            return
+        
+        if frame_meta_dict:
+            meta_texts = []
+            for p in self.current_image_paths:
+                filename = os.path.splitext(os.path.basename(p))[0]
+                frame_id = filename.split('_seq')[0] 
+                
+                metas = frame_meta_dict.get(frame_id, [])
+                has_meta = bool(metas)
+                meta_text = ", ".join([str(m) for m in metas if m]) if has_meta else ""
+                meta_texts.append(meta_text)
+                self.current_meta_mask.append(has_meta)
+            
+            try:
+                self.current_meta_embeddings = self.model.encode(meta_texts, convert_to_tensor=True, show_progress_bar=False)
+            except Exception as e:
+                print(f"Error indexing metadata: {e}")
+                self.current_meta_embeddings = None
+                self.current_meta_mask = []
+                return
+            
+        else:
+            self.current_meta_embeddings = None
+            self.current_meta_mask = []
+
+        if self.current_embeddings is not None:
+            assert self.current_embeddings.shape[0] == len(self.current_image_paths)
+            
+            if self.current_meta_embeddings is not None:
+                assert self.current_embeddings.shape[0] == self.current_meta_embeddings.shape[0]
+                
+                self.current_meta_mask = torch.tensor(
+                                            self.current_meta_mask,
+                                            dtype=torch.bool,
+                                            device=self.current_embeddings.device
+                                        )
 
     def search(self, query: str, k: int = 3):
         if self.current_embeddings is None:
             return []
 
-        query_embedding = self.model.encode([query], convert_to_tensor=True)
+        query_embedding = self.model.encode([query], convert_to_tensor=True).to(self.current_embeddings.device)
         
         # Ensure k isn't larger than the number of available images
         real_k = min(k, len(self.current_image_paths))
         
-        hits = util.semantic_search(query_embedding, self.current_embeddings, top_k=real_k)[0]
+        # hits = util.semantic_search(query_embedding, self.current_embeddings, top_k=real_k)[0]
         
+        # results = []
+        # for hit in hits:
+        #     img_idx = hit['corpus_id']
+        #     results.append(self.current_image_paths[img_idx])
+
+        visual_scores = util.cos_sim(query_embedding, self.current_embeddings)[0]
+
+        final_scores = visual_scores.clone()
+        if self.current_meta_embeddings is not None:
+            text_scores = util.cos_sim(query_embedding, self.current_meta_embeddings)[0]
+            final_scores[self.current_meta_mask] = self.alpha * visual_scores[self.current_meta_mask] + (1 - self.alpha) * text_scores[self.current_meta_mask]
+
+        top_results = torch.topk(final_scores, k=real_k)
+        top_indices = top_results.indices.cpu().numpy()
+
         results = []
-        for hit in hits:
-            img_idx = hit['corpus_id']
-            results.append(self.current_image_paths[img_idx])
+        for idx in top_indices:
+            results.append(self.current_image_paths[idx])
             
         return results
 
@@ -298,7 +359,7 @@ class InferenceEvaluator:
             
         return f"data:{mime_type};base64,{encoded_string}"
 
-    def _call_vlm_api(self, text_prompt, image_paths=None, system_prompt="You are a helpful assistant.", temperature: float = 0.7, max_tokens=2048, seed: int = 42):
+    def _call_vlm_api(self, text_prompt, image_paths=None, system_prompt="You are a helpful assistant.", temperature: float = 0.7, max_tokens=4096, seed: int = 42):
         """
         Generic wrapper to call the vLLM server via OpenAI API.
         Handles both text-only (Planning) and multimodal (Answering) requests.
@@ -355,12 +416,6 @@ class InferenceEvaluator:
         if not working_memory.strip():
             return instruction
 
-        # concrete_query = self._call_vlm_api(
-        #                     text_prompt=f"Context:\n{working_memory}\n\nHigh-Level Instruction:\n{instruction}",
-        #                     image_paths=None,
-        #                     system_prompt=QUERY_FORMULATION_SYSTEM_PROMPT,
-        #                     max_tokens=100
-        #                 ).split('assistant\n')[-1].strip()
         concrete_query = self._call_vlm_api(
                             text_prompt=f"Context:\n{working_memory}\n\nHigh-Level Instruction:\n{instruction}",
                             image_paths=None,
@@ -370,6 +425,66 @@ class InferenceEvaluator:
                         ).strip()
         
         return concrete_query
+
+    def _get_metadata_context(self, current_image_paths: List[str], frame_meta_dict: Dict[str, List[str]]) -> str:
+        """
+        Retrieval Logic for Frame Metadata.
+        Matches image filenames (Frame IDs) to the metadata dictionary.
+        """
+        if not frame_meta_dict or not current_image_paths:
+            return ""
+
+        meta_context = []
+
+        if frame_meta_dict is None:
+            return ""
+
+        visited = []
+        
+        for p in current_image_paths:
+            filename = os.path.splitext(os.path.basename(p))[0]
+            frame_id = filename.split('_seq')[0]
+            
+            # Retrieve metadata if it exists for this frame
+            if frame_id in frame_meta_dict and frame_id not in visited:
+                metas = frame_meta_dict.get(frame_id, [])
+                if metas:
+                    # Clean and format the list
+                    meta_text = ", ".join([str(m) for m in metas if m])
+                    meta_context.append(f"Frame {frame_id}: {meta_text}")
+                    visited.append(frame_id)
+        
+        if not meta_context:
+            return ""
+            
+        return "\n\nAdditional Metadata(which could not be depicted in the image) for retrieved images:\n" + "\n".join(meta_context)
+
+    def _get_relevant_triplets(self, current_image_paths: List[str], all_triplets: List[Tuple]) -> str:
+        """
+        Filters triplets where either the subject or object matches the IDs of the currently retrieved images.
+        """
+        if not all_triplets or not current_image_paths:
+            return ""
+
+        retrieved_ids = set()
+        for p in current_image_paths:
+            # Remove extension: "B_3_seq_1" and them split on '_seq_'
+            name_stem = os.path.splitext(os.path.basename(p))[0]
+            clean_id = name_stem.split('_seq')[0]
+            retrieved_ids.add(clean_id)
+        relevant = []
+        for triplet in all_triplets:
+            # Triplet format: ('B_3', 'is_west_of', 'B_2')
+            if len(triplet) == 3:
+                sub, rel, obj = triplet
+                # Check if subject or object is in the retrieved images
+                if sub in retrieved_ids or obj in retrieved_ids:
+                    relevant.append(triplet)
+        
+        if not relevant:
+            return ""
+            
+        return f"\n{str(relevant)}"
 
     def _extract_score(self, text: str) -> int:
         # print('score_text', text, flush=True)
@@ -383,7 +498,7 @@ class InferenceEvaluator:
             print("SCORE NOT IN FORMAT   ", score.upper(), flush=True)
             return 0
     
-    def _planned_rag_retrieval(self, image_source_paths, questions: List[str], questioners: List[str], answerers: List[str]):
+    def _planned_rag_retrieval(self, image_source_paths, questions: List[str], questioners: List[str], answerers: List[str], triplets: List[Tuple], frame_meta: Dict[str, List[str]]):
         # Generate the plans (Text-only call to VLM)
         raw_plans = []
         for i in range(len(questions)):
@@ -393,7 +508,7 @@ class InferenceEvaluator:
                     text_prompt=plan_prompt,
                     image_paths=None,
                     system_prompt=get_system_prompt_for_planning(answerers[i]),
-                    max_tokens=2048
+                    max_tokens=5000
                 )
             )
 
@@ -406,8 +521,14 @@ class InferenceEvaluator:
         for i, plan in enumerate(plans):
             # Each plan has a few steps which need to be broken down
             extracted_plan = [p.strip() for p in plan.split('<item>') if p.strip()]
-            target_user_folder = "A" if " POV: A" in extracted_plan[0] else "B" if "POV: B" in extracted_plan[0] else answerers[i]
-            target_image_source_paths = os.path.join(image_source_paths[i], str(target_user_folder))
+            if len(extracted_plan) != 0:
+                target_user_folder = "A" if " POV: A" in extracted_plan[0] else "B" if "POV: B" in extracted_plan[0] else None
+                if target_user_folder: 
+                    target_image_source_paths = os.path.join(image_source_paths, str(target_user_folder))
+                else:
+                    target_image_source_paths = image_source_paths
+            else:
+                return [], [], []
             # Start with ALL images in the folder of the target_user
             current_context_images = glob(os.path.join(target_image_source_paths, f'*.png')) + \
                                     glob(os.path.join(target_image_source_paths, "*.jpg"))
@@ -438,7 +559,7 @@ class InferenceEvaluator:
 
                 if 'RAG' in command:
                     # Embed the currently available common ground images generated from the dialogues
-                    self.image_searcher.index_images_from_path(current_context_images)
+                    self.image_searcher.index_images_from_path(current_context_images, frame_meta)
 
                     match = re.match(r"RAG\[k=(\d+)\]", command)
                     if match:
@@ -448,13 +569,17 @@ class InferenceEvaluator:
                         k_value = 3
 
                     current_context_images = self.image_searcher.search(concrete_query, k=k_value)
+                    meta_info_str = self._get_metadata_context(current_context_images, frame_meta)
+
                     found_names = [os.path.basename(p) for p in current_context_images]
                     log_msg = f"Found images: {found_names}"
-                    working_memory += f"\n--- Result of RAG step: '{concrete_query}' ---\n{log_msg}\n"
+                    working_memory += f"\n--- Result of RAG step: '{concrete_query}' ---\n{log_msg}\n{meta_info_str}\n"
                     retrieved_steps_for_logging.append({"step": instruction, "executed_query": concrete_query, "result": log_msg})
 
                 elif command == 'FINAL_ANSWER':
-                    processing_prompt = f"Original Question from {questioners[i]} : {questions[i]}.\n\n Final Context:\n{working_memory}\n\nBased on this context, follow this final instruction: {concrete_query}"
+                    meta_info_str = self._get_metadata_context(current_context_images, frame_meta)
+                    triplet_info = self._get_relevant_triplets(current_context_images, triplets)
+                    processing_prompt = f"Original Question from {questioners[i]} : {questions[i]}.\n\n Final Context:\n{working_memory}\n\nRelevant Triplets for current images: {triplet_info}\n\n{meta_info_str}\n\nBased on this context, follow this final instruction: {concrete_query}"
                     llm_result = self._call_vlm_api(
                                     text_prompt=processing_prompt,
                                     image_paths=current_context_images,
@@ -464,7 +589,9 @@ class InferenceEvaluator:
                     retrieved_steps_for_logging.append({"step": instruction, "executed_query": concrete_query, "result": llm_result})
 
                 elif command == 'PROCESS': 
-                    processing_prompt = f"Current Context:\n{working_memory}\n\nInstruction: {concrete_query}"                    
+                    meta_info_str = self._get_metadata_context(current_context_images, frame_meta)
+                    triplet_info = self._get_relevant_triplets(current_context_images, triplets)
+                    processing_prompt = f"Current Context:\n{working_memory}\n\nRelevant Triplets for current images: {triplet_info}\n\n{meta_info_str}\n\nInstruction: {concrete_query}"                    
                     llm_result = self._call_vlm_api(
                                     text_prompt=processing_prompt,
                                     image_paths=current_context_images,
@@ -479,7 +606,7 @@ class InferenceEvaluator:
                 
         return final_answers, all_retrieved_for_logging, plans
 
-    def evaluate(self, questions: List[str], questioners: List[str], answerers: List[str], correct_answers: List[str], image_path: str, datapoint_id: str):
+    def evaluate(self, questions: List[str], questioners: List[str], answerers: List[str], correct_answers: List[str], image_path: str, datapoint_id: str, triplets: List[Tuple], frame_meta: Dict[str, List[str]]):
         """
         Performs the full inference and evaluation pipeline for a single data point.
         
@@ -490,7 +617,9 @@ class InferenceEvaluator:
             questions=questions,
             questioners=questioners,
             answerers=answerers,
-            image_source_paths=image_path
+            image_source_paths=image_path,
+            triplets=triplets,
+            frame_meta=frame_meta 
         )
 
         llm_answers = [self._reasoning_extract_answer(l) for l in llm_answers]
@@ -547,11 +676,47 @@ def load_meetup_data(meetup_root: str) -> Dataset:
             if df.shape[0] < 3:
                 continue  # not enough messages for context, question, answer
 
-            # Build conversation log from all but last 2 rows
+            # Store the triplets
+            all_triplets = set()
+            # Dictionary for storing frame metadata
+            frame_meta_dict = defaultdict(list)
+
+            # Build conversation log from all but last 3 rows
             df_context = df.iloc[:-3]
             conversation_log = "Here is the conversation -\n"
             for _, row in df_context.iterrows():
                 conversation_log += f"Speaker: {row['character']}\nTime: {row['time']}\nMessage: {row['text']}\n\n"
+
+                # Check if frame_id and frame_meta exist and are not null
+                if 'frame_id' in row and 'frame_meta' in row:
+                    f_id = row['frame_id']
+                    f_meta = row['frame_meta']
+                    
+                    if pd.notna(f_id) and pd.notna(f_meta) and str(f_meta).strip() != "":
+                        frame_meta_dict[str(f_id)].append(str(f_meta))
+                
+                raw_triplets = row['extracted_triplets'] 
+                # Skip if NaN, None, or empty string
+                if pd.isna(raw_triplets) or raw_triplets == "" or raw_triplets is None:
+                    continue
+
+                current_row_triplets = []
+                if isinstance(raw_triplets, str):
+                    try:
+                        if not raw_triplets.strip().startswith('['): 
+                            continue
+                        parsed = ast.literal_eval(raw_triplets)
+                        if isinstance(parsed, list):
+                            current_row_triplets = parsed
+                    except (ValueError, SyntaxError):
+                        continue
+                elif isinstance(raw_triplets, list):
+                        current_row_triplets = raw_triplets
+                for t in current_row_triplets:
+                    if isinstance(t, (list, tuple)) and len(t) == 3:
+                        all_triplets.add(tuple(t))
+            
+            frame_meta_dict = {k: list(set(v)) for k, v in frame_meta_dict.items()}
 
             question_row = df.iloc[-3]
             question = question_row['text']
@@ -570,8 +735,10 @@ def load_meetup_data(meetup_root: str) -> Dataset:
                 'questioner': [question_user],
                 'answerer': [answer_user],
                 'model_answer': [model_answer],
-                'image_path': [image_path],
-                'file_name': [file_name]
+                'image_path': image_path,
+                'file_name': file_name,
+                'triplets': list(all_triplets),
+                'frame_meta': frame_meta_dict
             })
 
         except Exception as e:
@@ -610,7 +777,7 @@ def main_infer(model_args):
     print(f"[Logging] Writing evaluation samples to: {eval_logger.log_path}", flush=True)
     
     print("Setting up local embedding model for retriever...")
-    image_searcher = ImageSearcher(model_name=model_args.image_searcher_model, seed=model_args.seed)
+    image_searcher = ImageSearcher(model_name=model_args.image_searcher_model, seed=model_args.seed, alpha=model_args.alpha)
     try:
         print("Testing the image searcher model...")
         test_vec = image_searcher.model.encode(["query: This is a test."], convert_to_tensor=True)
@@ -635,7 +802,7 @@ def main_infer(model_args):
     vlm_processor = AutoProcessor.from_pretrained(model_args.model_name_or_path)
 
     judge_model = OpenAI(
-        base_url=f"http://{model_args.server_ip}:{model_args.port_judge}/v1",
+        base_url=f"http://{model_args.server_ip_judge}:{model_args.port_judge}/v1",
         api_key="not-needed"
     )
 
@@ -657,7 +824,9 @@ def main_infer(model_args):
                 answerers=sample['answerer'],
                 correct_answers=sample['model_answer'],
                 image_path=sample['image_path'],
-                datapoint_id=sample['file_name']
+                datapoint_id=sample['file_name'],
+                triplets=sample['triplets'],
+                frame_meta=sample['frame_meta']
             )
         total_scores.append(score)
 
