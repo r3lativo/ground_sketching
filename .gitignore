@@ -4,3 +4,4 @@ Qwen-Image-Lightning/
 output/*
 *.old
 *logs/*
+.DS_Store

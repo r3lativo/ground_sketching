@@ -43,7 +43,8 @@ LLM_Judge='/lustre/fsmisc/dataset/HuggingFace_Models/meta-llama/Llama-3.1-8B-Ins
 DATA_DIR='/lustre/fswork/projects/rech/bgp/ucm29gh/code/ground_sketching/output'
 DATA_SUB_DIR='Attributive_VA'
 echo "DATA_SUB_DIR=$DATA_SUB_DIR"
-Image_Searcher='/lustre/fsn1/projects/rech/bgp/ucm29gh/huggingface/hub/models--sentence-transformers--clip-ViT-L-14/snapshots/1b4b2e899178706d1b9905460ac21de1e0ba86a5/'
+Searcher='/lustre/fsn1/projects/rech/bgp/ucm29gh/huggingface/hub/models--sentence-transformers--clip-ViT-L-14/snapshots/1b4b2e899178706d1b9905460ac21de1e0ba86a5/'
+# Searcher='sentence-transformers/all-mpnet-base-v2'
 OUTPUT_DIR='/lustre/fswork/projects/rech/bgp/ucm29gh/code/ground_sketching/output/evaluation'
 
 printenv
@@ -67,12 +68,13 @@ CUDA_VISIBLE_DEVICES=3 python -m src.evaluate \
     --output_dir $OUTPUT_DIR \
     --test_dataset_name "${DATA_DIR}/${DATA_SUB_DIR}/" \
     --relation_type $DATA_SUB_DIR \
-    --image_searcher_model $Image_Searcher \
+    --searcher_model $Searcher \
     --port $MASTER_PORT \
     --port_judge $JUDGE_PORT \
     --server_ip $MASTER_ADDR \
     --server_ip_judge $MASTER_ADDR \
     --seed 42 \
-    --alpha 0.7
+    --alpha 0.7 \
+    --retrieval_mode 'image'
 
 wait
