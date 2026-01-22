@@ -1,6 +1,6 @@
 # Ground Sketching
 
-This repository contains the server infrastructure for a master's thesis project exploring multimodal representations of common ground in situated dialogue.
+This repository contains the server infrastructure for the project exploring multimodal representations of common ground in situated dialogue.
 
 Text-only Large Language Models (LLMs) struggle with reasoning in situated, embodied tasks: is it because they lack the visual and spatial grounding that humans inherently use? These models are often trained on "space-less, time-less" text, hindering their ability to resolve ambiguities or track references that are clear from a shared visual context.
 
@@ -23,6 +23,7 @@ The code herein sets up the necessary services, including an image generation mo
 |   ├── data_manager.py     # Deals with preparing the data
 │   ├── image_gen_app.py    # FastAPI app for the image generation service
 │   ├── logger.py           # Logger
+│   ├── evaluate.py         # Evaluate the models using Indiref data
 │   ├── mock_api_clients.py # Mock API class for test without running models
 │   ├── pipeline.py         # Manipulates the prepared data
 │   ├── strategies.py       # Prepares and parses i/o for VL model

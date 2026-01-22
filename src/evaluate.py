@@ -349,9 +349,11 @@ class SummarySearcher(BaseSearcher):
     """
     def __init__(self, model_name, device='cuda', seed=420):
         print(f"Loading Text Searcher with model: {model_name}")
-        self.model = SentenceTransformer(model_name, device=device)
+        self.model = SentenceTransformer(model_name, device=device, trust_remote_code=True, model_kwargs={"torch_dtype": torch.float16})
+        self.model._first_module().auto_model.config.use_cache = False
         self.device = device
         self.seed = seed
+        self.query_instruction = "Instruction: "
         
         self.current_ids = []
         self.current_texts = []
@@ -383,7 +385,7 @@ class SummarySearcher(BaseSearcher):
         if self.current_embeddings is None:
             return []
 
-        query_embedding = self.model.encode([query], convert_to_tensor=True).to(self.current_embeddings.device)
+        query_embedding = self.model.encode([self.query_instruction + query], convert_to_tensor=True).to(self.current_embeddings.device)
         real_k = min(k, len(self.current_texts))
         
         # Pure Cosine Similarity for text
@@ -903,7 +905,7 @@ def main_infer(model_args):
     if model_args.retrieval_mode == 'image':
         searcher = ImageSearcher(model_name=model_args.searcher_model, seed=model_args.seed, alpha=model_args.alpha)
     elif model_args.retrieval_mode == 'summary':
-        searcher = SummarySearcher(model_name="sentence-transformers/all-mpnet-base-v2", seed=model_args.seed)
+        searcher = SummarySearcher(model_name=model_args.searcher_model, seed=model_args.seed)
 
     try:
         print("Testing the searcher model...")
