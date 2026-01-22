@@ -10,7 +10,8 @@
 #SBATCH --time=01:45:00              # Maximum allocation time
 #SBATCH --account=bgp@h100           # H100 accounting
 
-cd $SLURM_SUBMIT_DIR
+# cd $SLURM_SUBMIT_DIR
+cd "$SLURM_SUBMIT_DIR/../"
 
 export HF_HOME="/lustre/fsn1/projects/rech/bgp/ucm29gh/huggingface"
 export XDG_CACHE_HOME="/lustre/fsn1/projects/rech/bgp/ucm29gh/cache"
@@ -59,7 +60,7 @@ CUDA_VISIBLE_DEVICES=2 python -m vllm.entrypoints.openai.api_server --model $LLM
     --host $MASTER_ADDR --port $JUDGE_PORT --trust-remote-code --tensor-parallel-size 1 --gpu-memory-utilization 0.95 --max-model-len 14000 &
 
 # Give the server time to initialize (adjust as needed)
-sleep 180
+sleep 240
 echo "Server is ready!"
 
 CUDA_VISIBLE_DEVICES=3 python -m src.evaluate \

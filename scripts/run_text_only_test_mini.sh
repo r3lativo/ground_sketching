@@ -1,17 +1,17 @@
 #!/bin/bash
 # run_experiment.sh
 
-#SBATCH --job-name=to_spatial
+#SBATCH --job-name=ta_test_m
 #SBATCH --output=/lustre/fswork/projects/rech/bgp/ucm29gh/code/ground_sketching/slurm_logs/%j.out 
 #SBATCH --error=/lustre/fswork/projects/rech/bgp/ucm29gh/code/ground_sketching/slurm_logs/%j.err
 #SBATCH --constraint=h100
 #SBATCH --nodes=1
 #SBATCH --gres=gpu:2
 #SBATCH --cpus-per-task=16
-#SBATCH --time=01:00:00
+#SBATCH --time=4:00:00
 #SBATCH --account=bgp@h100
 
-cd $SLURM_SUBMIT_DIR
+cd "$SLURM_SUBMIT_DIR/../"
 
 export HF_HOME="/lustre/fsn1/projects/rech/bgp/ucm29gh/huggingface"
 export XDG_CACHE_HOME="/lustre/fsn1/projects/rech/bgp/ucm29gh/cache"
@@ -64,7 +64,7 @@ echo " - VLM Backend: $VLLM_URL"
 wait_for_url() {
     local url=$1
     local name=$2
-    local max_retries=120
+    local max_retries=60
     local count=0
     
     echo -n "Waiting for $name..."
@@ -94,16 +94,15 @@ echo "All services are healthy. Proceeding..."
 # 4. Run Experiment
 
 # Define Input Folder
-NAME="Spatial"
-INPUT_DIR="/lustre/fswork/projects/rech/bgp/ucm29gh/code/jeanzay-rl/data/IndiRef/meetup_final/$NAME"
+INPUT_DIR="data/test_mini"
 
 python -m src.augmenter \
     --input_dir "$INPUT_DIR" \
-    --output_dir "output/text_only_$NAME" \
+    --output_dir "output/text_only_test_mini" \
     --create_aug \
     --text_only \
     --relation_triplets \
-    --n_files 200
+    --n_files 1
 
 # 4. Cleanup
 echo "--- CLEANING UP ---"

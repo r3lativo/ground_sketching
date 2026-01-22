@@ -1,7 +1,7 @@
 #!/bin/bash
 # run_experiment.sh
 
-#SBATCH --job-name=to_temporal
+#SBATCH --job-name=to_inferred
 #SBATCH --output=/lustre/fswork/projects/rech/bgp/ucm29gh/code/ground_sketching/slurm_logs/%j.out 
 #SBATCH --error=/lustre/fswork/projects/rech/bgp/ucm29gh/code/ground_sketching/slurm_logs/%j.err
 #SBATCH --constraint=h100
@@ -11,7 +11,7 @@
 #SBATCH --time=01:00:00
 #SBATCH --account=bgp@h100
 
-cd $SLURM_SUBMIT_DIR
+cd "$SLURM_SUBMIT_DIR/../"
 
 export HF_HOME="/lustre/fsn1/projects/rech/bgp/ucm29gh/huggingface"
 export XDG_CACHE_HOME="/lustre/fsn1/projects/rech/bgp/ucm29gh/cache"
@@ -94,7 +94,7 @@ echo "All services are healthy. Proceeding..."
 # 4. Run Experiment
 
 # Define Input Folder
-NAME="Temporal"
+NAME="Inferred"
 INPUT_DIR="/lustre/fswork/projects/rech/bgp/ucm29gh/code/jeanzay-rl/data/IndiRef/meetup_final/$NAME"
 
 python -m src.augmenter \
