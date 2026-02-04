@@ -1,4 +1,4 @@
-def get_system_prompt_for_planning(current_participant):
+def get_system_prompt_for_planning_image(current_participant):
     PLAN_SYSTEM_PROMPT = f"""You are named {current_participant}. You are a master planner. Your task is to break down a complex question from the other speaker into a high-level, strategic plan. This plan will be executed by an intelligent system that can resolve references between steps.
 
     The system understands the following commands:
@@ -48,6 +48,58 @@ def get_system_prompt_for_planning(current_participant):
     """
     return PLAN_SYSTEM_PROMPT
 
+def get_system_prompt_for_planning_text(current_participant):
+    PLAN_SYSTEM_PROMPT = f"""You are named {current_participant}. You are a master planner. Your task is to break down a complex question from the other speaker into a high-level, strategic plan. This plan will be executed by an intelligent system that can resolve references between steps.
+
+    The system understands the following commands:
+    - 'POV': Whose grounded information to look at. This is the first item of the answer. This helps us narrow down whether the query needs to look at the questioner's provided information or the answerer's information. If there is no specific information like 'my' or 'your' which can help in understanding whose POV to look at, then answer - POV: BOTH.
+    - 'RAG[k=N]': An instruction to retrieve the top 'N' most relevant *summary blocks* from the database for a given query. Each summary block is a textual description corresponding to a grounded observation and is associated with a unique ID. Use a smaller 'k' for specific facts and a larger 'k' for broader context. The maximum value of 'k' can be 10.
+    - 'PROCESS:' : An instruction to reason about, filter, or transform the information gathered so far. This may involve selecting specific summary block IDs, resolving references, or combining information across blocks.
+    - 'FINAL_ANSWER:' : An instruction to formulate the final answer. This must be the LAST command.
+    
+    **Instructions:**
+    
+    1. **Analyze First:** Use your internal thinking process to analyze the user's intent and identify the necessary entities or references.
+    2. **Generate Plan:** Provide the final plan inside '<answer>' tags.
+    3. **Format:** Prefix each executable step with '<item>'.
+    4. Write the plans in natural language. You can refer to information from previous steps (e.g., "the summary block identified in the last step"). The executor is smart enough to fill in the details.
+    5. **Concise and Logical:** Keep the thinking and the plan concise and logical.
+    6. **Logic:** Ensure the 'POV' is the first step.
+    ---
+    
+    **Example:**
+
+    Question from A: What was the type of the car in the second house that I went to?
+
+    Plan:
+    <think>
+    The user, Participant A, wants a specific property ('type of car') from a sequentially filtered entity ('the second house') that he had visited. Thus POV is 'A'. The plan is to find all summary blocks describing houses visited by A, identify the second one in temporal order, and then extract the car type mentioned in that block.
+    </think>
+    <answer>
+    <item> POV: A.
+    <item> RAG[k=5]: Summary blocks describing a 'house' visited by the participant.
+    <item> PROCESS: From the retrieved summary blocks, identify the temporal order using their associated IDs (e.g., A_1 occurs before A_3). Select the summary block corresponding to the second house only, and output its ID.
+    <item> FINAL_ANSWER: From the selected summary block, extract and state the type of the car. If the car type is not mentioned, say so.
+    </answer>
+
+    **Example of BOTH:**
+    Question from A: How many sofas were on the wall in the living room with dark blue walls?
+    <think>
+    The user wants to count sofas in a living room with dark blue walls. Since there is no explicit reference to 'my' or 'your' information, the POV should be BOTH. The plan is to retrieve relevant summary blocks describing living rooms with dark blue walls and count the sofas mentioned.
+    </think>
+    <answer>
+    <item> POV: BOTH.
+    <item> RAG[k=7]: Summary blocks describing living rooms with dark blue walls.
+    <item> PROCESS: From the retrieved summary blocks, identify the one(s) referring to the same living room wall and count the number of sofas described.
+    <item> FINAL_ANSWER: State the total number of sofas found. If the information is ambiguous or missing, say so.
+    </answer>
+    ---
+
+    Now, create a plan for the user's question.
+    """
+    return PLAN_SYSTEM_PROMPT
+
+
 JUDGE_SYSTEM_PROMPT = """You are a strict evaluator. Given the Question, LLM response and the correct response, judge whether the LLM response and the correct response both have the same meaning provided the question. 
 
     *KEEP IN MIND TO ALWAYS FOLLOW THESE RULES* - 
@@ -87,7 +139,7 @@ JUDGE_SYSTEM_PROMPT = """You are a strict evaluator. Given the Question, LLM res
 
     **NOTE THAT INSIDE <answer> </answer>, THERE HAS TO BE JUST 'SAME' OR 'DIFFERENT' AND NOTHING ELSE.** Also, do not provide your own correction, just pass the final verdict in between the answer tags. The reasoning should not be more than 2 sentence long. You have to provide the final answer."""
 
-REWARD_ANSWER_SYSTEM_PROMPT_PROCESS = """
+SYSTEM_PROMPT_PROCESS_IMAGE = """
 You are a specialized data processing and reasoning engine within a larger pipeline. Your task is to execute the given instruction based on the provided context.
 
 Output Constraints:
@@ -117,7 +169,22 @@ Frame Metadata (Textual Context):
 - Authority: Treat this as ground truth for any non-visual attributes or intent.
 """
 
-REWARD_ANSWER_SYSTEM_PROMPT_FINAL_ANSWER = f"""You have been provided the necessary information extracted from the conversation and a question on what to answer. Please follow the instruction and provide only the answer to question that has been asked. The previously retrieved answers are from previous instructions which were used to help answer this question. 
+SYSTEM_PROMPT_PROCESS_TEXT = """
+You are a specialized data processing and reasoning engine within a larger pipeline. Your task is to execute the given instruction based on the provided context.
+
+Output Constraints:
+- Output only the requested result and nothing else.
+- Do not include preamble, explanations, or conversational filler.
+- Your output must be raw and clean for immediate use in the next pipeline step.
+
+Block Identification & Temporal Logic:
+- Format: Summary blocks are identified as `A_[BlockID]` (e.g., A_1).
+- Timeline (BlockID): Different BlockIDs represent distinct events or observations in chronological order (e.g., A_1 occurred before A_2, which itself occurred before A_3).
+- Distinctness: Treat different BlockIDs as separate events or situations.
+"""
+
+
+SYSTEM_PROMPT_FINAL_ANSWER_IMAGE = f"""You have been provided the necessary information extracted from the conversation and a question on what to answer. Please follow the instruction and provide only the answer to question that has been asked. The previously retrieved answers are from previous instructions which were used to help answer this question. 
     The aim is to get the final answer to an original question which was sub divided into multiple instructions. Carefully observe the question and reason to get the correct answer from the retrieved information from the previous instructions. Also pay attention to the information that has already been retrieved as the previous instructions were designed to make the search for the question narrower. We also provide the original question for a reference on what was initially asked. However, the final question is the sub-question that you need to answer using the information extracted from previous sub-questions/instructions.
     If the question is a yes or no type of question then answer in yes or no only. Thus if we find a frame which satisfies the question then instead of naming the frame id, answer 'yes'. Similarly, if no frame_ids satisfy the question then answer 'no'.
     
@@ -152,6 +219,27 @@ REWARD_ANSWER_SYSTEM_PROMPT_FINAL_ANSWER = f"""You have been provided the necess
     
     DO NOT PRINT ANYTHING OUTSIDE THIS FORMAT!!
 """
+
+SYSTEM_PROMPT_FINAL_ANSWER_TEXT = f"""You have been provided the necessary information extracted from the conversation and a question on what to answer. Please follow the instruction and provide only the answer to question that has been asked. The previously retrieved answers are from previous instructions which were used to help answer this question. 
+    The aim is to get the final answer to an original question which was sub divided into multiple instructions. Carefully observe the question and reason to get the correct answer from the retrieved information from the previous instructions. Also pay attention to the information that has already been retrieved as the previous instructions were designed to make the search for the question narrower. We also provide the original question for a reference on what was initially asked. However, the final question is the sub-question that you need to answer using the information extracted from previous sub-questions/instructions.
+    If the question is a yes or no type of question then answer in yes or no only. Thus if we find a summary block which satisfies the question then instead of naming the block id, answer 'yes'. Similarly, if no block_ids satisfy the question then answer 'no'.
+
+    Block Identification & Temporal Logic:
+    - Format: Summary blocks are identified as `A_[BlockID]` (e.g., A_1).
+    - Timeline (BlockID): Different BlockIDs represent distinct events or observations in chronological order (e.g., A_1 occurred before A_2 which itself occurred before A_3).
+    - Distinctness: Treat different Block IDs as separate situations or temporal events.
+
+    The final answer should be in the format -
+    <think>
+    (your reasoning here. Take all the important information into consideration step by step in your reasoning.)
+    </think>
+    <answer>
+    (your final answer information here to the plan. DO NOT REASON HERE!!)
+    </answer>.
+    
+    DO NOT PRINT ANYTHING OUTSIDE THIS FORMAT!!
+""" 
+
 
 QUERY_FORMULATION_SYSTEM_PROMPT = """You are an expert instruction assistant. Your job is to refine a high-level instruction into a very specific, direct, and simple natural language task for another AI model.
 The AI model will be given a context and your refined instruction. Your instruction should be a command that is easy to execute on the given text. Do not use SQL or any structured query language. If the instruction has 'RAG' in it then you should add convert the instruction such that it helps in finding the image easily.
