@@ -635,6 +635,18 @@ class InferenceEvaluator:
                 
         return final_answers, all_retrieved_for_logging, plans
 
+    def _log(self, question, plan, retrieved_steps, llm_answers, judge_response_content, correct_answer, score, datapoint_id):
+        self.latest_sample_for_logging = {
+                    "question": question,
+                    "plan": plan,
+                    "retrieved_steps": retrieved_steps,
+                    "llm_response": llm_answers,
+                    "judge_response": judge_response_content,
+                    "correct_response": correct_answer,
+                    "score": score,
+                    "datapoint_id": datapoint_id
+                }
+
     def evaluate(self, questions: List[str], questioners: List[str], answerers: List[str], correct_answers: List[str], image_path: str, datapoint_id: str, triplets: List[Tuple], frame_meta: Dict[str, List[str]], frame_summaries: Dict[str, str]):
         """
         Performs the full inference and evaluation pipeline for a single data point.
@@ -653,7 +665,9 @@ class InferenceEvaluator:
         )
 
         llm_answers = [self._reasoning_extract_answer(l) for l in llm_answers]
-        # llm_answers, retrieved_steps, plans = self._retrieval(common_ground, questions, questioners)
+        if not llm_answers:
+            self._log(questions[0], plans[0], retrieved_steps[0], '', '', '', 0, datapoint_id)
+            return 0.0
 
         # Use the model as a judge to score the generated answers
         judgement_prompts = []
@@ -664,6 +678,10 @@ class InferenceEvaluator:
             formatted_judge_prompt = self.judge_tokenizer.apply_chat_template(input_message, tokenize=False, add_generation_prompt=True)
             judgement_prompts.append(formatted_judge_prompt)
         
+        if len(judgement_prompts) == 0:
+            self._log(questions[0], plans[0], retrieved_steps[0], '', '', '', 0, datapoint_id)
+            return 0.0
+
         decoded_judge_outputs = self._judge_with_vllm(
                                 prompts=judgement_prompts,
                                 max_output_tokens=200,
@@ -679,16 +697,7 @@ class InferenceEvaluator:
 
             # Store the details of the first evaluated sample for logging
             if i == 0:
-                self.latest_sample_for_logging = {
-                    "question": questions[i],
-                    "plan": plans[i],
-                    "retrieved_steps": retrieved_steps[i],
-                    "llm_response": llm_answers[i],
-                    "judge_response": judge_response_content,
-                    "correct_response": correct_answers[i],
-                    "score": score,
-                    "datapoint_id": datapoint_id
-                }
+                self._log(questions[i], plans[i], retrieved_steps[i], llm_answers[i], judge_response_content, correct_answers[i], score, datapoint_id)
 
         gc.collect()
         return mean(scores) if scores else 0.0

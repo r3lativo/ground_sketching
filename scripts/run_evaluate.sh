@@ -59,8 +59,23 @@ CUDA_VISIBLE_DEVICES=0,1 python -m vllm.entrypoints.openai.api_server --model $P
 CUDA_VISIBLE_DEVICES=2 python -m vllm.entrypoints.openai.api_server --model $LLM_Judge \
     --host $MASTER_ADDR --port $JUDGE_PORT --trust-remote-code --tensor-parallel-size 1 --gpu-memory-utilization 0.95 --max-model-len 14000 &
 
-# Give the server time to initialize (adjust as needed)
-sleep 400
+# wait for vLLM to answer instead of fixed sleep
+for i in {1..200}; do
+  if curl -s "http://$MASTER_ADDR:$MASTER_PORT/v1/models" >/dev/null; then
+    echo "VLM server ready"
+    break
+  fi
+  sleep 2
+done
+
+for i in {1..200}; do
+  if curl -s "http://$MASTER_ADDR:$JUDGE_PORT/v1/models" >/dev/null; then
+    echo "Judge server ready"
+    break
+  fi
+  sleep 2
+done
+
 echo "Server is ready!"
 
 CUDA_VISIBLE_DEVICES=3 python -m src.evaluate \
