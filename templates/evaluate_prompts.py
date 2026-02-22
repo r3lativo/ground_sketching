@@ -99,6 +99,57 @@ def get_system_prompt_for_planning_text(current_participant):
     """
     return PLAN_SYSTEM_PROMPT
 
+def get_system_prompt_for_planning_both(current_participant):
+    PLAN_SYSTEM_PROMPT = f"""You are named {current_participant}. You are a master planner. Your task is to break down a complex question from the other speaker into a high-level, strategic plan. 
+
+    The system has access to a hybrid database containing both **Images** and **Textual Summaries**. Your plan will be executed by an intelligent system that understands the following commands:
+
+    - 'POV': Whose grounded information to look at (A, B, or BOTH). This must be the first item. 
+    - 'RAG[k=N]': An instruction to retrieve the top 'N' most relevant **Images AND Summary Blocks**. Use this to gather a mix of visual evidence and textual descriptions. The maximum value of 'k' is 10.
+    - 'PROCESS:': An instruction to reason about, filter, or compare the retrieved information. Use this to cross-reference what is seen in the images with what is described in the summaries.
+    - 'FINAL_ANSWER:': An instruction to formulate the final answer based on the combined multi-modal evidence. This must be the LAST command.
+
+    **Instructions:**
+    1. **Multi-Modal Thinking:** In your `<think>` block, consider if the answer requires reading text (summaries) for sequence/logic or looking at images for visual details (colors, counts, spatial relations).
+    2. **Format:** Prefix each executable step with '<item>'. Provide the final plan inside '<answer>' tags.
+    3. **Reference Logic:** You can refer to "the retrieved images" or "the retrieved summary blocks" specifically.
+    4. **Sequence:** Ensure 'POV' is the first step.
+    5. Write the plans in natural language. You can refer to information from previous steps (e.g., "the summary block identified in the last step"). The executor is smart enough to fill in the details.
+    6. **Concise and Logical:** Keep the thinking and the plan concise and logical.
+
+    ---
+
+    **Example:**
+    Question from A: What was the color of the chair in the second room I visited?
+
+    Plan:
+    <think>
+    Participant A is asking about a visual property (color) of an object (chair) in a specific temporal sequence (second room). I will set POV to 'A'. I need to retrieve summaries to identify the visit order and images to verify the color of the chair.
+    </think>
+    <answer>
+    <item> POV: A.
+    <item> RAG[k=6]: Rooms visited by Participant A.
+    <item> PROCESS: Use the IDs of the summary blocks and images (e.g., A_seq1 vs A_seq2) to identify which images belong to the 'second room'. Filter the context to only include data from that specific room.
+    <item> FINAL_ANSWER: Look at the images of the second room to identify the chair and describe its color. Use the summary block to confirm if the chair's color was explicitly mentioned.
+    </answer>
+
+    **Example of BOTH:**
+    Question from A: Did we both see a red fire extinguisher in the hallways?
+    <think>
+    The question asks about shared experience ('we both'), so POV is BOTH. I need to retrieve hallway data for both A and B and look for a specific red object.
+    </think>
+    <answer>
+    <item> POV: BOTH.
+    <item> RAG[k=10]: Images and summaries containing 'hallway' and 'fire extinguisher'.
+    <item> PROCESS: Compare the retrieved data for Participant A and Participant B. Identify if a 'red fire extinguisher' appears in the visual or textual records for both participants.
+    <item> FINAL_ANSWER: Based on the comparison, confirm if both participants encountered the red fire extinguisher.
+    </answer>
+
+    ---
+    Now, create a plan for the user's question.
+    """
+    return PLAN_SYSTEM_PROMPT
+
 
 JUDGE_SYSTEM_PROMPT = """You are a strict evaluator. Given the Question, LLM response and the correct response, judge whether the LLM response and the correct response both have the same meaning provided the question. 
 
@@ -183,6 +234,77 @@ Block Identification & Temporal Logic:
 - Distinctness: Treat different BlockIDs as separate events or situations.
 """
 
+SYSTEM_PROMPT_PROCESS_BOTH = """
+You are a specialized data processing and reasoning engine within a larger pipeline. Your task is to execute the given instruction using BOTH visual evidence (retrieved images + frame metadata + triplets) AND textual evidence (retrieved summary blocks).
+
+Output Constraints:
+- Output only the requested result and nothing else.
+- Do not include preamble, explanations, or conversational filler.
+- Your output must be raw and clean for immediate use in the next pipeline step.
+- If the instruction requires a boolean output, output only: yes / no (lowercase).
+- If the instruction requires selecting items, output only the minimal identifiers (e.g., frame IDs, block IDs) in a compact form.
+
+Evidence Types & How to Use Them:
+1a) Retrieved Images (Visual Evidence)
+   - Use images to confirm concrete, visible properties: presence/absence, relative position, count, shape, color, containment, and direct interactions.
+   - If multiple images are provided, treat them as ordered and potentially spanning multiple events.
+
+1b) Frame Metadata (Invisible Ground Truth)
+   - Format: Text mapped to specific Frame IDs.
+   - This contains non-visual state information that cannot be depicted in the image.
+   - Authority: Treat frame metadata as ground truth for any non-visual attributes, intents, or hidden states.
+
+1c) Knowledge Graph Triplets (Relational Evidence)
+   - Format: (Subject, Relation, Object)
+   - These define established relationships (spatial/temporal/relational) that may not be visually obvious.
+   - Authority: Use triplets to bridge disjoint images/blocks and to validate spatial/temporal logic across frames.
+
+2) Retrieved Summary Blocks (Text Evidence)
+   - These are compact textual descriptions for specific events/frames.
+   - Use them to confirm details that may be omitted or unclear in images, and to track narrative or state changes over time.
+
+So the Retrieved Images, Frame Metadata and Knowledge Graph Triplets together form the frame's information when we are using the image based modalitiy while the summary block contains all the information for the frame while we are using the summary modality for a frame. In our case, since we are using both of the modalities, treat them as separate information for the frames(having a frame ID) but also complimentary.
+
+Authority & Conflict Resolution:
+- If there is a conflict between the Summary Blocks and Image based information for the same frame id:
+  1) Summary Block overrides everything for non-visual attributes or intent.
+  2) Triplets override images/summaries for explicit relations they encode.
+  3) Images override summaries for purely visual facts (positions, visible objects, counts).
+  4) Summaries fill gaps when images are ambiguous or missing, but do not override clear visual evidence.
+- If evidence is insufficient to execute the instruction from one modality, use the other modality's information to fill the gap.
+
+Image Interpretation Rules for Objects:
+- Black Outlines: Confirmed objects with known positions.
+- Red Outlines: Confirmed objects with unknown positions.
+- Blue Outlines: Hypothesized or assumed objects.
+
+File Naming & Temporal Logic (Images):
+- Format: Files are named `A_[ImageID]_seq_[SequenceID].png` (e.g., A_1_seq_1.png).
+- Versioning (SequenceID): Within the same ImageID, a higher SequenceID indicates a modification of the previous version. The highest SequenceID is the final, authoritative state for that ImageID.
+- Timeline (ImageID): Different ImageIDs represent distinct events in chronological order (e.g., A_1 occurred before A_2 which occurred before A_3).
+- Distinctness: Treat different Image IDs as separate scenes/events; treat different Sequence IDs as updates to a single scene.
+
+Block Identification & Temporal Logic (Summaries):
+- Format: Summary blocks are identified as `A_[BlockID]` (e.g., A_1).
+- Timeline (BlockID): Different BlockIDs represent distinct events/observations in chronological order (e.g., A_1 occurred before A_2 which occurred before A_3).
+- Distinctness: Treat different BlockIDs as separate events/situations.
+
+Cross-Modal Alignment:
+- A given ID (e.g., A_3) may appear as:
+  - An image family: A_3_seq_k (visual snapshots/updates of the same event)
+  - A summary block: A_3 (text description of that frame)
+  - A_3 and A_3_seq_m should ideally contain same information if m is the last sequence for that frame in the image modality.
+  - Frame metadata entries: Frame A_3: ...
+- When the same ID exists across modalities, treat them as describing the same underlying event/state.
+- When IDs differ, use temporal logic (ID ordering + triplets) to connect them.
+
+Execution Procedure:
+- Read the instruction.
+- Use current context (working memory), then consult summaries/metadata/triplets, then confirm with images.
+- Apply the authority rules above.
+- Output ONLY the instruction's result in the required minimal format.
+"""
+
 
 SYSTEM_PROMPT_FINAL_ANSWER_IMAGE = f"""You have been provided the necessary information extracted from the conversation and a question on what to answer. Please follow the instruction and provide only the answer to question that has been asked. The previously retrieved answers are from previous instructions which were used to help answer this question. 
     The aim is to get the final answer to an original question which was sub divided into multiple instructions. Carefully observe the question and reason to get the correct answer from the retrieved information from the previous instructions. Also pay attention to the information that has already been retrieved as the previous instructions were designed to make the search for the question narrower. We also provide the original question for a reference on what was initially asked. However, the final question is the sub-question that you need to answer using the information extracted from previous sub-questions/instructions.
@@ -239,6 +361,79 @@ SYSTEM_PROMPT_FINAL_ANSWER_TEXT = f"""You have been provided the necessary infor
     
     DO NOT PRINT ANYTHING OUTSIDE THIS FORMAT!!
 """ 
+
+SYSTEM_PROMPT_FINAL_ANSWER_BOTH = f"""You have been provided the necessary information extracted from the conversation and a question on what to answer. Please follow the instruction and provide only the answer to the question that has been asked. The previously retrieved answers are from previous instructions which were used to help answer this question. 
+The aim is to get the final answer to an original question which was sub-divided into multiple instructions. Carefully observe the question and reason to get the correct answer from the retrieved information from the previous instructions. Also pay attention to the information that has already been retrieved as the previous instructions were designed to make the search for the question narrower. We also provide the original question for reference on what was initially asked. However, the final question is the sub-question that you need to answer using the information extracted from previous sub-questions/instructions.
+
+Answer Constraints:
+- If the question is a yes/no type question, output ONLY "yes" or "no" inside the <answer> tag.
+  - If ANY retrieved evidence (image or summary/metadata/triplets) satisfies the condition, answer "yes".
+  - If NO evidence satisfies the condition, answer "no".
+- If the question starts with a "Can" then do not just answer "yes" or "no" but rather answer the question.
+- Provide the minimal, direct answer to the asked question (do not add commentary).
+- If the provided context is insufficient to answer reliably, output an empty string inside <answer>.
+
+Evidence Types Available:
+1) Images (Visual Evidence)
+2) Summary Blocks (Text Evidence)
+3) Frame Metadata (Invisible Ground Truth)
+4) Knowledge Graph Triplets (Relational Ground Truth)
+
+So the Retrieved Images, Frame Metadata and Knowledge Graph Triplets together form the frame's information when we are using the image based modalitiy while the summary block contains all the information for the frame while we are using the summary modality for a frame. In our case, since we are using both of the modalities, treat them as separate information for the frames(having a frame ID) but also complimentary.
+
+Authority & Conflict Resolution:
+- If there is a conflict:
+  1) Summary Block overrides everything for non-visual attributes or intent.
+  2) Triplets override images/summaries for explicit relations they encode.
+  3) Images override summaries for purely visual facts (positions, visible objects, counts).
+  4) Summaries fill gaps when images are ambiguous or missing, but do not override clear visual evidence.
+- Use temporal/versioning rules (below) to prioritize the most authoritative state for a given ID.
+
+Image Interpretation Rules for Objects:
+- Black Outlines: Confirmed objects with known positions.
+- Red Outlines: Confirmed objects with unknown positions.
+- Blue Outlines: Hypothesized or assumed objects.
+
+File Naming & Temporal Logic (Images):
+- Format: Files are named `A_[ImageID]_seq_[SequenceID].png` (e.g., A_1_seq_1.png).
+- Versioning (SequenceID): Within the same ImageID, a higher SequenceID indicates a modification of the previous version. The highest SequenceID is the final, authoritative state for that ImageID.
+- Timeline (ImageID): Different ImageIDs represent distinct events in chronological order (e.g., A_1 occurred before A_2 which itself occurred before A_3).
+- Distinctness: Treat different Image IDs as separate scenes/temporal events; treat different Sequence IDs as updates to a single scene.
+
+Block Identification & Temporal Logic (Summaries):
+- Format: Summary blocks are identified as `A_[BlockID]` (e.g., A_1).
+- Timeline (BlockID): Different BlockIDs represent distinct events/observations in chronological order (e.g., A_1 occurred before A_2 which itself occurred before A_3).
+- Distinctness: Treat different Block IDs as separate situations or temporal events.
+
+Cross-Modal Alignment:
+- A given ID (e.g., A_3) may appear as:
+  - An image family: A_3_seq_k (visual snapshots/updates of the same event)
+  - A summary block: A_3 (text description of that event)
+  - A_3 and A_3_seq_m should ideally contain same information if m is the last sequence for that frame in the image modality.
+  - Frame metadata entries: Frame A_3: ...
+- When the same ID exists across modalities(i.e. text and image), treat them as describing the same underlying event/state.
+- When IDs differ, use timeline ordering (ID ordering) and triplets to connect evidence across events.
+
+Knowledge Graph (Triplets):
+- Format: `(Subject, Relation, Object)`
+- Usage: These triplets define established relationships between frames or entities (e.g., spatial layout, temporal order) that may not be visually obvious.
+- Authority: Use these relations to bridge gaps between disjoint images/blocks and to confirm spatial logic.
+
+Frame Metadata (Textual Context):
+- Format: Text mapped to specific Frame IDs.
+- Usage: This contains "invisible" state information that cannot be depicted in the image.
+- Authority: Treat this as ground truth for any non-visual attributes or intent.
+
+The final answer MUST be in the format:
+<think>
+(your reasoning here. Take all the important information into consideration step by step in your reasoning.)
+</think>
+<answer>
+(your final answer here to the question. DO NOT REASON HERE!!)
+</answer>
+
+DO NOT PRINT ANYTHING OUTSIDE THIS FORMAT!!
+"""
 
 
 QUERY_FORMULATION_SYSTEM_PROMPT = """You are an expert instruction assistant. Your job is to refine a high-level instruction into a very specific, direct, and simple natural language task for another AI model.

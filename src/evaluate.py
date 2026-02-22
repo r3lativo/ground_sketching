@@ -31,7 +31,8 @@ from transformers import (
     HfArgumentParser
 )
 
-from templates.evaluate_prompts import JUDGE_SYSTEM_PROMPT, get_system_prompt_for_planning_image, get_system_prompt_for_planning_text, SYSTEM_PROMPT_FINAL_ANSWER_IMAGE, SYSTEM_PROMPT_FINAL_ANSWER_TEXT, SYSTEM_PROMPT_PROCESS_IMAGE, SYSTEM_PROMPT_PROCESS_TEXT, QUERY_FORMULATION_SYSTEM_PROMPT
+# from templates.evaluate_prompts import JUDGE_SYSTEM_PROMPT, get_system_prompt_for_planning_image, get_system_prompt_for_planning_text, SYSTEM_PROMPT_FINAL_ANSWER_IMAGE, SYSTEM_PROMPT_FINAL_ANSWER_TEXT, SYSTEM_PROMPT_PROCESS_IMAGE, SYSTEM_PROMPT_PROCESS_TEXT, QUERY_FORMULATION_SYSTEM_PROMPT
+from templates.evaluate_prompts import *
 from src.searcher import ImageSearcher, SummarySearcher
 
 @dataclass
@@ -56,13 +57,22 @@ class ModelArguments:
         },
     )
 
-    searcher_model: Optional[str] = field(
+    image_searcher_model: Optional[str] = field(
         metadata={
             "help": (
                 "The model checkpoint for weights initialization of the retriever"
             )
         },
     )
+    
+    summary_searcher_model: Optional[str] = field(
+        metadata={
+            "help": (
+                "The model checkpoint for weights initialization of the retriever"
+            )
+        },
+    )
+
     output_dir: str = field(
         metadata={
             "help": (
@@ -70,16 +80,16 @@ class ModelArguments:
             )
         },
     )
-    train_dataset_name: Optional[str] = field(
-        default="/lustre/fswork/projects/rech/bgp/ucm29gh/code/jeanzay-rl/data/meetup",
+    image_dataset_name: Optional[str] = field(
+        default="data/meetup",
         metadata={
             "help": (
-                "The path to the dataset to be trained"
+                "The path to the dataset to be tested"
             )
         },
     )
-    test_dataset_name: Optional[str] = field(
-        default="/lustre/fswork/projects/rech/bgp/ucm29gh/code/jeanzay-rl/data/meetup",
+    summary_dataset_name: Optional[str] = field(
+        default="data/meetup",
         metadata={
             "help": (
                 "The path to the dataset to be tested"
@@ -197,7 +207,7 @@ class ModelArguments:
         default="image",
         metadata={
             "help": "Mode of retrieval. Options: 'image' (default) or 'summary'.",
-            "choices": ["image", "summary"]
+            "choices": ["image", "summary", "both"]
         },
     )
 
@@ -221,7 +231,7 @@ class InferenceEvaluator:
     """
     Handles the evaluation of model completions by generating answers and using a judge model to score them.
     """
-    def __init__(self, vlm_model, vlm_tokenizer, vlm_processor, vlm_model_name, searcher, judge_model, judge_tokenizer, judge_name, seed=420):
+    def __init__(self, vlm_model, vlm_tokenizer, vlm_processor, vlm_model_name, searchers, judge_model, judge_tokenizer, judge_name, retrieval_mode, seed=420):
         self.vlm_model = vlm_model
         self.vlm_tokenizer = vlm_tokenizer
         self.vlm_processor = vlm_processor
@@ -230,8 +240,9 @@ class InferenceEvaluator:
         self.judge_tokenizer =judge_tokenizer
         self.judge_name = judge_name
         self.latest_sample_for_logging = None
-        self.searcher = searcher
+        self.searchers = searchers
         self.seed = seed
+        self.retrieval_mode = retrieval_mode
 
     def _reasoning_extract_answer(self, input_string: str):
         if '<answer>' in input_string or '</answer>' in input_string or '</reasoning>' in input_string:
@@ -264,14 +275,24 @@ class InferenceEvaluator:
 
         # Attach Images (if any)
         if image_paths:
+            image_list_header = "The following images are provided in order:\n"
+            for idx, p in enumerate(image_paths):
+                fname = os.path.basename(p)
+                image_list_header += f"- Image {idx+1}: {fname}\n"
+            
+            user_content.append({"type": "text", "text": image_list_header})
+
             for p in image_paths:
+                fname = os.path.basename(p)
                 base64_image = self._encode_image_to_base64(p)
+                user_content.append({"type": "text", "text": f"Visual data for {fname}:"})
                 user_content.append({
                     "type": "image_url",
                     "image_url": {
                         "url": base64_image
                     }
                 })
+            
 
         # Attach Text
         user_content.append({"type": "text", "text": text_prompt})
@@ -379,6 +400,37 @@ class InferenceEvaluator:
             
         return f"\n{str(relevant)}"
 
+    def _retrieve(self, concrete_query, mode='image', k_value=3, frame_meta=None):
+        if mode == 'image': 
+            current_context_images = self.searchers[mode].search(concrete_query, k=k_value)
+            print('current_context_images $$ ',  current_context_images)
+            if len(current_context_images)==0:
+                working_memory = ''
+                return current_context_images, working_memory, ''
+
+            meta_info_str = self._get_metadata_context(current_context_images, frame_meta)
+            found_names = [os.path.basename(p) for p in current_context_images]
+            log_msg = f"Found: {found_names}"
+            working_memory = f"\n--- Result of RAG step for Images: '{concrete_query}' ---\n{log_msg}\n{meta_info_str}\n"
+            
+            return current_context_images, working_memory, log_msg
+
+        elif mode == 'summary':
+            target_frame_summaries = self.searchers[mode].search(concrete_query, k=k_value)
+            if len(target_frame_summaries)==0:
+                working_memory = ''
+                return target_frame_summaries, working_memory, ''
+
+            meta_info_str = '\n'
+            information = f""
+            for k,v in target_frame_summaries.items():
+                information += f"{k} : {v} | "
+            log_msg = f"These are the retrieved summary instances that match the current query(in the form of K:V, where K is the ID of the summary and V is the summary itself): {information}"
+            working_memory = f"\n--- Result of RAG step for Summaries: '{concrete_query}' ---\n{log_msg}\n{meta_info_str}\n"
+        
+            return target_frame_summaries, working_memory, log_msg
+
+
     def _extract_score(self, text: str) -> int:
         # print('score_text', text, flush=True)
         score = text.split("<answer>")[-1]
@@ -391,23 +443,41 @@ class InferenceEvaluator:
             print("SCORE NOT IN FORMAT   ", score.upper(), flush=True)
             return 0
     
-    def _planned_rag_retrieval(self, image_source_paths, questions: List[str], questioners: List[str], answerers: List[str], triplets: List[Tuple], frame_meta: Dict[str, List[str]], frame_summaries: Dict[str, str], retrieval_mode: str):
+    def _planned_rag_retrieval(self, image_source_paths, questions: List[str], questioners: List[str], answerers: List[str], triplets: List[Tuple], frame_meta: Dict[str, List[str]], frame_summaries: Dict[str, str]):
         # Generate the plans (Text-only call to VLM)
         raw_plans = []
         for i in range(len(questions)):
             plan_prompt = f"\nQuestion from {questioners[i]}: {questions[i]}\nThink and create your plan here:"
-            if retrieval_mode in ['image', 'both']:
+            if self.retrieval_mode  == 'image':
                 system_prompt = get_system_prompt_for_planning_image(answerers[i]) 
-            elif retrieval_mode in ['summary', 'both']:
-                system_prompt = get_system_prompt_for_planning_text(answerers[i])
-            raw_plans.append(
-                self._call_vlm_api(
-                    text_prompt=plan_prompt,
-                    image_paths=None,
-                    system_prompt=system_prompt,
-                    max_tokens=7000
+                raw_plans.append(
+                    self._call_vlm_api(
+                        text_prompt=plan_prompt,
+                        image_paths=None,
+                        system_prompt=system_prompt,
+                        max_tokens=7000
+                    )
                 )
-            )
+            elif self.retrieval_mode == 'summary':
+                system_prompt = get_system_prompt_for_planning_text(answerers[i])
+                raw_plans.append(
+                    self._call_vlm_api(
+                        text_prompt=plan_prompt,
+                        image_paths=None,
+                        system_prompt=system_prompt,
+                        max_tokens=7000
+                    )
+                )
+            else:
+                system_prompt = get_system_prompt_for_planning_both(answerers[i])
+                raw_plans.append(
+                    self._call_vlm_api(
+                        text_prompt=plan_prompt,
+                        image_paths=None,
+                        system_prompt=system_prompt,
+                        max_tokens=7000
+                    )
+                )
 
         plans = [self._reasoning_extract_answer(p) for p in raw_plans]
 
@@ -422,22 +492,24 @@ class InferenceEvaluator:
                 p0 = extracted_plan[0].replace(" ", "").upper()
                 target_user_folder = "A" if "POV:A" in p0 else "B" if "POV:B" in p0 else None
                 if target_user_folder:
-                    if retrieval_mode in ['image', 'both']:
+                    if self.retrieval_mode in ['image', 'both']:
                         target_image_source_paths = os.path.join(image_source_paths, str(target_user_folder))
-                    elif retrieval_mode in ['summary', 'both']:
+                    if self.retrieval_mode in ['summary', 'both']:
                         target_frame_summaries = {k: v for k, v in frame_summaries.items() if k.startswith(target_user_folder)}
                 else:
-                    if retrieval_mode in ['image', 'both']:
+                    if self.retrieval_mode in ['image', 'both']:
                         target_image_source_paths = image_source_paths
-                    elif retrieval_mode in ['summary', 'both']:
+                    if self.retrieval_mode in ['summary', 'both']:
                         target_frame_summaries = frame_summaries
             else:
                 return [], [], []
             
-            if retrieval_mode in ['image', 'both']:
+            if self.retrieval_mode in ['image', 'both']:
                 # Start with ALL images in the folder of the target_user
                 current_context_images = glob(os.path.join(target_image_source_paths, f'*.png')) + \
                                         glob(os.path.join(target_image_source_paths, "*.jpg"))
+
+                print('current_context_images $$ ',  current_context_images)
 
             working_memory = ""
             retrieved_steps_for_logging = []
@@ -465,58 +537,62 @@ class InferenceEvaluator:
 
                 if 'RAG' in command:
                     # Embed the currently available common ground images generated from the dialogues
-                    if retrieval_mode in ['image', 'both']:
-                        self.searcher.index_context(current_context_images, frame_meta)
-                    elif retrieval_mode in ['summary', 'both']:
-                        self.searcher.index_context(target_frame_summaries, frame_meta)
+                    if self.retrieval_mode in ['image']:
+                        self.searchers['image'].index_context(current_context_images, frame_meta)
+                    elif self.retrieval_mode in ['summary']:
+                        self.searchers['summary'].index_context(target_frame_summaries, frame_meta)
+                    else:
+                        self.searchers['image'].index_context(current_context_images, frame_meta)
+                        self.searchers['summary'].index_context(target_frame_summaries, frame_meta)
 
-                    match = re.match(r"RAG\[k=(\d+)\]", command)
+                    match = re.match(r"RAG\[k=(\d+)\]", command, re.IGNORECASE)
                     if match:
                         k_value = int(match.group(1))
                     else:
                         print('COMMAND NO KEY : ', command)
                         k_value = 3
 
-                    if retrieval_mode == 'image':
-                        current_context_images = self.searcher.search(concrete_query, k=k_value)
-
-                        if len(current_context_images)==0:
-                            working_memory = ''
+                    if self.retrieval_mode == 'image':
+                        current_context_images, local_working_memory, log_msg = self._retrieve(concrete_query, 'image', k_value=k_value, frame_meta=frame_meta)
+                        if local_working_memory == '':
                             retrieved_steps_for_logging.append({"step": instruction, "executed_query": concrete_query, "result": ''})
                             break
-
-                        meta_info_str = self._get_metadata_context(current_context_images, frame_meta)
-                        found_names = [os.path.basename(p) for p in current_context_images]
-                        log_msg = f"Found: {found_names}"
-                    elif retrieval_mode == 'summary':
-                        target_frame_summaries = self.searcher.search(concrete_query, k=k_value)
-
-                        if len(target_frame_summaries)==0:
-                            working_memory = ''
+                        working_memory += local_working_memory
+                    elif self.retrieval_mode == 'summary':
+                        target_frame_summaries, local_working_memory, log_msg = self._retrieve(concrete_query, 'summary', k_value=k_value)
+                        if local_working_memory == '':
                             retrieved_steps_for_logging.append({"step": instruction, "executed_query": concrete_query, "result": ''})
                             break
+                    else:
+                        current_context_images, im_working_memory, im_log_msg = self._retrieve(concrete_query, 'image', k_value=k_value, frame_meta=frame_meta)
+                        target_frame_summaries, s_working_memory, s_log_msg = self._retrieve(concrete_query, 'summary', k_value=k_value)
+                        if im_working_memory == '' and s_working_memory == '':
+                            retrieved_steps_for_logging.append({"step": instruction, "executed_query": concrete_query, "result": ''})
+                            break
+                        working_memory += s_working_memory + im_working_memory
+                        log_msg = s_log_msg + im_log_msg
 
-                        meta_info_str = '\n'
-                        information = f""
-                        for k,v in target_frame_summaries.items():
-                            information += f"{k} : {v} | "
-                        log_msg = f"These are the retrieved instances that match the current query(in the form of K:V, where K is the ID of the summary and V is the summary itself): {information}"
-                    
-                    working_memory += f"\n--- Result of RAG step: '{concrete_query}' ---\n{log_msg}\n{meta_info_str}\n"
                     retrieved_steps_for_logging.append({"step": instruction, "executed_query": concrete_query, "result": log_msg})
 
                 elif command == 'FINAL_ANSWER':
-                    if retrieval_mode == 'image':
+                    if self.retrieval_mode == 'image':
                         meta_info_str = self._get_metadata_context(current_context_images, frame_meta)
                         triplet_info = self._get_relevant_triplets(current_context_images, triplets)
                         image_paths = current_context_images
                         system_prompt = SYSTEM_PROMPT_FINAL_ANSWER_IMAGE
                         processing_prompt = f"Original Question from {questioners[i]} : {questions[i]}.\n\n Final Context:\n{working_memory}\n\nRelevant Triplets for current images: {triplet_info}\n\n{meta_info_str}\n\nBased on this context, follow this final instruction: {concrete_query}"
-                    elif retrieval_mode == 'summary':
+                    elif self.retrieval_mode == 'summary':
                         system_prompt = SYSTEM_PROMPT_FINAL_ANSWER_TEXT
                         processing_prompt = f"Original Question from {questioners[i]} : {questions[i]}.\n\n Final Context:\n{working_memory}\n\nBased on this context, follow this final instruction: {concrete_query}"
                         image_paths = None
-                    
+                    else:
+                        meta_info_str = self._get_metadata_context(current_context_images, frame_meta)
+                        triplet_info = self._get_relevant_triplets(current_context_images, triplets)
+                        image_prompt = f"\n\nRelevant Triplets for current images: {triplet_info}\n\n{meta_info_str}" if len(current_context_images) > 0 else ""
+                        image_paths = current_context_images if len(current_context_images) > 0 else None
+                        system_prompt = SYSTEM_PROMPT_FINAL_ANSWER_BOTH
+                        processing_prompt = f"Original Question from {questioners[i]} : {questions[i]}.\n\n Final Context:\n{working_memory}{image_prompt}\n\nBased on this context, follow this final instruction: {concrete_query}"
+
                     llm_result = self._call_vlm_api(
                                     text_prompt=processing_prompt,
                                     image_paths=image_paths,
@@ -527,16 +603,23 @@ class InferenceEvaluator:
                     retrieved_steps_for_logging.append({"step": instruction, "executed_query": concrete_query, "result": llm_result})
 
                 elif command == 'PROCESS':
-                    if retrieval_mode == 'image':
+                    if self.retrieval_mode == 'image':
                         meta_info_str = self._get_metadata_context(current_context_images, frame_meta)
                         triplet_info = self._get_relevant_triplets(current_context_images, triplets)
                         image_paths = current_context_images
                         system_prompt=SYSTEM_PROMPT_PROCESS_IMAGE
                         processing_prompt = f"Current Context:\n{working_memory}\n\nRelevant Triplets for current images: {triplet_info}\n\n{meta_info_str}\n\nInstruction: {concrete_query}"                    
-                    elif retrieval_mode == 'summary':
+                    elif self.retrieval_mode == 'summary':
                         image_paths = None 
                         system_prompt=SYSTEM_PROMPT_PROCESS_TEXT
                         processing_prompt = f"Current Context:\n{working_memory}\n\nInstruction: {concrete_query}"                    
+                    else:
+                        meta_info_str = self._get_metadata_context(current_context_images, frame_meta)
+                        triplet_info = self._get_relevant_triplets(current_context_images, triplets)
+                        image_paths = current_context_images if len(current_context_images) > 0 else None
+                        image_prompt = f"Relevant Triplets for current images: {triplet_info}\n\n{meta_info_str}\n\n" if len(current_context_images) > 0 else ''
+                        system_prompt=SYSTEM_PROMPT_PROCESS_BOTH
+                        processing_prompt = f"Current Context:\n{working_memory}\n\n{image_prompt}Instruction: {concrete_query}"                    
 
                     llm_result = self._call_vlm_api(
                                     text_prompt=processing_prompt,
@@ -552,7 +635,7 @@ class InferenceEvaluator:
                 
         return final_answers, all_retrieved_for_logging, plans
 
-    def evaluate(self, questions: List[str], questioners: List[str], answerers: List[str], correct_answers: List[str], image_path: str, datapoint_id: str, triplets: List[Tuple], frame_meta: Dict[str, List[str]], frame_summaries: Dict[str, str], retrieval_mode: str):
+    def evaluate(self, questions: List[str], questioners: List[str], answerers: List[str], correct_answers: List[str], image_path: str, datapoint_id: str, triplets: List[Tuple], frame_meta: Dict[str, List[str]], frame_summaries: Dict[str, str]):
         """
         Performs the full inference and evaluation pipeline for a single data point.
         
@@ -566,8 +649,7 @@ class InferenceEvaluator:
             image_source_paths=image_path,
             triplets=triplets,
             frame_meta=frame_meta,
-            frame_summaries=frame_summaries,
-            retrieval_mode=retrieval_mode 
+            frame_summaries=frame_summaries
         )
 
         llm_answers = [self._reasoning_extract_answer(l) for l in llm_answers]
@@ -734,25 +816,30 @@ def setup_eval_logger(output_dir: str, filename: str = "eval_samples.log") -> lo
     return logger
 
 def main_infer(model_args):
-    eval_logger = setup_eval_logger(model_args.output_dir, f"{model_args.relation_type}.log")
+    eval_logger = setup_eval_logger(model_args.output_dir, f"{model_args.relation_type}_{model_args.retrieval_mode}.log")
     print(f"[Logging] Writing evaluation samples to: {eval_logger.log_path}", flush=True)
     
     print("Setting up local embedding model for retriever...")
-    if model_args.retrieval_mode == 'image':
-        searcher = ImageSearcher(model_name=model_args.searcher_model, seed=model_args.seed, alpha=model_args.alpha)
-    elif model_args.retrieval_mode == 'summary':
-        searcher = SummarySearcher(model_name=model_args.searcher_model, seed=model_args.seed)
+    searchers = {}
+    if model_args.retrieval_mode in ['image', 'both'] :
+        image_searcher = ImageSearcher(model_name=model_args.image_searcher_model, seed=model_args.seed, alpha=model_args.alpha)
+        searchers['image'] = image_searcher
+    if model_args.retrieval_mode in ['summary', 'both']:
+        summary_searcher = SummarySearcher(model_name=model_args.summary_searcher_model, seed=model_args.seed)
+        searchers['summary'] = summary_searcher
 
     try:
-        print("Testing the searcher model...")
-        test_vec = searcher.model.encode(["query: This is a test."], convert_to_tensor=True)
-        print(f"Success! Vector starts with: {test_vec[:5]}")
+        print("Testing the searcher models...")
+        for s in searchers:
+            test_vec = searchers[s].model.encode(["query: This is a test."], convert_to_tensor=True)
+            print(f"Success! Vector starts with: {test_vec[:5]}")
     except Exception as e:
-        print(f"FAILED: The image searcher model could not be used. Error: {e}")
+        print(f"FAILED: The searcher model could not be used. Error: {e}")
         import traceback
         traceback.print_exc()
         return
-    print("Image searcher model setup complete.")
+
+    print("Searcher model setup complete.")
 
     print(f"Connecting to vLLM server at http://{model_args.server_ip}:{model_args.port}/v1")
     vlm_model = OpenAI(
@@ -775,9 +862,29 @@ def main_infer(model_args):
     judge_tokenizer.pad_token = judge_tokenizer.eos_token
     judge_tokenizer.padding_side = "left"
 
-    eval_dataset = load_meetup_data(model_args.test_dataset_name, model_args.retrieval_mode)
+    if model_args.retrieval_mode == 'image':
+        eval_dataset = load_meetup_data(model_args.image_dataset_name, model_args.retrieval_mode)
+    elif model_args.retrieval_mode == 'summary':
+        eval_dataset = load_meetup_data(model_args.summary_dataset_name, model_args.retrieval_mode)
+    else:
+        image_eval_dataset = load_meetup_data(model_args.image_dataset_name, model_args.retrieval_mode)
+        summary_eval_dataset = load_meetup_data(model_args.summary_dataset_name, model_args.retrieval_mode)
+        # Combine both of them
+        summary_lookup = {
+            sample['file_name']: sample['frame_summaries'] 
+            for sample in summary_eval_dataset
+        }
 
-    evaluator = InferenceEvaluator(vlm_model, vlm_tokenizer, vlm_processor, model_args.model_name_or_path, searcher, judge_model, judge_tokenizer, model_args.judge_name_or_path, seed=model_args.seed)
+        combined_data = []
+        for sample in image_eval_dataset:
+            fname = sample['file_name']
+            sample['frame_summaries'] = summary_lookup[fname]
+            combined_data.append(sample)
+
+        eval_dataset = Dataset.from_list(combined_data)
+        print(f"Combined {len(eval_dataset)} samples with image and summary data.")
+
+    evaluator = InferenceEvaluator(vlm_model, vlm_tokenizer, vlm_processor, model_args.model_name_or_path, searchers, judge_model, judge_tokenizer, model_args.judge_name_or_path, model_args.retrieval_mode, seed=model_args.seed)
 
     total_scores = []
     
@@ -792,8 +899,7 @@ def main_infer(model_args):
                 datapoint_id=sample['file_name'],
                 triplets=sample['triplets'],
                 frame_meta=sample['frame_meta'],
-                frame_summaries=sample['frame_summaries'],
-                retrieval_mode=model_args.retrieval_mode
+                frame_summaries=sample['frame_summaries']
             )
         total_scores.append(score)
 

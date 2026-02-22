@@ -7,7 +7,7 @@
 #SBATCH --ntasks-per-node=4          # 1 task per GPU 
 #SBATCH --gres=gpu:4                 # GPUs per node
 #SBATCH --cpus-per-task=16           # Reserve 16 CPUs per task
-#SBATCH --time=02:45:00              # Maximum allocation time
+#SBATCH --time=03:30:00              # Maximum allocation time
 #SBATCH --account=bgp@h100           # H100 accounting
 
 # cd $SLURM_SUBMIT_DIR
@@ -42,10 +42,10 @@ output_slurm_job_id=$SLURM_JOB_ID
 PROCESSING_LLM="/lustre/fsn1/projects/rech/bgp/ucm29gh/huggingface/hub/models--Qwen--Qwen3-VL-32B-Thinking/snapshots/7edd10ffd1196091948fb245ff63e406ccb2d4d1"
 LLM_Judge='/lustre/fsmisc/dataset/HuggingFace_Models/meta-llama/Llama-3.1-8B-Instruct'
 DATA_DIR='/lustre/fswork/projects/rech/bgp/ucm29gh/code/ground_sketching/output'
-DATA_SUB_DIR='Spatial_VA'
-echo "DATA_SUB_DIR=$DATA_SUB_DIR"
-# Searcher='/lustre/fsn1/projects/rech/bgp/ucm29gh/huggingface/hub/models--sentence-transformers--clip-ViT-L-14/snapshots/1b4b2e899178706d1b9905460ac21de1e0ba86a5/'
-Searcher='/lustre/fsn1/projects/rech/bgp/ucm29gh/huggingface/hub/models--Alibaba-NLP--gte-Qwen2-7B-instruct/snapshots/a8d08b36ada9cacfe34c4d6f80957772a025daf2'
+SUB_DIR='Inferred'
+echo "SUB_DIR=$SUB_DIR"
+ImageSearcher='/lustre/fsn1/projects/rech/bgp/ucm29gh/huggingface/hub/models--sentence-transformers--clip-ViT-L-14/snapshots/1b4b2e899178706d1b9905460ac21de1e0ba86a5/'
+SummarySearcher='/lustre/fsn1/projects/rech/bgp/ucm29gh/huggingface/hub/models--Alibaba-NLP--gte-Qwen2-7B-instruct/snapshots/a8d08b36ada9cacfe34c4d6f80957772a025daf2'
 OUTPUT_DIR='/lustre/fswork/projects/rech/bgp/ucm29gh/code/ground_sketching/output/evaluation'
 
 printenv
@@ -60,22 +60,24 @@ CUDA_VISIBLE_DEVICES=2 python -m vllm.entrypoints.openai.api_server --model $LLM
     --host $MASTER_ADDR --port $JUDGE_PORT --trust-remote-code --tensor-parallel-size 1 --gpu-memory-utilization 0.95 --max-model-len 14000 &
 
 # Give the server time to initialize (adjust as needed)
-sleep 300
+sleep 400
 echo "Server is ready!"
 
 CUDA_VISIBLE_DEVICES=3 python -m src.evaluate \
     --model_name_or_path $PROCESSING_LLM \
     --judge_name_or_path $LLM_Judge \
     --output_dir $OUTPUT_DIR \
-    --test_dataset_name "${DATA_DIR}/${DATA_SUB_DIR}/" \
-    --relation_type $DATA_SUB_DIR \
-    --searcher_model $Searcher \
+    --image_dataset_name "${DATA_DIR}/${SUB_DIR}_VA/" \
+    --summary_dataset_name "${DATA_DIR}/text_only_${SUB_DIR}/" \
+    --relation_type $SUB_DIR \
     --port $MASTER_PORT \
     --port_judge $JUDGE_PORT \
     --server_ip $MASTER_ADDR \
     --server_ip_judge $MASTER_ADDR \
     --seed 42 \
     --alpha 0.7 \
-    --retrieval_mode 'summary'
+    --retrieval_mode 'both' \
+    --image_searcher_model $ImageSearcher \
+    --summary_searcher_model $SummarySearcher
 
 wait
