@@ -1,6 +1,6 @@
 # Ground Sketching
 
-This repository contains the server infrastructure for the project exploring multimodal representations of common ground in situated dialogue.
+This repository contains the server infrastructure for the project exploring multimodal representations of common ground in situated dialogue. Further information can be found in the paper "Using Machine Mental Imagery for Representing Common Ground in Situated Dialogue" [[Paper Link]](https://arxiv.org/pdf/2604.21144).
 
 ![Example of using visual scaffolding for common ground representation](/asset/example.png)
 
