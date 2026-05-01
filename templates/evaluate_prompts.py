@@ -351,6 +351,11 @@ SYSTEM_PROMPT_FINAL_ANSWER_TEXT = f"""You have been provided the necessary infor
     - Timeline (BlockID): Different BlockIDs represent distinct events or observations in chronological order (e.g., A_1 occurred before A_2 which itself occurred before A_3).
     - Distinctness: Treat different Block IDs as separate situations or temporal events.
 
+    Knowledge Graph (Triplets):
+    - Format: `(Subject, Relation, Object)`
+    - Usage: These triplets define established relationships between frames or entities (e.g., spatial layout, temporal order) that may not be visually obvious.
+    - Authority: Use these relations to bridge gaps between disjoint images or to confirm spatial logic.
+
     The final answer should be in the format -
     <think>
     (your reasoning here. Take all the important information into consideration step by step in your reasoning.)

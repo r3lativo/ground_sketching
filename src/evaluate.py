@@ -373,7 +373,7 @@ class InferenceEvaluator:
             
         return "\n\nAdditional Metadata(which could not be depicted in the image) for retrieved images:\n" + "\n".join(meta_context)
 
-    def _get_relevant_triplets(self, current_image_paths: List[str], all_triplets: List[Tuple]) -> str:
+    def _get_relevant_triplets_image(self, current_image_paths: List[str], all_triplets: List[Tuple]) -> str:
         """
         Filters triplets where either the subject or object matches the IDs of the currently retrieved images.
         """
@@ -393,12 +393,34 @@ class InferenceEvaluator:
                 sub, rel, obj = triplet
                 # Check if subject or object is in the retrieved images
                 if sub in retrieved_ids or obj in retrieved_ids:
-                    relevant.append(triplet)
+                    relevant.append(tuple(triplet))
         
         if not relevant:
             return ""
+        
+        deduped = list(set(relevant))
             
-        return f"\n{str(relevant)}"
+        return f"\n{str(deduped)}"
+
+    def _get_relevant_triplets_summary(self, retrieved_frame_summaries: Dict[str, str], all_triplets: List[Tuple]) -> str:
+        """
+        Filters triplets where either the subject or object matches the IDs of the currently retrieved images.
+        """
+        if not all_triplets or not retrieved_frame_summaries:
+            return ""
+
+        retrieved_ids = set(retrieved_frame_summaries.keys())  # already frame ids like "A_3"
+
+        relevant = []
+        for triplet in all_triplets:
+            if isinstance(triplet, (list, tuple)) and len(triplet) == 3:
+                sub, rel, obj = triplet
+                if sub in retrieved_ids or obj in retrieved_ids:
+                    relevant.append(tuple(triplet))
+
+        deduped = list(set(relevant))
+
+        return f"\n{deduped}"
 
     def _retrieve(self, concrete_query, mode='image', k_value=3, frame_meta=None):
         if mode == 'image': 
@@ -577,17 +599,18 @@ class InferenceEvaluator:
                 elif command == 'FINAL_ANSWER':
                     if self.retrieval_mode == 'image':
                         meta_info_str = self._get_metadata_context(current_context_images, frame_meta)
-                        triplet_info = self._get_relevant_triplets(current_context_images, triplets)
+                        triplet_info = self._get_relevant_triplets_image(current_context_images, triplets)
                         image_paths = current_context_images
                         system_prompt = SYSTEM_PROMPT_FINAL_ANSWER_IMAGE
                         processing_prompt = f"Original Question from {questioners[i]} : {questions[i]}.\n\n Final Context:\n{working_memory}\n\nRelevant Triplets for current images: {triplet_info}\n\n{meta_info_str}\n\nBased on this context, follow this final instruction: {concrete_query}"
                     elif self.retrieval_mode == 'summary':
                         system_prompt = SYSTEM_PROMPT_FINAL_ANSWER_TEXT
-                        processing_prompt = f"Original Question from {questioners[i]} : {questions[i]}.\n\n Final Context:\n{working_memory}\n\nBased on this context, follow this final instruction: {concrete_query}"
+                        triplet_info = self._get_relevant_triplets_summary(target_frame_summaries, triplets)
+                        processing_prompt = f"Original Question from {questioners[i]} : {questions[i]}.\n\n Final Context:\n{working_memory}\n\n\n\nRelevant Triplets for current images: {triplet_info}\n\nBased on this context, follow this final instruction: {concrete_query}"
                         image_paths = None
                     else:
                         meta_info_str = self._get_metadata_context(current_context_images, frame_meta)
-                        triplet_info = self._get_relevant_triplets(current_context_images, triplets)
+                        triplet_info = "\n".join(filter(None, [self._get_relevant_triplets_image(current_context_images, triplets), self._get_relevant_triplets_summary(target_frame_summaries, triplets)]))
                         image_prompt = f"\n\nRelevant Triplets for current images: {triplet_info}\n\n{meta_info_str}" if len(current_context_images) > 0 else ""
                         image_paths = current_context_images if len(current_context_images) > 0 else None
                         system_prompt = SYSTEM_PROMPT_FINAL_ANSWER_BOTH
@@ -605,17 +628,18 @@ class InferenceEvaluator:
                 elif command == 'PROCESS':
                     if self.retrieval_mode == 'image':
                         meta_info_str = self._get_metadata_context(current_context_images, frame_meta)
-                        triplet_info = self._get_relevant_triplets(current_context_images, triplets)
+                        triplet_info = self._get_relevant_triplets_image(current_context_images, triplets)
                         image_paths = current_context_images
                         system_prompt=SYSTEM_PROMPT_PROCESS_IMAGE
                         processing_prompt = f"Current Context:\n{working_memory}\n\nRelevant Triplets for current images: {triplet_info}\n\n{meta_info_str}\n\nInstruction: {concrete_query}"                    
                     elif self.retrieval_mode == 'summary':
                         image_paths = None 
                         system_prompt=SYSTEM_PROMPT_PROCESS_TEXT
-                        processing_prompt = f"Current Context:\n{working_memory}\n\nInstruction: {concrete_query}"                    
+                        triplet_info = self._get_relevant_triplets_summary(target_frame_summaries, triplets)
+                        processing_prompt = f"Current Context:\n{working_memory}\n\nRelevant Triplets for current images: {triplet_info}\n\nInstruction: {concrete_query}"                    
                     else:
                         meta_info_str = self._get_metadata_context(current_context_images, frame_meta)
-                        triplet_info = self._get_relevant_triplets(current_context_images, triplets)
+                        triplet_info = "\n".join(filter(None, [self._get_relevant_triplets_image(current_context_images, triplets), self._get_relevant_triplets_summary(target_frame_summaries, triplets)]))
                         image_paths = current_context_images if len(current_context_images) > 0 else None
                         image_prompt = f"Relevant Triplets for current images: {triplet_info}\n\n{meta_info_str}\n\n" if len(current_context_images) > 0 else ''
                         system_prompt=SYSTEM_PROMPT_PROCESS_BOTH
@@ -678,6 +702,7 @@ class InferenceEvaluator:
             formatted_judge_prompt = self.judge_tokenizer.apply_chat_template(input_message, tokenize=False, add_generation_prompt=True)
             judgement_prompts.append(formatted_judge_prompt)
         
+        judgement_prompts = [p for p in judgement_prompts if isinstance(p, str) and p.strip()]
         if len(judgement_prompts) == 0:
             self._log(questions[0], plans[0], retrieved_steps[0], '', '', '', 0, datapoint_id)
             return 0.0

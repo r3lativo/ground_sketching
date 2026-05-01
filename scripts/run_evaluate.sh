@@ -42,7 +42,7 @@ output_slurm_job_id=$SLURM_JOB_ID
 PROCESSING_LLM="/lustre/fsn1/projects/rech/bgp/ucm29gh/huggingface/hub/models--Qwen--Qwen3-VL-32B-Thinking/snapshots/7edd10ffd1196091948fb245ff63e406ccb2d4d1"
 LLM_Judge='/lustre/fsmisc/dataset/HuggingFace_Models/meta-llama/Llama-3.1-8B-Instruct'
 DATA_DIR='/lustre/fswork/projects/rech/bgp/ucm29gh/code/ground_sketching/output'
-SUB_DIR='Inferred'
+SUB_DIR='Attributive'
 echo "SUB_DIR=$SUB_DIR"
 ImageSearcher='/lustre/fsn1/projects/rech/bgp/ucm29gh/huggingface/hub/models--sentence-transformers--clip-ViT-L-14/snapshots/1b4b2e899178706d1b9905460ac21de1e0ba86a5/'
 SummarySearcher='/lustre/fsn1/projects/rech/bgp/ucm29gh/huggingface/hub/models--Alibaba-NLP--gte-Qwen2-7B-instruct/snapshots/a8d08b36ada9cacfe34c4d6f80957772a025daf2'
@@ -91,7 +91,7 @@ CUDA_VISIBLE_DEVICES=3 python -m src.evaluate \
     --server_ip_judge $MASTER_ADDR \
     --seed 42 \
     --alpha 0.7 \
-    --retrieval_mode 'both' \
+    --retrieval_mode 'summary' \
     --image_searcher_model $ImageSearcher \
     --summary_searcher_model $SummarySearcher
 
