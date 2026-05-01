@@ -2,6 +2,8 @@
 
 This repository contains the server infrastructure for the project exploring multimodal representations of common ground in situated dialogue.
 
+![Example of using visual scaffolding for common ground representation](/asset/example.png)
+
 Text-only Large Language Models (LLMs) struggle with reasoning in situated, embodied tasks: is it because they lack the visual and spatial grounding that humans inherently use? These models are often trained on "space-less, time-less" text, hindering their ability to resolve ambiguities or track references that are clear from a shared visual context.
 
 This project aims to address this gap by developing a system that compositionally generates a visual representation, or "mental imagery," from conversational utterances. This visual sketch serves as a persistent, grounded representation of the situational context, which we hypothesize will improve an agent's reasoning and question-answering capabilities. The assumption is that visual imagery would help the model to create associations more easily.
