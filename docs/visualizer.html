@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ground Sketching — Conversation Visualizer</title>
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-title">
+    <h1>Ground Sketching</h1>
+    <p class="tagline">Browse the corresponding images generated from a conversation, turn by turn. See the <a href="index.html">project page</a> for the paper, or explore the full <a href="https://github.com/r3lativo/ground_sketching" target="_blank" rel="noopener">repository</a>.</p>
+  </div>
+  <div class="conv-label" id="convLabel">Loading…</div>
+</header>
+
+<main class="layout">
+  <section class="side side-a" id="sideA">
+    <h2 class="side-heading">A</h2>
+    <div class="subsection-label">All frames</div>
+    <div class="global-tracker" id="globalTrackerA"></div>
+    <div class="subsection-label">This frame — edit history</div>
+    <div class="thumb-strip thumb-strip-a" id="thumbsA"></div>
+    <div class="main-image-wrap" id="imageWrapA">
+      <img id="imageA" class="main-image" alt="">
+      <div class="no-image" id="noImageA">No image available</div>
+    </div>
+    <div class="frame-badge-wrap" id="badgeA"></div>
+    <div class="meta-grid" id="metaA"></div>
+  </section>
+
+  <section class="chat-col">
+    <h2 class="side-heading">Conversation</h2>
+    <div class="chat-scroll" id="chatScroll">
+      <div class="chat-list" id="chatList"></div>
+    </div>
+    <aside class="qa-panel" id="qaPanel">
+      <div class="qa-panel-header">
+        <h3>Q&amp;A</h3>
+        <button id="qaClose" class="text-btn">Close</button>
+      </div>
+      <div id="qaList"></div>
+    </aside>
+  </section>
+
+  <section class="side side-b" id="sideB">
+    <h2 class="side-heading">B</h2>
+    <div class="subsection-label">All frames</div>
+    <div class="global-tracker" id="globalTrackerB"></div>
+    <div class="subsection-label">This frame — edit history</div>
+    <div class="thumb-strip thumb-strip-b" id="thumbsB"></div>
+    <div class="main-image-wrap" id="imageWrapB">
+      <img id="imageB" class="main-image" alt="">
+      <div class="no-image" id="noImageB">No image available</div>
+    </div>
+    <div class="frame-badge-wrap" id="badgeB"></div>
+    <div class="meta-grid" id="metaB"></div>
+  </section>
+</main>
+
+<div class="search-bar" id="searchBar">
+  <input type="text" id="searchInput" placeholder="Search this conversation… (Enter = next match, Esc = close)">
+  <span class="search-count" id="searchCount"></span>
+</div>
+
+<div class="overlay" id="menuOverlay">
+  <div class="panel">
+    <h3>Choose a conversation</h3>
+    <div id="menuList"></div>
+    <button id="menuClose" class="text-btn">Close</button>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="footer-group footer-left">
+    <button id="btnMenu" class="icon-btn" title="Choose conversation">☰</button>
+    <button id="btnSearch" class="icon-btn" title="Search this conversation">🔍</button>
+    <button id="btnRandom" class="icon-btn" title="Random conversation">🔀</button>
+    <button id="btnQA" class="icon-btn" title="Toggle Q&amp;A panel">❓</button>
+  </div>
+  <div class="footer-group footer-center">
+    <button id="btnFirst" class="icon-btn" title="First message">|&lt;</button>
+    <button id="btnPrev" class="icon-btn" title="Previous message">&lt;</button>
+    <button id="btnNext" class="icon-btn" title="Next message">&gt;</button>
+    <button id="btnLast" class="icon-btn" title="Last message">&gt;|</button>
+  </div>
+  <div class="footer-group footer-legend">
+    <span class="legend-title">Legend</span>
+    <span class="legend-item"><span class="legend-dot fc-new"></span>New</span>
+    <span class="legend-item"><span class="legend-dot fc-continue"></span>Continue</span>
+    <span class="legend-item"><span class="legend-dot fc-skip"></span>Skip</span>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>
