@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- EDIT: page title shown in the browser tab / when shared -->
+<title>Ground Sketching — Using Machine Mental Imagery for Representing Common Ground in Situated Dialogue</title>
+<meta name="description" content="Project page for &quot;Using Machine Mental Imagery for Representing Common Ground in Situated Dialogue&quot;.">
+
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="project.css">
+</head>
+<body>
+
+<!-- ============================================================
+     HERO / TITLE BLOCK
+     Nerfies-style: title, author list w/ affiliation superscripts,
+     affiliation legend, then a row of link buttons.
+     ============================================================ -->
+<header class="hero">
+  <div class="hero-inner">
+
+    <!-- EDIT: paper title -->
+    <h1 class="paper-title">Using Machine Mental Imagery for Representing Common Ground in Situated Dialogue</h1>
+
+    <!-- Author names, superscript-linked to the affiliation list below.
+         "*" = equal contribution, "†" = Giovanni's Master's-thesis note
+         (both per the paper's LaTeX author block). -->
+    <div class="authors">
+      <span class="author"><a href="https://sites.google.com/view/biswesh-mohapatra/" target="_blank" rel="noopener">Biswesh Mohapatra</a><sup>*,1</sup></span>
+      <span class="author"><a href="https://r3lativo.github.io" target="_blank" rel="noopener">Giovanni Duca</a><sup>*,&dagger;,2</sup></span>
+      <!-- EDIT: no known personal site for Laurent -- plain text for now -->
+      <span class="author">Laurent Romary<sup>1</sup></span>
+      <span class="author"><a href="https://www.justinecassell.com/" target="_blank" rel="noopener">Justine Cassell</a><sup>1,3</sup></span>
+    </div>
+
+    <!-- Affiliations, matching the superscripts above -->
+    <div class="affiliations">
+      <span><sup>1</sup> Inria</span>
+      <span><sup>2</sup> University of Trento</span>
+      <span><sup>3</sup> Carnegie Mellon University</span>
+    </div>
+
+    <div class="author-notes">
+      <span>* Both authors contributed equally.</span>
+      <span>&dagger; Work done during internship at Inria.</span>
+    </div>
+
+    <!-- EDIT: link targets. Paper/arXiv point at the same preprint for
+         now (see README) — swap the "Paper" link for a venue PDF once
+         published. Visualizer link stays relative so it works both
+         locally and on GitHub Pages. -->
+    <div class="link-buttons">
+      <a class="link-btn" href="https://arxiv.org/pdf/2604.21144" target="_blank" rel="noopener">
+        <span class="link-icon">📄</span> Paper
+      </a>
+      <a class="link-btn" href="https://arxiv.org/abs/2604.21144" target="_blank" rel="noopener">
+        <span class="link-icon">📚</span> arXiv
+      </a>
+      <a class="link-btn" href="https://github.com/r3lativo/ground_sketching" target="_blank" rel="noopener">
+        <span class="link-icon">💻</span> Code
+      </a>
+      <a class="link-btn" href="index.html">
+        <span class="link-icon">🖼️</span> Visualizer
+      </a>
+    </div>
+
+  </div>
+</header>
+
+<main class="content">
+
+  <!-- ============================================================
+       TEASER FIGURE
+       Uses the real example figure from /asset/example.png (copied
+       into docs/assets/teaser.png so the static site is self-contained).
+       Swap for a proper teaser/pipeline figure whenever ready.
+       ============================================================ -->
+  <section class="section teaser-section">
+    <figure class="figure">
+      <img src="assets/teaser.png" alt="Example of using visual scaffolding for common ground representation">
+      <!-- EDIT: caption -->
+      <figcaption>Figure 1: Example of visual scaffolding used to represent common ground between two interlocutors.</figcaption>
+    </figure>
+  </section>
+
+  <!-- ============================================================
+       ABSTRACT
+       Drafted from the README project description — re-check this
+       against the paper's actual abstract before publishing.
+       ============================================================ -->
+  <section class="section">
+    <h2 class="section-title">Abstract</h2>
+    <div class="card abstract">
+      <p>
+        Text-only Large Language Models (LLMs) struggle with reasoning in situated, embodied
+        tasks, in part because they lack the visual and spatial grounding that humans rely on.
+        Trained on "space-less, time-less" text, these models often fail to resolve ambiguities
+        or track references that would be obvious from shared visual context. We address this
+        gap with a system that compositionally generates a visual representation — a "mental
+        imagery" — directly from conversational utterances. This sketch acts as a persistent,
+        grounded representation of the situational context, which we hypothesize helps an agent
+        form associations more easily and improves its reasoning and question-answering
+        capabilities. Our pipeline combines an image generation model with a Visual Language
+        Model (VLM) acting as a "prompt polisher", translating abstract conversational intent
+        into the precise, detailed prompts required for compositional image editing. We evaluate
+        the approach on situated dialogue data and show [EDIT: fill in headline results once
+        available].
+      </p>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       METHOD / APPROACH
+       Skeleton only — replace lorem ipsum + placeholder figure with
+       the actual pipeline description and diagram.
+       ============================================================ -->
+  <section class="section">
+    <h2 class="section-title">Method</h2>
+    <div class="card">
+      <!-- EDIT: replace with the real pipeline diagram -->
+      <div class="figure-placeholder">Figure placeholder — pipeline / architecture diagram</div>
+      <!-- EDIT: replace lorem ipsum with the actual method description -->
+      <p>
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor
+        incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
+        exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure
+        dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+      </p>
+      <p>
+        Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt
+        mollit anim id est laborum. Curabitur pretium tincidunt lacus, ut interdum tellus
+        elementum sit amet.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       RESULTS
+       Skeleton only — replace with real qualitative/quantitative
+       results, tables, comparison figures, etc.
+       ============================================================ -->
+  <section class="section">
+    <h2 class="section-title">Results</h2>
+    <div class="card">
+      <!-- EDIT: replace with real result figures/qualitative examples -->
+      <div class="figure-placeholder">Figure placeholder — qualitative examples grid</div>
+      <!-- EDIT: replace with real quantitative results (table or chart) -->
+      <div class="figure-placeholder">Figure placeholder — quantitative results table / chart</div>
+      <p>
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla facilisi. Integer nec
+        odio praesent libero sed cursus ante dapibus diam. Sed nisi nulla quis sem at nibh
+        elementum imperdiet.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       INTERACTIVE VISUALIZER CALLOUT
+       Points readers at the live conversation visualizer built in
+       this same docs/ folder (index.html).
+       ============================================================ -->
+  <section class="section">
+    <h2 class="section-title">Explore the Data</h2>
+    <div class="card callout">
+      <p>
+        Browse full example conversations turn-by-turn, including the generated imagery for
+        both participants at every step, in our interactive visualizer.
+      </p>
+      <a class="link-btn" href="index.html">
+        <span class="link-icon">🖼️</span> Open the Conversation Visualizer
+      </a>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       BIBTEX
+       EDIT: fill in the real bibkey / venue / year once known.
+       ============================================================ -->
+  <section class="section">
+    <h2 class="section-title">BibTeX</h2>
+    <div class="card">
+      <pre class="bibtex"><code>@article{mohapatra2026groundsketching,
+  title   = {Using Machine Mental Imagery for Representing Common Ground in Situated Dialogue},
+  author  = {Mohapatra, Biswesh and Duca, Giovanni and Romary, Laurent and Cassell, Justine},
+  journal = {arXiv preprint arXiv:2604.21144},
+  year    = {2026}
+}</code></pre>
+    </div>
+  </section>
+
+</main>
+
+<!-- ============================================================
+     FOOTER / LICENSE
+     Nerfies-style acknowledgement + license footer. EDIT the license
+     to match whatever you settle on for the paper text / figures vs.
+     the site's source code (these are often licensed separately).
+     ============================================================ -->
+<footer class="site-footer">
+  <div class="footer-inner">
+    <p>
+      This project page is built on top of the
+      <a href="https://github.com/r3lativo/ground_sketching" target="_blank" rel="noopener">Ground Sketching</a>
+      repository. Design adapted from the
+      <a href="https://nerfies.github.io/" target="_blank" rel="noopener">Nerfies project page</a>.
+    </p>
+    <!-- EDIT: pick a license for the page text/figures, e.g. CC BY-SA 4.0 -->
+    <p class="license">
+      The content of this page is licensed under a
+      <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener">Creative Commons Attribution-ShareAlike 4.0 International License</a>.
+    </p>
+  </div>
+</footer>
+
+</body>
+</html>
