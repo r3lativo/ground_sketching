@@ -76,12 +76,23 @@ def resolve_sequence(img_path_rel, final_prompt_text):
     prefix, current_seq_num, ext = match.group(1), int(match.group(2)), match.group(3)
     pattern = str(directory / f"{prefix}_seq*{ext}")
     found_files = sorted(glob.glob(pattern), key=extract_seq_num)
-    prompt_parts = final_prompt_text.split("$$$") if final_prompt_text else []
+    prompt_parts = [p.strip() for p in final_prompt_text.split("$$$")] if final_prompt_text else []
+
+    # A row's own final_prompt describes only the image(s) *this* turn
+    # produced -- one part normally, or several when "$$$" packs multiple
+    # edits into one turn. Those parts belong to the last len(prompt_parts)
+    # seq numbers ending at this row's own current_seq_num, not to whichever
+    # files happen to sort first overall (a turn can arrive well into an
+    # already-long sequence).
+    start_seq_num = current_seq_num - len(prompt_parts) + 1
 
     sequence = []
-    for i, file_p in enumerate(found_files):
+    for file_p in found_files:
         s_num = extract_seq_num(file_p)
-        p_text = prompt_parts[i].strip() if i < len(prompt_parts) else ""
+        if prompt_parts and start_seq_num <= s_num <= current_seq_num:
+            p_text = prompt_parts[s_num - start_seq_num]
+        else:
+            p_text = ""
         sequence.append({
             "path": str(Path(file_p).relative_to(ROOT)),
             "prompt": p_text,

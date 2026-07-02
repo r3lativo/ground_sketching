@@ -42,16 +42,6 @@ function getAnnotationRows() {
   return state.conv.rows.filter((r) => r.mtype && r.mtype !== "text");
 }
 
-// The one rule that drives the image + metadata on each side panel: nearest
-// row at or before `uptoPos` where `character` produced an image.
-function findSideRow(character, uptoPos) {
-  const rows = state.conv.rows;
-  for (let i = uptoPos; i >= 0; i--) {
-    if (rows[i].character === character && rows[i].img_path) return rows[i];
-  }
-  return null;
-}
-
 // Every distinct frame this character has ever had, each at its latest
 // (most-evolved) image, in frame-number order. Not bounded by the current
 // selection — the whole set is always shown, since this is an overview of
@@ -71,15 +61,46 @@ function getGlobalFrames(character) {
     .sort((a, b) => (a.num ?? 0) - (b.num ?? 0));
 }
 
-// The character's most recent turn at all, image or not. SKIP turns have no
-// img_path (nothing to show), but the badge still needs to say "SKIP" when
-// that's genuinely the last thing this character did.
+// The single rule that drives everything about a side panel: this
+// character's most recent chat turn at or before `uptoPos`, image or not.
+// Selecting one of A's own bubbles resolves to that exact turn (uptoPos
+// itself matches immediately); selecting a B bubble resolves to A's latest
+// turn *as of then* -- which may itself be a SKIP with no image, and that's
+// shown honestly rather than borrowing an older image. Restricted to text
+// rows so Question/Answer annotation rows (which share the same
+// `character` value but carry no frame_choice) don't shadow the real turn.
 function findLatestTurn(character, uptoPos) {
   const rows = state.conv.rows;
   for (let i = uptoPos; i >= 0; i--) {
-    if (rows[i].character === character) return rows[i];
+    if (rows[i].character === character && rows[i].mtype === "text") return rows[i];
   }
   return null;
+}
+
+// The chat position of the turn that produced a given sequence image, so
+// clicking a sequence-strip thumb can jump to its chat bubble the same way
+// the global tracker does.
+//
+// Usually the turn's own `img_path` points exactly at this file. But a
+// single turn can use "$$$" in its final_prompt to describe two edits in
+// one go (e.g. "...$$$..."), which produces two sequence images while only
+// the *last* one becomes that row's own `img_path` -- the intermediate one
+// has no row of its own. In that case, fall back to the earliest turn for
+// this frame whose own resulting seq number has caught up to (or passed)
+// this one, since that's the turn that generated it as a byproduct.
+function findPosForImage(character, path, targetSeqNum, frameId) {
+  const rows = state.conv.rows;
+  const exact = rows.findIndex((r) => r.character === character && r.img_path === path);
+  if (exact !== -1) return exact;
+  if (targetSeqNum == null || !frameId) return -1;
+  for (let i = 0; i < rows.length; i++) {
+    const r = rows[i];
+    if (r.character !== character || r.frame_id !== frameId || !r.img_path) continue;
+    const m = r.img_path.match(/_seq(\d+)\./);
+    const rSeq = m ? parseInt(m[1], 10) : null;
+    if (rSeq !== null && rSeq >= targetSeqNum) return i;
+  }
+  return -1;
 }
 
 function render() {
@@ -110,8 +131,12 @@ function renderChat() {
   chatPositions.forEach((pos) => {
     const row = rows[pos];
     const bubble = document.createElement("div");
-    // A is always on the left (matches the A-side panel), B always on the right.
-    bubble.className = "bubble " + (row.character === "B" ? "align-right" : "align-left");
+    // A is always on the left (matches the A-side panel), B always on the
+    // right. The bubble's own background carries its frame-choice color
+    // directly instead of a separate badge.
+    const badge = frameChoiceBadge(row.frame_choice);
+    bubble.className = "bubble " + (row.character === "B" ? "align-right" : "align-left") +
+      (badge ? ` ${badge.cls}` : "");
     if (pos === state.selectedPos) bubble.classList.add("selected");
 
     const who = document.createElement("span");
@@ -163,9 +188,9 @@ function renderQA() {
   });
 }
 
-function metaField(label, value) {
+function metaField(label, value, spanClass) {
   const wrap = document.createElement("div");
-  wrap.className = "meta-item";
+  wrap.className = "meta-item" + (spanClass ? ` ${spanClass}` : "");
   const l = document.createElement("span");
   l.className = "label";
   l.textContent = label;
@@ -187,38 +212,65 @@ function frameChoiceBadge(rawValue) {
   return { text: clean, cls: classByChoice[clean] || "fc-other" };
 }
 
+// Shared thumb renderer used by both the global frame tracker and the
+// per-frame sequence strip -- they're the same visual language, just
+// different sizes and different sets of entries.
+function renderThumb(container, { src, label, active, sizeClass, title, onClick }) {
+  const thumb = document.createElement("div");
+  thumb.className = `global-thumb ${sizeClass}` + (active ? " global-thumb-active" : "");
+  if (title) thumb.title = title;
+
+  const img = document.createElement("img");
+  img.src = src;
+  thumb.appendChild(img);
+
+  const labelEl = document.createElement("span");
+  labelEl.className = "global-thumb-num";
+  labelEl.textContent = label;
+  thumb.appendChild(labelEl);
+
+  thumb.addEventListener("click", onClick);
+  container.appendChild(thumb);
+}
+
 function renderGlobalTracker(character) {
   const wrap = el(`globalTracker${character}`);
   wrap.innerHTML = "";
-  const activeRow = findSideRow(character, state.selectedPos);
+  const activeRow = findLatestTurn(character, state.selectedPos);
   const activeFrameId = activeRow ? activeRow.frame_id : null;
 
   getGlobalFrames(character).forEach(({ frameId, num, row, pos }) => {
-    const thumb = document.createElement("div");
-    thumb.className = "global-thumb" + (frameId === activeFrameId ? " global-thumb-active" : "");
-    thumb.title = frameId;
-
-    const img = document.createElement("img");
-    img.src = row.img_path;
-    thumb.appendChild(img);
-
-    const label = document.createElement("span");
-    label.className = "global-thumb-num";
-    label.textContent = num !== null ? num : "?";
-    thumb.appendChild(label);
-
-    thumb.addEventListener("click", () => selectPos(pos));
-    wrap.appendChild(thumb);
+    renderThumb(wrap, {
+      src: row.img_path,
+      label: num !== null ? num : "?",
+      active: frameId === activeFrameId,
+      sizeClass: "thumb-size-tracker",
+      title: frameId,
+      onClick: () => selectPos(pos),
+    });
   });
 }
 
+function extractSeqNum(seqId) {
+  const m = (seqId || "").match(/(\d+)/);
+  return m ? parseInt(m[1], 10) : 1;
+}
+
+function extractFrameNum(frameId) {
+  const m = (frameId || "").match(/(\d+)\s*$/);
+  return m ? parseInt(m[1], 10) : null;
+}
+
 function renderSide(character) {
-  const row = findSideRow(character, state.selectedPos);
+  // One rule for both sides (see findLatestTurn): this character's own turn
+  // when it's the one selected, or its latest turn as of the selection
+  // otherwise. Whatever that turn actually has -- image or none -- is what
+  // gets shown; no borrowing an image or metadata from a different turn.
+  const row = findLatestTurn(character, state.selectedPos);
   const img = el(`image${character}`);
   const noImage = el(`noImage${character}`);
   const thumbStrip = el(`thumbs${character}`);
   const badgeWrap = el(`badge${character}`);
-  const promptCaption = el(`prompt${character}`);
   const metaGrid = el(`meta${character}`);
 
   thumbStrip.innerHTML = "";
@@ -226,10 +278,7 @@ function renderSide(character) {
   metaGrid.innerHTML = "";
   renderGlobalTracker(character);
 
-  // The badge reflects this character's most recent turn, even a SKIP one
-  // (which has no image of its own) — that's the case the badge matters most.
-  const latestTurn = findLatestTurn(character, state.selectedPos);
-  const badge = latestTurn ? frameChoiceBadge(latestTurn.frame_choice) : null;
+  const badge = row ? frameChoiceBadge(row.frame_choice) : null;
   if (badge) {
     const span = document.createElement("span");
     span.className = `frame-badge ${badge.cls}`;
@@ -240,42 +289,68 @@ function renderSide(character) {
   if (!row) {
     img.classList.add("hidden");
     noImage.classList.remove("hidden");
-    promptCaption.textContent = "";
     state.sideOverride[character] = null;
     return;
   }
 
-  const sequence = row.sequence || [];
-  const override = state.sideOverride[character];
-  const displayed = (override && sequence.some((s) => s.path === override.path))
-    ? override
-    : sequence.find((s) => s.is_current) || { path: row.img_path, prompt: "" };
+  let promptText = "";
 
-  img.src = displayed.path;
-  img.classList.remove("hidden");
-  noImage.classList.add("hidden");
-  promptCaption.textContent = displayed.prompt ? displayed.prompt : "No sub-prompt for this step.";
+  if (row.img_path) {
+    const sequence = row.sequence || [];
+    const currentEntry = sequence.find((s) => s.is_current) || { path: row.img_path, prompt: "", seq_id: "Final" };
+    const override = state.sideOverride[character];
+    const displayed = (override && sequence.some((s) => s.path === override.path))
+      ? override
+      : currentEntry;
 
-  sequence
-    .filter((s) => s.path !== (sequence.find((x) => x.is_current) || {}).path)
-    .forEach((s) => {
-      const thumb = document.createElement("img");
-      thumb.src = s.path;
-      thumb.title = s.seq_id;
-      if (s.path === displayed.path) thumb.classList.add("thumb-active");
-      thumb.addEventListener("click", () => {
-        state.sideOverride[character] = s;
-        renderSide(character);
+    img.src = displayed.path;
+    img.classList.remove("hidden");
+    noImage.classList.add("hidden");
+
+    // The prompt for *this specific image*: when a turn's final_prompt used
+    // "$$$" to describe two edits at once, `displayed.prompt` is already
+    // just the one segment that produced this exact image (see
+    // resolve_sequence() in build_site.py). Falls back to the turn's whole
+    // final_prompt for the common case of a single, unsplit prompt.
+    promptText = displayed.prompt || row.final_prompt || "";
+
+    const frameNum = extractFrameNum(row.frame_id);
+    sequence.forEach((s) => {
+      const seqNum = extractSeqNum(s.seq_id);
+      renderThumb(thumbStrip, {
+        src: s.path,
+        label: frameNum !== null ? `${frameNum}.${seqNum}` : seqNum,
+        active: s.path === displayed.path,
+        sizeClass: "thumb-size-seq",
+        title: s.prompt ? `${s.seq_id}: ${s.prompt}` : s.seq_id,
+        onClick: () => {
+          // Navigate to the turn that produced this file (for context), then
+          // force the preview to this exact sequence entry -- otherwise an
+          // intermediate "$$$" step (see findPosForImage) would land you on
+          // its owning turn but show that turn's own *final* image instead of
+          // the intermediate one you actually clicked.
+          const pos = findPosForImage(character, s.path, seqNum, row.frame_id);
+          if (pos !== -1) selectPos(pos);
+          state.sideOverride[character] = s;
+          renderSide(character);
+        },
       });
-      thumbStrip.appendChild(thumb);
     });
+  } else {
+    // A genuine SKIP: no image, and no fields below borrowed from an
+    // earlier turn either -- metaField already renders "-" for each blank
+    // one, which is the honest state of *this* turn.
+    img.classList.add("hidden");
+    noImage.classList.remove("hidden");
+    state.sideOverride[character] = null;
+  }
 
-  metaGrid.appendChild(metaField("Frame Meta", row.frame_meta));
-  metaGrid.appendChild(metaField("Relation", row.relation));
-  metaGrid.appendChild(metaField("Extracted Triplets", row.extracted_triplets));
-  metaGrid.appendChild(metaField("Frame ID", row.frame_id));
-  metaGrid.appendChild(metaField("Imagery", row.imagery));
-  metaGrid.appendChild(metaField("Final Prompt", row.final_prompt));
+  metaGrid.appendChild(metaField("Prompt", promptText, "meta-span-all"));
+  metaGrid.appendChild(metaField("Frame Meta", row.frame_meta, "meta-span-third"));
+  metaGrid.appendChild(metaField("Frame ID", row.frame_id, "meta-span-third"));
+  metaGrid.appendChild(metaField("Extracted Triplets", row.extracted_triplets, "meta-span-third"));
+  metaGrid.appendChild(metaField("Relation", row.relation, "meta-span-half"));
+  metaGrid.appendChild(metaField("Imagery", row.imagery, "meta-span-half"));
 }
 
 function selectPos(pos) {
