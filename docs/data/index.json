@@ -1,0 +1,26 @@
+[
+  {
+    "id": "262_163_290_15",
+    "category": "Inferred_VA",
+    "label": "Inferred / 262_163_290_15",
+    "num_messages": 73
+  },
+  {
+    "id": "270_327_290_225",
+    "category": "Attributive_VA",
+    "label": "Attributive / 270_327_290_225",
+    "num_messages": 84
+  },
+  {
+    "id": "52_244_210_229",
+    "category": "Temporal_VA",
+    "label": "Temporal / 52_244_210_229",
+    "num_messages": 91
+  },
+  {
+    "id": "238_372_80_290",
+    "category": "Spatial_VA",
+    "label": "Spatial / 238_372_80_290",
+    "num_messages": 85
+  }
+]

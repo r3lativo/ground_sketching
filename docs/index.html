@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ground Sketching — Conversation Visualizer</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <h1>Ground Sketching <span class="subtitle">Conversation Visualizer</span></h1>
+  <div class="conv-label" id="convLabel">Loading…</div>
+</header>
+
+<main class="layout">
+  <section class="side side-a" id="sideA">
+    <h2 class="side-heading">A</h2>
+    <div class="global-tracker" id="globalTrackerA"></div>
+    <div class="thumb-strip thumb-strip-a" id="thumbsA"></div>
+    <div class="main-image-wrap">
+      <img id="imageA" class="main-image" alt="">
+      <div class="no-image" id="noImageA">No image yet</div>
+    </div>
+    <div class="frame-badge-wrap" id="badgeA"></div>
+    <div class="prompt-caption" id="promptA"></div>
+    <div class="meta-grid" id="metaA"></div>
+  </section>
+
+  <section class="chat-col">
+    <div class="chat-scroll" id="chatScroll">
+      <div class="chat-list" id="chatList"></div>
+    </div>
+    <aside class="qa-panel" id="qaPanel">
+      <div class="qa-panel-header">
+        <h3>Summary / Q&amp;A</h3>
+        <button id="qaClose" class="text-btn">Close</button>
+      </div>
+      <div id="qaList"></div>
+    </aside>
+  </section>
+
+  <section class="side side-b" id="sideB">
+    <h2 class="side-heading">B</h2>
+    <div class="global-tracker" id="globalTrackerB"></div>
+    <div class="thumb-strip thumb-strip-b" id="thumbsB"></div>
+    <div class="main-image-wrap">
+      <img id="imageB" class="main-image" alt="">
+      <div class="no-image" id="noImageB">No image yet</div>
+    </div>
+    <div class="frame-badge-wrap" id="badgeB"></div>
+    <div class="prompt-caption" id="promptB"></div>
+    <div class="meta-grid" id="metaB"></div>
+  </section>
+</main>
+
+<div class="search-bar" id="searchBar">
+  <input type="text" id="searchInput" placeholder="Search this conversation… (Enter = next match, Esc = close)">
+  <span class="search-count" id="searchCount"></span>
+</div>
+
+<div class="overlay" id="menuOverlay">
+  <div class="panel">
+    <h3>Choose a conversation</h3>
+    <div id="menuList"></div>
+    <button id="menuClose" class="text-btn">Close</button>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="footer-group footer-left">
+    <button id="btnMenu" class="icon-btn" title="Choose conversation">☰</button>
+    <button id="btnSearch" class="icon-btn" title="Search this conversation">🔍</button>
+    <button id="btnRandom" class="icon-btn" title="Random conversation">🔀</button>
+    <button id="btnQA" class="icon-btn" title="Toggle Summary / Q&amp;A panel">💬</button>
+  </div>
+  <div class="footer-group footer-center">
+    <button id="btnFirst" class="icon-btn" title="First message">|&lt;</button>
+    <button id="btnPrev" class="icon-btn" title="Previous message">&lt;</button>
+    <button id="btnNext" class="icon-btn" title="Next message">&gt;</button>
+    <button id="btnLast" class="icon-btn" title="Last message">&gt;|</button>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>
