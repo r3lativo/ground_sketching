@@ -696,7 +696,11 @@ function wireUp() {
 async function main() {
   wireUp();
   await loadIndex();
-  if (state.index.length) {
+  const requested = new URLSearchParams(location.search).get("conv");
+  const entry = state.index.find((e) => e.id === requested);
+  if (entry) {
+    await loadConversation(entry.id);
+  } else if (state.index.length) {
     await loadConversation(state.index[0].id);
   }
   maybeAutoOpenTutorial();

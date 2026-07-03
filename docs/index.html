@@ -79,87 +79,250 @@
        ============================================================ -->
   <section class="section teaser-section">
     <figure class="figure">
-      <img src="assets/teaser.png" alt="Example of using visual scaffolding for common ground representation">
+      <div class="zoomable">
+        <img src="assets/teaser.png" alt="Example of using visual scaffolding for common ground representation">
+        <span class="zoom-lens">🔍</span>
+      </div>
       <!-- EDIT: caption -->
       <figcaption>Figure 1: Example of visual scaffolding used to represent common ground between two interlocutors.</figcaption>
     </figure>
   </section>
-
-  <!-- ============================================================
-       ABSTRACT
-       Drafted from the README project description — re-check this
-       against the paper's actual abstract before publishing.
+<!-- ============================================================
+       HOOK
+       Sits above the abstract. Grounds the "why" in something the
+       reader already does (writing things down to remember them)
+       before making the research claim.
        ============================================================ -->
   <section class="section">
-    <h2 class="section-title">Abstract</h2>
-    <div class="card abstract">
+    <div class="card hook">
       <p>
-        Text-only Large Language Models (LLMs) struggle with reasoning in situated, embodied
-        tasks, in part because they lack the visual and spatial grounding that humans rely on.
-        Trained on "space-less, time-less" text, these models often fail to resolve ambiguities
-        or track references that would be obvious from shared visual context. We address this
-        gap with a system that compositionally generates a visual representation — a "mental
-        imagery" — directly from conversational utterances. This sketch acts as a persistent,
-        grounded representation of the situational context, which we hypothesize helps an agent
-        form associations more easily and improves its reasoning and question-answering
-        capabilities. Our pipeline combines an image generation model with a Visual Language
-        Model (VLM) acting as a "prompt polisher", translating abstract conversational intent
-        into the precise, detailed prompts required for compositional image editing. We evaluate
-        the approach on situated dialogue data and show [EDIT: fill in headline results once
-        available].
+        People offload memory constantly: we write things down, sketch a floor plan, draw a diagram
+        on a napkin. It is a way of turning something we might misremember into something we can check.
+        Conversational AI agents don't do this. Everything they know about a conversation lives in text,
+        and text compresses. Two different rooms, described across a long dialogue, can start to blur
+        into one.
+      </p>
+      <p>
+        We asked a simple question: what happens if an AI agent could sketch what it understands, the
+        same way a person might, and check its own sketch later instead of relying on memory alone?
       </p>
     </div>
   </section>
 
   <!-- ============================================================
+       ABSTRACT
+       ============================================================ -->
+  <section class="section">
+    <h2 class="section-title">Abstract</h2>
+    <div class="card abstract">
+      <p>
+        Situated dialogue requires speakers to maintain a reliable representation of shared context rather than reasoning only over isolated utterances. Current conversational agents often struggle with this requirement, especially when the common ground must be preserved beyond the immediate context window. In such settings, fine-grained distinctions are frequently compressed into purely textual representations, leading to a critical failure mode we call <i>representational blur</i>, in which similar but distinct entities collapse into interchangeable descriptions. This semantic flattening creates an illusion of grounding, where agents appear locally coherent but fail to track shared context persistently over time. Inspired by the role of mental imagery in human reasoning, and based on the increased availability of multimodal models, we explore whether conversational agents can be given an analogous ability to construct some depictive intermediate representations during dialogue to address these limitations. Thus, we introduce an active visual scaffolding framework that incrementally converts dialogue state into a persistent visual history that can later be retrieved for grounded response generation. Evaluation on the IndiRef benchmark shows that incremental externalization itself improves over full-dialog reasoning, while visual scaffolding provides additional gains by reducing representational blur and enforcing concrete scene commitments. At the same time, textual representations remain advantageous for non-depictable information, and a hybrid multimodal setting yields the best overall performance. Together, these findings suggest that conversational agents benefit from an explicitly multimodal representation of common ground that integrates depictive and propositional information.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       FAILURE MODE EXAMPLE
+       One real trace from the dataset, shown before the method.
+       This is the "why should I care" beat, backed by an actual
+       result rather than a hypothetical.
+       ============================================================ -->
+  <section class="section">
+    <h2 class="section-title">A concrete failure</h2>
+    <div class="card">
+      <p>
+        In one dialogue, Speaker B visits a bathroom, mentions a yellow rug, leaves, returns eighteen
+        turns later, and mentions a red tub in what they call "the bathroom again." Later, B is asked:
+        <i>"What color was the rug in the room with the red tub?"</i>
+      </p>
+      <!-- EDIT: each image's own width below (independent of the other --
+           changing one does not affect the other). The spacer between
+           them absorbs whatever room is left, shrinking to 0 if the two
+           widths already fill the row. -->
+      <div class="figure-pair">
+        <figure class="figure" style="width: 380px;">
+          <div class="zoomable">
+            <img src="assets/yellow_rug_snippet.png" alt="Dialogue trace snippet showing the yellow rug and red tub mentions">
+            <span class="zoom-lens">🔍</span>
+          </div>
+          <figcaption>Dialogue trace (turns 7&ndash;22)</figcaption>
+        </figure>
+        <div class="figure-spacer"></div>
+        <figure class="figure" style="width: 300px;">
+          <div class="zoomable">
+            <img src="assets/yellow_rug_red_tub.png" alt="Generated visual scaffolding showing the yellow rug and red tub as separate elements in one scene">
+            <span class="zoom-lens">🔍</span>
+          </div>
+          <figcaption>Generated visual artifact</figcaption>
+        </figure>
+      </div>
+      <p>
+        An agent relying on a text summary of the conversation answered <b>red</b>. It had folded the
+        two visits into one compressed description, and the tub's color overwrote the rug's. An agent
+        that had instead sketched the room, then updated the sketch as new details came in, answered
+        <b>yellow</b>, the correct answer. Both attributes existed as separate marks on the same canvas,
+        so there was nothing left to merge.
+      </p>
+      <!-- EDIT: links straight to the real conversation behind the example above -->
+      <a class="link-btn" href="visualizer.html?conv=7_385_309_126">
+        <span class="link-icon">🖼️</span> View this conversation
+      </a>
+    </div>
+  </section>
+
+  <!-- ============================================================
        METHOD / APPROACH
-       Skeleton only — replace lorem ipsum + placeholder figure with
-       the actual pipeline description and diagram.
        ============================================================ -->
   <section class="section">
     <h2 class="section-title">Method</h2>
     <div class="card">
-      <!-- EDIT: replace with the real pipeline diagram -->
-      <div class="figure-placeholder">Figure placeholder — pipeline / architecture diagram</div>
-      <!-- EDIT: replace lorem ipsum with the actual method description -->
+      <figure class="figure">
+        <div class="zoomable">
+          <img src="assets/OCR_scheme.png" alt="Pipeline diagram: Dialog flows through an Observer, a Constructor, into a Memory Bank, retrieved by a Reasoner">
+          <span class="zoom-lens">🔍</span>
+        </div>
+        <figcaption>Dialog &rarr; Observer &rarr; Constructor &rarr; Memory Bank &rarr; Reasoner</figcaption>
+      </figure>
       <p>
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor
-        incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
-        exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure
-        dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+        Each new utterance passes through an <b>Observer</b>, which decides whether it changes the
+        shared state at all. Most turns don't: small talk, confirmations, and false starts are skipped.
+        When a turn does introduce or revise a detail about the scene, the Observer flags it and hands
+        it to a <b>Constructor</b>, which renders the update into an explicit artifact, a schematic
+        image in our main condition, a dense text summary in a comparison condition built the same way.
+        These artifacts accumulate into a <b>Memory Bank</b>: one visual history per speaker, since each
+        speaker in the MeetUp! task occupies their own room and only shares what they say out loud.
       </p>
       <p>
-        Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt
-        mollit anim id est laborum. Curabitur pretium tincidunt lacus, ut interdum tellus
-        elementum sit amet.
+        The sketches are deliberately schematic rather than photorealistic. A photorealistic render would
+        force the model to invent details the dialogue never specified. Instead, we color-code each
+        object by how certain it is: black for confirmed and located, red for confirmed but unplaced,
+        blue for assumed but never stated. Uncertainty stays visible on the canvas instead of getting
+        smoothed over.
+      </p>
+      <p>
+        At query time, a <b>Reasoner</b> takes a question, retrieves the relevant artifacts from memory
+        (matching both the image itself and its attached metadata), and answers from what it retrieves,
+        the same way it would consult notes rather than trying to recall the entire conversation from
+        scratch.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       PIPELINE IN ACTION (GIF)
+       ============================================================ -->
+  <section class="section">
+    <h2 class="section-title">Watching it build</h2>
+    <div class="card">
+      <div class="figure-placeholder">
+        GIF — a single conversation played turn by turn, with the generated visual memory updating
+        alongside it for both speakers
+      </div>
+      <p>
+        This is one dialogue from the benchmark, replayed frame by frame. Each time the Observer flags
+        an update, a new or revised sketch appears. The full, browsable version of this trace, including
+        every intermediate artifact, is in the visualizer below.
       </p>
     </div>
   </section>
 
   <!-- ============================================================
        RESULTS
-       Skeleton only — replace with real qualitative/quantitative
-       results, tables, comparison figures, etc.
        ============================================================ -->
   <section class="section">
     <h2 class="section-title">Results</h2>
     <div class="card">
-      <!-- EDIT: replace with real result figures/qualitative examples -->
-      <div class="figure-placeholder">Figure placeholder — qualitative examples grid</div>
-      <!-- EDIT: replace with real quantitative results (table or chart) -->
-      <div class="figure-placeholder">Figure placeholder — quantitative results table / chart</div>
+      <!-- EDIT: "best-cell" marks the top score in each column individually
+           (not a whole "best row") -- Agentic-Image currently wins the
+           Inferred column even though Agentic-Both wins the other three. -->
+      <div class="table-scroll">
+        <table class="results-table">
+          <thead>
+            <tr>
+              <th>Framework</th>
+              <th>Temporal</th>
+              <th>Spatial</th>
+              <th>Attributive</th>
+              <th>Inferred</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>FD (Qwen3-VL-Thinking)</td>
+              <td>0.18</td>
+              <td>0.10</td>
+              <td>0.20</td>
+              <td>0.24</td>
+            </tr>
+            <tr>
+              <td>FD (Qwen-QwQ)</td>
+              <td>0.32</td>
+              <td>0.38</td>
+              <td>0.40</td>
+              <td>0.40</td>
+            </tr>
+            <tr>
+              <td>Agentic-Text</td>
+              <td>0.42</td>
+              <td>0.26</td>
+              <td>0.44</td>
+              <td>0.46</td>
+            </tr>
+            <tr>
+              <td>Agentic-Image</td>
+              <td>0.50</td>
+              <td>0.24</td>
+              <td>0.44</td>
+              <td class="best-cell">0.58</td>
+            </tr>
+            <tr>
+              <td>Agentic-Both</td>
+              <td class="best-cell">0.58</td>
+              <td class="best-cell">0.44</td>
+              <td class="best-cell">0.64</td>
+              <td>0.52</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
       <p>
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla facilisi. Integer nec
-        odio praesent libero sed cursus ante dapibus diam. Sed nisi nulla quis sem at nibh
-        elementum imperdiet.
+        Building an incremental memory helps regardless of format: both the image and text agents beat
+        a baseline that reasons over the raw transcript, on every question type. Within the incremental
+        setting, images and text split the work. Visual memory does better on temporal, attributive, and
+        inferred questions (58% vs. 46% accuracy on inferred questions, for example), where the win comes
+        from keeping distinct details as distinct marks on the canvas. Text memory holds a small edge on
+        spatial questions (26% vs. 24%), because room-to-room transitions ("left the bathroom and went
+        north") are easier to state as a sentence than to recover from a set of separate images.
+      </p>
+      <p>
+        Combining both, one memory bank holding a sketch and its paired text summary for every update,
+        produces the best results overall: 58% on temporal, 44% on spatial, 64% on attributive. The one
+        exception is inferred questions, where the image-only agent (58%) slightly beats the combined
+        one (52%). Adding text back in appears to reintroduce some of the ambiguity that forcing a
+        concrete sketch had removed.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       LIMITATIONS
+       ============================================================ -->
+  <section class="section">
+    <h2 class="section-title">Where it breaks</h2>
+    <div class="card">
+      <p>
+        Sketches struggle with anything that isn't a positive, depictable fact. When a speaker asks
+        "it's not yellow?", that question reveals real information about their room, but it's phrased as
+        a negation, so the Observer skips it and nothing gets drawn. Cross-room reasoning is the other
+        weak point: connecting one sketch to the next relies on a separate set of extracted relations,
+        and when those links are missing or too weak to retrieve, the agent locks onto the wrong room
+        even when the sketch it needed was rendered correctly.
       </p>
     </div>
   </section>
 
   <!-- ============================================================
        INTERACTIVE VISUALIZER CALLOUT
-       Points readers at the live conversation visualizer built in
-       this same docs/ folder (index.html).
        ============================================================ -->
   <section class="section">
     <h2 class="section-title">Explore the Data</h2>
@@ -173,7 +336,6 @@
       </a>
     </div>
   </section>
-
   <!-- ============================================================
        BIBTEX
        EDIT: fill in the real bibkey / venue / year once known.
@@ -181,7 +343,9 @@
   <section class="section">
     <h2 class="section-title">BibTeX</h2>
     <div class="card">
-      <pre class="bibtex"><code>@article{mohapatra2026groundsketching,
+      <!-- EDIT: clicking anywhere in this block selects all of it, ready
+           to copy (see the script at the bottom of the page). -->
+      <pre class="bibtex" id="bibtex" title="Click to select all"><code>@article{mohapatra2026groundsketching,
   title   = {Using Machine Mental Imagery for Representing Common Ground in Situated Dialogue},
   author  = {Mohapatra, Biswesh and Duca, Giovanni and Romary, Laurent and Cassell, Justine},
   journal = {arXiv preprint arXiv:2604.21144},
@@ -213,6 +377,73 @@
     </p>
   </div>
 </footer>
+
+<!-- ============================================================
+     IMAGE LIGHTBOX
+     Click any figure (or its lens icon) to zoom it full-screen over
+     a dimmed backdrop. Click the backdrop, the close button, or press
+     Escape to dismiss.
+     ============================================================ -->
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" id="lightboxClose" aria-label="Close">&times;</button>
+  <img id="lightboxImg" src="" alt="">
+</div>
+
+<script>
+(function () {
+  var lightbox = document.getElementById("lightbox");
+  var lightboxImg = document.getElementById("lightboxImg");
+
+  function openLightbox(img) {
+    lightboxImg.src = img.src;
+    lightboxImg.alt = img.alt;
+    lightbox.classList.add("open");
+
+    // Wide, short images (teaser, pipeline diagram) fit-to-width on a
+    // narrow phone would render only a sliver tall. If that's the case
+    // here, let the image grow to at least a third of the screen's
+    // height instead, scrolling sideways rather than shrinking further.
+    var ratio = img.naturalWidth / img.naturalHeight;
+    var widthConstrainedHeight = (window.innerWidth * 0.9) / ratio;
+    var minHeightTarget = window.innerHeight * 0.33;
+    var isNarrowScreen = window.innerWidth <= 600;
+    lightboxImg.classList.toggle(
+      "lightbox-img-wide",
+      isNarrowScreen && widthConstrainedHeight < minHeightTarget
+    );
+  }
+  function closeLightbox() {
+    lightbox.classList.remove("open");
+  }
+
+  document.querySelectorAll(".zoomable img").forEach(function (img) {
+    img.addEventListener("click", function () { openLightbox(img); });
+  });
+  document.querySelectorAll(".zoom-lens").forEach(function (lens) {
+    lens.addEventListener("click", function (e) {
+      e.stopPropagation();
+      openLightbox(lens.previousElementSibling);
+    });
+  });
+
+  document.getElementById("lightboxClose").addEventListener("click", closeLightbox);
+  lightbox.addEventListener("click", function (e) {
+    if (e.target === lightbox) closeLightbox();
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") closeLightbox();
+  });
+
+  var bibtex = document.getElementById("bibtex");
+  bibtex.addEventListener("click", function () {
+    var range = document.createRange();
+    range.selectNodeContents(bibtex);
+    var selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+  });
+})();
+</script>
 
 </body>
 </html>
