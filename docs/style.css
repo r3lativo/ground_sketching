@@ -572,7 +572,7 @@ body {
   inset: 0;
   background: rgba(30,28,24,0.55);
   display: none;
-  z-index: 36;
+  z-index: 41;
 }
 
 .tutorial-backdrop.open { display: block; }
@@ -589,7 +589,7 @@ body {
   border: 3px solid var(--accent-a);
   box-shadow: 0 0 0 9999px rgba(30,28,24,0.55);
   pointer-events: none;
-  z-index: 36;
+  z-index: 42;
   transition: top 0.25s ease, left 0.25s ease, width 0.25s ease, height 0.25s ease;
 }
 
@@ -606,7 +606,7 @@ body {
   border-radius: 12px;
   padding: 16px 18px;
   box-shadow: 0 8px 24px rgba(0,0,0,0.18);
-  z-index: 37;
+  z-index: 43;
 }
 
 .tutorial-box.open { display: block; }

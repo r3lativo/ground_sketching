@@ -477,6 +477,7 @@ const TUTORIAL_STEPS = [
     selector: "#sideA",
     placement: "right",
     mobilePrep: () => openMobileSheet("A"),
+    mobileCenter: true,
   },
   {
     title: "Skipped turns",
@@ -485,6 +486,7 @@ const TUTORIAL_STEPS = [
     anchorPos: 12,
     placement: "left",
     mobilePrep: () => openMobileSheet("B"),
+    mobileCenter: true,
   },
   {
     title: "Global frame history",
@@ -602,7 +604,7 @@ function renderTutorialStep() {
   setTimeout(() => {
     const rect = target.getBoundingClientRect();
     positionSpotlight(rect);
-    positionTutorialBox(rect, step.placement);
+    positionTutorialBox(rect, step.placement, step.mobileCenter);
   }, 300);
 }
 
@@ -619,7 +621,7 @@ function positionCurrentTutorialStep() {
   if (target) {
     const rect = target.getBoundingClientRect();
     positionSpotlight(rect);
-    positionTutorialBox(rect, step.placement);
+    positionTutorialBox(rect, step.placement, step.mobileCenter);
   }
 }
 
@@ -643,7 +645,7 @@ function positionSpotlight(rect) {
 // centered on it) instead of below/above -- for tall targets like the chat
 // column or a side panel, below/above would land on top of their own
 // content instead of next to it.
-function positionTutorialBox(rect, placement) {
+function positionTutorialBox(rect, placement, mobileCenter) {
   const box = el("tutorialBox");
   box.style.top = "";
   box.style.left = "";
@@ -654,11 +656,18 @@ function positionTutorialBox(rect, placement) {
   // On a narrow screen the target is often a near-fullscreen sheet (or the
   // whole chat column), leaving no real "beside"/"above"/"below" -- pin the
   // box to a fixed, always-readable spot near the bottom instead of trying
-  // to compute one relative to the target's geometry.
+  // to compute one relative to the target's geometry. Steps that highlight
+  // a slide-in side sheet (which itself covers that bottom spot) ask to be
+  // vertically centered instead via `mobileCenter`.
   if (isMobileLayout()) {
     box.style.left = "16px";
     box.style.width = "calc(100vw - 32px)";
-    box.style.bottom = `calc(var(--footer-h) + 16px)`;
+    if (mobileCenter) {
+      const boxHeight = box.offsetHeight || 140;
+      box.style.top = `${Math.max(16, (window.innerHeight - boxHeight) / 2)}px`;
+    } else {
+      box.style.bottom = `calc(var(--footer-h) + 16px)`;
+    }
     return;
   }
 
