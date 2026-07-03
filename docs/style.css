@@ -543,6 +543,83 @@ body {
   padding: 6px 0;
 }
 
+/* Tutorial */
+.tutorial-btn { font-weight: 600; }
+
+@keyframes tutorial-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(45, 108, 223, 0.45); }
+  50% { box-shadow: 0 0 0 8px rgba(45, 108, 223, 0); }
+}
+
+/* Full dim for the two bookend steps, which have no specific element to
+   spotlight -- everything is dimmed, nothing is exempt. */
+.tutorial-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(30,28,24,0.55);
+  display: none;
+  z-index: 36;
+}
+
+.tutorial-backdrop.open { display: block; }
+
+/* Spotlight for element-targeted steps: a box-shadow with a huge spread
+   dims the entire page except this element's own box, which is left as a
+   transparent "hole" showing the real, undimmed page through it. Pointer
+   events pass through everywhere so the highlighted element (and anything
+   else) stays clickable during the tour. */
+.tutorial-spotlight {
+  position: fixed;
+  display: none;
+  border-radius: 8px;
+  border: 3px solid var(--accent-a);
+  box-shadow: 0 0 0 9999px rgba(30,28,24,0.55);
+  pointer-events: none;
+  z-index: 36;
+  transition: top 0.25s ease, left 0.25s ease, width 0.25s ease, height 0.25s ease;
+}
+
+.tutorial-spotlight.open { display: block; }
+
+/* One floating card reused for every step -- JS repositions it either
+   centered (welcome/done steps) or next to the highlighted element. */
+.tutorial-box {
+  position: fixed;
+  display: none;
+  width: 320px;
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px 18px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+  z-index: 37;
+}
+
+.tutorial-box.open { display: block; }
+
+.tutorial-step-count {
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.tutorial-box h3 { margin: 0 0 8px; font-size: 15px; }
+.tutorial-box p { margin: 0 0 14px; font-size: 13px; line-height: 1.5; color: var(--ink); }
+
+.tutorial-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tutorial-nav { display: flex; gap: 6px; }
+.tutorial-nav .icon-btn { font-size: 12.5px; padding: 6px 12px; }
+
+/* Nudge toward advancing if a step has sat unread for a while. */
+.tutorial-nav .icon-btn.tutorial-next-shine { animation: tutorial-pulse 1.6s ease-in-out infinite; }
+
 @media (max-width: 900px) {
   .layout { grid-template-columns: 1fr; }
   .side, .chat-col { max-height: none; }

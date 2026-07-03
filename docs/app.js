@@ -7,6 +7,8 @@ const state = {
   sideOverride: { A: null, B: null }, // manual thumbnail preview per side
   searchMatches: [],
   searchCursor: -1,
+  tutorialOpen: false,
+  tutorialStep: 0,
 };
 
 const el = (id) => document.getElementById(id);
@@ -109,7 +111,6 @@ function render() {
   renderQA();
   renderSide("A");
   renderSide("B");
-  renderNavButtons();
 }
 
 function renderConvLabel() {
@@ -361,28 +362,6 @@ function selectPos(pos) {
   if (selected) selected.scrollIntoView({ block: "nearest", behavior: "smooth" });
 }
 
-function renderNavButtons() {
-  const chatPositions = getChatPositions();
-  const cursor = chatPositions.indexOf(state.selectedPos);
-  el("btnFirst").disabled = cursor <= 0;
-  el("btnPrev").disabled = cursor <= 0;
-  el("btnNext").disabled = cursor === -1 || cursor >= chatPositions.length - 1;
-  el("btnLast").disabled = cursor === -1 || cursor >= chatPositions.length - 1;
-}
-
-function stepChat(delta) {
-  const chatPositions = getChatPositions();
-  const cursor = chatPositions.indexOf(state.selectedPos);
-  const next = Math.min(Math.max(cursor + delta, 0), chatPositions.length - 1);
-  selectPos(chatPositions[next]);
-}
-
-function jumpChat(toEnd) {
-  const chatPositions = getChatPositions();
-  if (!chatPositions.length) return;
-  selectPos(toEnd ? chatPositions[chatPositions.length - 1] : chatPositions[0]);
-}
-
 // --- Menu (conversation picker) ---
 function renderMenu() {
   const list = el("menuList");
@@ -447,6 +426,242 @@ async function loadRandomConversation() {
   await loadConversation(pick.id);
 }
 
+// --- Tutorial ---
+// Anchored to this specific conversation so every step has real, curated
+// data behind it (see anchorPos below) -- opening the tour always loads it,
+// regardless of what the visitor was previously browsing.
+const TUTORIAL_CONV_ID = "262_163_290_15";
+
+const TUTORIAL_STEPS = [
+  {
+    title: "Welcome",
+    text: "Two human participants, A and B, try to find each other in a virtual environment. We let an Agentic system build imagery of scenes through conversation alone. Each message can start a new sketch, edit the existing one, or leave it untouched: let's walk through how that's shown here.",
+    selector: null,
+    anchorPos: 13,
+  },
+  {
+    title: "The conversation",
+    text: "This is the dialogue between A and B. Click any message to jump straight to that turn. The panels on either side always reflect what was true at that exact moment.",
+    selector: ".chat-col",
+    placement: "right",
+  },
+  {
+    title: "Each side's sketch",
+    text: "This panel shows what A pictured as of the selected turn: A's own state if it's A's turn, or A's most recent state otherwise.",
+    selector: "#sideA",
+    placement: "right",
+  },
+  {
+    title: "Skipped turns",
+    text: "Not every turn produces a change to the picture. B's last turn here was skipped, so B's panel shows “No image available.”",
+    selector: "#sideB",
+    anchorPos: 8,
+    placement: "left",
+  },
+  {
+    title: "Global frame history",
+    text: "Every distinct scene sketched from A's POV in this conversation, each at its latest version. Click any thumbnail to preview it and jump to the corresponding message in the conversation.",
+    selector: "#globalTrackerA",
+    anchorPos: 13,
+  },
+  {
+    title: "Edit history",
+    text: "Every edit made to the current scene.",
+    selector: "#thumbsA",
+  },
+  {
+    title: "Prompt & metadata",
+    text: "The exact prompt that generated the current image, plus the structured data extracted from that turn (frame metadata, relations, imagery).",
+    selector: "#metaA",
+  },
+  {
+    title: "Color legend",
+    text: "Green marks a brand-new sketch, purple an edit to the existing one, orange a skipped turn.",
+    selector: ".footer-legend",
+  },
+  {
+    title: "More tools",
+    text: "Switch conversations, search within one, jump to a random example, or inspect the underlying Q&A annotations from here.",
+    selector: ".footer-left",
+  },
+  {
+    title: "That's it",
+    text: "Click any message to start exploring. You can reopen this tour anytime from the “Show tutorial” button.",
+    selector: null,
+  },
+];
+
+let tutorialShineTimeout = null;
+
+async function openTutorial() {
+  closeSearch();
+  closeMenu();
+  closeQA();
+  if (!state.conv || state.conv.id !== TUTORIAL_CONV_ID) {
+    await loadConversation(TUTORIAL_CONV_ID);
+  }
+  state.tutorialOpen = true;
+  state.tutorialStep = 0;
+  el("tutorialBox").classList.add("open");
+  window.addEventListener("resize", positionCurrentTutorialStep);
+  window.addEventListener("scroll", positionCurrentTutorialStep, true);
+  renderTutorialStep();
+}
+
+function closeTutorial() {
+  clearTimeout(tutorialShineTimeout);
+  el("tutorialNext").classList.remove("tutorial-next-shine");
+  state.tutorialOpen = false;
+  el("tutorialBackdrop").classList.remove("open");
+  el("tutorialSpotlight").classList.remove("open");
+  el("tutorialBox").classList.remove("open");
+  window.removeEventListener("resize", positionCurrentTutorialStep);
+  window.removeEventListener("scroll", positionCurrentTutorialStep, true);
+}
+
+function renderTutorialStep() {
+  const step = TUTORIAL_STEPS[state.tutorialStep];
+  if (step.anchorPos !== undefined) selectPos(step.anchorPos);
+
+  el("tutorialStepCount").textContent = `${state.tutorialStep + 1} / ${TUTORIAL_STEPS.length}`;
+  el("tutorialTitle").textContent = step.title;
+  el("tutorialText").textContent = step.text;
+  el("tutorialPrev").disabled = state.tutorialStep === 0;
+  el("tutorialNext").textContent = state.tutorialStep === TUTORIAL_STEPS.length - 1 ? "Done" : "Next";
+
+  // Nudge toward the next step if this one sits unread for a while.
+  clearTimeout(tutorialShineTimeout);
+  el("tutorialNext").classList.remove("tutorial-next-shine");
+  tutorialShineTimeout = setTimeout(() => {
+    el("tutorialNext").classList.add("tutorial-next-shine");
+  }, 5000);
+
+  if (!step.selector) {
+    el("tutorialBackdrop").classList.add("open");
+    positionSpotlight(null);
+    positionTutorialBox(null);
+    return;
+  }
+
+  el("tutorialBackdrop").classList.remove("open");
+  const target = document.querySelector(step.selector);
+  if (!target) {
+    positionSpotlight(null);
+    positionTutorialBox(null);
+    return;
+  }
+  target.scrollIntoView({ block: "center", behavior: "smooth" });
+  // Give the smooth scroll a moment to settle before measuring/positioning.
+  setTimeout(() => {
+    const rect = target.getBoundingClientRect();
+    positionSpotlight(rect);
+    positionTutorialBox(rect, step.placement);
+  }, 300);
+}
+
+// Reposition-only pass for resize/scroll while the tour is open -- doesn't
+// re-select a position or re-run the scroll choreography.
+function positionCurrentTutorialStep() {
+  const step = TUTORIAL_STEPS[state.tutorialStep];
+  if (!step.selector) {
+    positionSpotlight(null);
+    positionTutorialBox(null);
+    return;
+  }
+  const target = document.querySelector(step.selector);
+  if (target) {
+    const rect = target.getBoundingClientRect();
+    positionSpotlight(rect);
+    positionTutorialBox(rect, step.placement);
+  }
+}
+
+// Sizes/moves the cutout to match the target's box exactly (plus a little
+// padding) -- everywhere outside of it is dimmed by its own box-shadow.
+function positionSpotlight(rect) {
+  const spotlight = el("tutorialSpotlight");
+  if (!rect) {
+    spotlight.classList.remove("open");
+    return;
+  }
+  const pad = 4;
+  spotlight.style.left = `${rect.left - pad}px`;
+  spotlight.style.top = `${rect.top - pad}px`;
+  spotlight.style.width = `${rect.width + pad * 2}px`;
+  spotlight.style.height = `${rect.height + pad * 2}px`;
+  spotlight.classList.add("open");
+}
+
+// `placement` of "left"/"right" puts the box beside the target (vertically
+// centered on it) instead of below/above -- for tall targets like the chat
+// column or a side panel, below/above would land on top of their own
+// content instead of next to it.
+function positionTutorialBox(rect, placement) {
+  const box = el("tutorialBox");
+  const margin = 12;
+  const boxWidth = box.offsetWidth || 320;
+  const boxHeight = box.offsetHeight || 140;
+
+  if (!rect) {
+    box.style.left = `${(window.innerWidth - boxWidth) / 2}px`;
+    box.style.top = `${(window.innerHeight - boxHeight) / 2}px`;
+    return;
+  }
+
+  let top, left;
+
+  if (placement === "left" || placement === "right") {
+    top = rect.top + rect.height / 2 - boxHeight / 2;
+    top = Math.max(margin, Math.min(top, window.innerHeight - boxHeight - margin));
+
+    if (placement === "right") {
+      left = rect.right + margin;
+      if (left + boxWidth > window.innerWidth - margin) left = rect.left - boxWidth - margin;
+    } else {
+      left = rect.left - boxWidth - margin;
+      if (left < margin) left = rect.right + margin;
+    }
+    left = Math.max(margin, Math.min(left, window.innerWidth - boxWidth - margin));
+  } else {
+    top = rect.bottom + margin;
+    if (top + boxHeight > window.innerHeight - margin) {
+      top = rect.top - boxHeight - margin;
+    }
+    top = Math.max(margin, Math.min(top, window.innerHeight - boxHeight - margin));
+
+    left = rect.left + rect.width / 2 - boxWidth / 2;
+    left = Math.max(margin, Math.min(left, window.innerWidth - boxWidth - margin));
+  }
+
+  box.style.top = `${top}px`;
+  box.style.left = `${left}px`;
+}
+
+function tutorialNext() {
+  if (state.tutorialStep >= TUTORIAL_STEPS.length - 1) {
+    closeTutorial();
+    return;
+  }
+  state.tutorialStep += 1;
+  renderTutorialStep();
+}
+
+function tutorialPrev() {
+  if (state.tutorialStep <= 0) return;
+  state.tutorialStep -= 1;
+  renderTutorialStep();
+}
+
+// First-ever visit: open the tour by default instead of waiting to be
+// clicked. Marked as seen right away so a reload (or any later visit)
+// doesn't keep forcing it back open -- the button remains available to
+// reopen it manually at any time.
+function maybeAutoOpenTutorial() {
+  if (localStorage.getItem("gs_tutorial_prompted")) return;
+  localStorage.setItem("gs_tutorial_prompted", "true");
+  openTutorial();
+}
+
 function wireUp() {
   el("btnMenu").addEventListener("click", openMenu);
   el("menuClose").addEventListener("click", closeMenu);
@@ -469,10 +684,13 @@ function wireUp() {
   el("btnQA").addEventListener("click", toggleQA);
   el("qaClose").addEventListener("click", closeQA);
 
-  el("btnFirst").addEventListener("click", () => jumpChat(false));
-  el("btnPrev").addEventListener("click", () => stepChat(-1));
-  el("btnNext").addEventListener("click", () => stepChat(1));
-  el("btnLast").addEventListener("click", () => jumpChat(true));
+  el("btnTutorial").addEventListener("click", openTutorial);
+  el("tutorialNext").addEventListener("click", tutorialNext);
+  el("tutorialPrev").addEventListener("click", tutorialPrev);
+  el("tutorialSkip").addEventListener("click", closeTutorial);
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && state.tutorialOpen) closeTutorial();
+  });
 }
 
 async function main() {
@@ -481,6 +699,7 @@ async function main() {
   if (state.index.length) {
     await loadConversation(state.index[0].id);
   }
+  maybeAutoOpenTutorial();
 }
 
 main();
