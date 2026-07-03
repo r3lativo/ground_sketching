@@ -1,9 +1,15 @@
 [
   {
-    "id": "262_163_290_15",
+    "id": "7_385_309_126",
+    "category": "Attributive_VA",
+    "label": "Attributive / 7_385_309_126",
+    "num_messages": 66
+  },
+  {
+    "id": "420_401_196_249",
     "category": "Inferred_VA",
-    "label": "Inferred / 262_163_290_15",
-    "num_messages": 73
+    "label": "Inferred / 420_401_196_249",
+    "num_messages": 72
   },
   {
     "id": "270_327_290_225",
@@ -22,11 +28,5 @@
     "category": "Spatial_VA",
     "label": "Spatial / 238_372_80_290",
     "num_messages": 85
-  },
-  {
-    "id": "7_385_309_126",
-    "category": "Attributive_VA",
-    "label": "Attributive / 7_385_309_126",
-    "num_messages": 66
   }
 ]

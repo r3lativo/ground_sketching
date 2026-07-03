@@ -21,11 +21,11 @@ MAX_WIDTH = 900
 # (category, conversation_id) pairs to publish. Edit this list to swap in a
 # different subset, then rerun the script.
 CONVERSATIONS = [
-    ("Inferred_VA", "262_163_290_15"),
+    ("Attributive_VA", "7_385_309_126"),
+    ("Inferred_VA", "420_401_196_249"),
     ("Attributive_VA", "270_327_290_225"),
     ("Temporal_VA", "52_244_210_229"),
     ("Spatial_VA", "238_372_80_290"),
-    ("Attributive_VA", "7_385_309_126"),
 ]
 
 # The CSVs reference category folders with this casing; the folders on disk

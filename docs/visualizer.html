@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Ground Sketching — Conversation Visualizer</title>
+<title>Ground Sketching | Interactive Visualization</title>
 <link rel="icon" href="assets/favicon-visualizer.svg" type="image/svg+xml">
 <link rel="stylesheet" href="style.css">
 </head>
@@ -11,14 +11,20 @@
 
 <header class="topbar">
   <div class="topbar-title">
-    <h1>Ground Sketching</h1>
+    <h1>Interactive Visualization</h1>
     <p class="tagline">Browse the corresponding images generated from a conversation, turn by turn. See the <a href="index.html">project page</a> for the paper, or explore the full <a href="https://github.com/r3lativo/ground_sketching" target="_blank" rel="noopener">repository</a>.</p>
   </div>
-  <div class="conv-label" id="convLabel">Loading…</div>
 </header>
 
 <main class="layout">
   <section class="side side-a" id="sideA">
+    <div class="mobile-sheet-bar">
+      <div class="mobile-side-switch">
+        <button class="mobile-side-btn" data-side="A">A</button>
+        <button class="mobile-side-btn" data-side="B">B</button>
+      </div>
+      <button class="icon-btn mobile-sheet-close" title="Close">✕</button>
+    </div>
     <h2 class="side-heading">A</h2>
     <div class="subsection-label">All frames</div>
     <div class="global-tracker" id="globalTrackerA"></div>
@@ -34,6 +40,7 @@
 
   <section class="chat-col">
     <h2 class="side-heading">Conversation</h2>
+    <div class="conv-label" id="convLabel">Loading…</div>
     <div class="chat-scroll" id="chatScroll">
       <div class="chat-list" id="chatList"></div>
     </div>
@@ -47,6 +54,13 @@
   </section>
 
   <section class="side side-b" id="sideB">
+    <div class="mobile-sheet-bar">
+      <div class="mobile-side-switch">
+        <button class="mobile-side-btn" data-side="A">A</button>
+        <button class="mobile-side-btn" data-side="B">B</button>
+      </div>
+      <button class="icon-btn mobile-sheet-close" title="Close">✕</button>
+    </div>
     <h2 class="side-heading">B</h2>
     <div class="subsection-label">All frames</div>
     <div class="global-tracker" id="globalTrackerB"></div>
@@ -61,8 +75,10 @@
   </section>
 </main>
 
+<div class="mobile-sheet-backdrop" id="mobileSheetBackdrop"></div>
+
 <div class="search-bar" id="searchBar">
-  <input type="text" id="searchInput" placeholder="Search this conversation… (Enter = next match, Esc = close)">
+  <input type="text" id="searchInput" placeholder="Search this conversation…">
   <span class="search-count" id="searchCount"></span>
 </div>
 
@@ -95,17 +111,28 @@
     <button id="btnSearch" class="icon-btn" title="Search this conversation">🔍</button>
     <button id="btnRandom" class="icon-btn" title="Random conversation">🔀</button>
     <button id="btnQA" class="icon-btn" title="Toggle Q&amp;A panel">❓</button>
+    <button id="btnMobileMore" class="icon-btn mobile-more-btn" title="Menu">☰ Menu</button>
   </div>
   <div class="footer-group footer-center">
-    <button id="btnTutorial" class="icon-btn tutorial-btn" title="Show tutorial">🎓 Show tutorial</button>
+    <button id="btnTutorial" class="icon-btn tutorial-btn" title="Tutorial">🎓 Tutorial</button>
   </div>
-  <div class="footer-group footer-legend">
-    <span class="legend-title">Legend</span>
-    <span class="legend-item"><span class="legend-dot fc-new"></span>New</span>
-    <span class="legend-item"><span class="legend-dot fc-continue"></span>Continue</span>
-    <span class="legend-item"><span class="legend-dot fc-skip"></span>Skip</span>
+  <div class="footer-group footer-legend" id="footerLegend">
+    <button class="icon-btn legend-toggle-btn" id="legendToggleBtn" title="Legend">🎨 Legend</button>
+    <div class="legend-body">
+      <span class="legend-title">Legend</span>
+      <span class="legend-item"><span class="legend-dot fc-new"></span>New</span>
+      <span class="legend-item"><span class="legend-dot fc-continue"></span>Continue</span>
+      <span class="legend-item"><span class="legend-dot fc-skip"></span>Skip</span>
+    </div>
   </div>
 </footer>
+
+<div class="mobile-more-menu" id="mobileMoreMenu">
+  <button class="menu-item" data-action="menu">☰ Choose conversation</button>
+  <button class="menu-item" data-action="search">🔍 Search this conversation</button>
+  <button class="menu-item" data-action="random">🔀 Random conversation</button>
+  <button class="menu-item" data-action="qa">❓ Q&amp;A</button>
+</div>
 
 <script src="app.js"></script>
 </body>

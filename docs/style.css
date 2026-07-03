@@ -21,17 +21,30 @@ body {
 }
 
 .topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
   height: auto;
   min-height: var(--topbar-h);
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 16px;
   padding: 8px 20px;
   border-bottom: 1px solid var(--border);
   background: var(--panel-bg);
 }
 
-.topbar-title { display: flex; flex-direction: column; gap: 2px; flex: 1 1 auto; min-width: 0; }
+.topbar-title {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 640px;
+  text-align: center;
+}
 
 .topbar h1 {
   font-size: 18px;
@@ -54,12 +67,10 @@ body {
 .tagline a:hover { text-decoration: underline; }
 
 .conv-label {
-  flex: 0 0 auto;
-  min-width: 170px;
-  text-align: right;
-  font-size: 13px;
+  text-align: center;
+  font-size: 12px;
   color: var(--muted);
-  white-space: nowrap;
+  margin: -6px 0 8px;
 }
 
 .layout {
@@ -67,14 +78,14 @@ body {
   grid-template-columns: 1fr 1fr 1fr;
   gap: 1px;
   background: var(--border);
-  min-height: calc(100vh - var(--topbar-h) - var(--footer-h));
+  min-height: calc(100dvh - var(--topbar-h) - var(--footer-h));
 }
 
 .side {
   background: var(--panel-bg);
   padding: 14px 16px;
   overflow-y: auto;
-  max-height: calc(100vh - var(--topbar-h) - var(--footer-h));
+  max-height: calc(100dvh - var(--topbar-h) - var(--footer-h));
 }
 
 .main-image-wrap {
@@ -85,7 +96,7 @@ body {
 .chat-col {
   position: relative;
   background: var(--panel-bg);
-  max-height: calc(100vh - var(--topbar-h) - var(--footer-h));
+  max-height: calc(100dvh - var(--topbar-h) - var(--footer-h));
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -299,6 +310,7 @@ body {
   font-size: 13.5px;
   line-height: 1.35;
   text-align: left;
+  transition: box-shadow 0.15s ease;
 }
 
 .bubble .who { font-weight: 600; margin-right: 4px; }
@@ -320,40 +332,41 @@ body {
 .bubble.align-right { border-right: 3px solid var(--accent-b); }
 .bubble.align-left { border-left: 3px solid var(--accent-a); }
 
+/* A real glow (not just a border) so the selected turn is obvious at a
+   glance -- colored to match the speaker, same as the bubble's own stripe. */
 .bubble.selected.align-left {
   border-color: var(--accent-a);
-  box-shadow: 0 0 0 1px var(--accent-a) inset;
+  box-shadow: 0 0 0 1px var(--accent-a) inset, 0 0 0 3px rgba(45, 108, 223, 0.35), 0 0 12px 2px rgba(45, 108, 223, 0.45);
 }
 
 .bubble.selected.align-right {
   border-color: var(--accent-b);
-  box-shadow: 0 0 0 1px var(--accent-b) inset;
+  box-shadow: 0 0 0 1px var(--accent-b) inset, 0 0 0 3px rgba(207, 91, 63, 0.35), 0 0 12px 2px rgba(207, 91, 63, 0.45);
 }
 
 .bubble.search-match { outline: 2px solid #e6b800; }
 .bubble.search-dim { opacity: 0.35; }
 
-/* Q&A panel: pinned to the bottom of the chat column specifically (not the
-   whole viewport), so it sits right next to the dialog it summarizes and
-   stays put while the chat scrolls behind it. Toggled independently instead
-   of living inline in the message feed. */
+/* Q&A panel: a normal flex sibling below .chat-scroll (not an overlay), so
+   opening it shrinks the chat's own scroll area (flex: 1 there absorbs the
+   difference) instead of covering the bottom of it. */
 .qa-panel {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  max-height: 45%;
+  flex: 0 0 auto;
+  max-height: 0;
   background: var(--panel-bg);
-  border-top: 1px solid var(--border);
-  box-shadow: 0 -4px 16px rgba(0,0,0,0.08);
-  padding: 14px 16px;
-  overflow-y: auto;
-  transform: translateY(100%);
-  transition: transform 0.2s ease;
-  z-index: 15;
+  border-top: 1px solid transparent;
+  padding: 0 16px;
+  overflow: hidden;
+  transition: max-height 0.2s ease, padding 0.2s ease;
 }
 
-.qa-panel.open { transform: translateY(0); }
+.qa-panel.open {
+  max-height: 35dvh;
+  padding: 14px 16px;
+  overflow-y: auto;
+  border-top-color: var(--border);
+  box-shadow: 0 -4px 16px rgba(0,0,0,0.08);
+}
 
 .qa-panel-header {
   display: flex;
@@ -418,7 +431,6 @@ body {
   grid-column: 3;
   justify-self: end;
   align-items: center;
-  gap: 14px;
   font-size: 13.5px;
   color: var(--ink);
   border: 1px solid var(--border);
@@ -426,6 +438,8 @@ body {
   padding: 6px 14px;
   background: var(--bg);
 }
+
+.legend-body { display: flex; align-items: center; gap: 14px; }
 
 .legend-title {
   font-size: 11px;
@@ -620,7 +634,127 @@ body {
 /* Nudge toward advancing if a step has sat unread for a while. */
 .tutorial-nav .icon-btn.tutorial-next-shine { animation: tutorial-pulse 1.6s ease-in-out infinite; }
 
+/* ---------- Mobile: slide-in side sheets, collapsed footer groups ---------- */
+/* Base (hidden-by-default) rules for mobile-only controls -- the media
+   query below only flips visibility/geometry, keeping the "off" state in
+   one place regardless of viewport. */
+
+.mobile-sheet-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 18, 15, 0.5);
+  z-index: 39;
+}
+
+.mobile-sheet-backdrop.open { display: block; }
+
+.mobile-sheet-bar {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  background: var(--panel-bg);
+  margin: 0 -16px 10px;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.mobile-side-switch { display: flex; gap: 4px; }
+
+.mobile-side-btn {
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--ink);
+  border-radius: 8px;
+  padding: 4px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.mobile-side-btn[data-side="A"].active { background: var(--accent-a); color: #fff; border-color: var(--accent-a); }
+.mobile-side-btn[data-side="B"].active { background: var(--accent-b); color: #fff; border-color: var(--accent-b); }
+
+.mobile-more-btn { display: none; }
+
+.mobile-more-menu {
+  display: none;
+  position: fixed;
+  left: 12px;
+  bottom: calc(var(--footer-h) + 8px);
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 8px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+  z-index: 25;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 210px;
+}
+
+.mobile-more-menu.open { display: flex; }
+
+/* Sizing/shape comes from .icon-btn (shared with the other mobile footer
+   buttons) -- this only adds the mobile-only show/hide behavior. */
+.legend-toggle-btn { display: none; }
+
 @media (max-width: 900px) {
   .layout { grid-template-columns: 1fr; }
-  .side, .chat-col { max-height: none; }
+  .chat-col { max-height: calc(100dvh - var(--topbar-h) - var(--footer-h)); }
+
+  /* Side panels become slide-in sheets (~80% width) instead of stacked
+     columns -- each anchored to the edge matching its bubble alignment
+     (A left, B right), off-screen by default and slid in on demand. */
+  .side {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    width: 80vw;
+    max-width: 380px;
+    max-height: none;
+    z-index: 40;
+    box-shadow: 0 0 28px rgba(0, 0, 0, 0.3);
+    transition: transform 0.25s ease;
+  }
+
+  .side-a { left: 0; transform: translateX(-100%); }
+  .side-b { right: 0; transform: translateX(100%); }
+  .side.mobile-open { transform: translateX(0); }
+
+  /* The plain "A"/"B" heading is replaced by the switch bar above, which
+     carries the same label plus the switch/close controls -- scoped to the
+     side sheets only, the chat column's own "Conversation" heading (which
+     shares this class) is untouched. */
+  .side > .side-heading { display: none; }
+  .mobile-sheet-bar { display: flex; }
+
+  /* Footer: collapse the 4 left-hand actions behind one "more" trigger. */
+  #btnMenu, #btnSearch, #btnRandom, #btnQA { display: none; }
+  .mobile-more-btn { display: inline-flex; }
+
+  /* Footer: collapse the always-on legend into a toggleable chip. Only
+     .legend-body (the popover) moves/floats on expand -- the toggle button
+     itself stays exactly where it is in the footer, never repositioned. */
+  .footer-legend { padding: 0; border: none; background: none; }
+  .legend-toggle-btn { display: inline-flex; }
+  .legend-body { display: none; }
+  .footer-legend.expanded .legend-body {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    position: fixed;
+    right: 12px;
+    bottom: calc(var(--footer-h) + 8px);
+    background: var(--panel-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 14px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    z-index: 25;
+  }
 }

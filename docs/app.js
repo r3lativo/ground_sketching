@@ -156,7 +156,10 @@ function renderChat() {
       }
     }
 
-    bubble.addEventListener("click", () => selectPos(pos));
+    bubble.addEventListener("click", () => {
+      selectPos(pos);
+      if (isMobileLayout()) openMobileSheet(row.character);
+    });
     list.appendChild(bubble);
   });
 
@@ -362,6 +365,29 @@ function selectPos(pos) {
   if (selected) selected.scrollIntoView({ block: "nearest", behavior: "smooth" });
 }
 
+// --- Mobile: slide-in side sheets ---
+// Below the layout breakpoint, #sideA/#sideB leave the grid and become
+// fixed, off-screen sheets (see the @media block in style.css) shown one
+// at a time instead of three columns squeezed into one screen.
+function isMobileLayout() {
+  return window.matchMedia("(max-width: 900px)").matches;
+}
+
+function openMobileSheet(character) {
+  el("sideA").classList.toggle("mobile-open", character === "A");
+  el("sideB").classList.toggle("mobile-open", character === "B");
+  document.querySelectorAll(".mobile-side-btn").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.side === character);
+  });
+  el("mobileSheetBackdrop").classList.add("open");
+}
+
+function closeMobileSheet() {
+  el("sideA").classList.remove("mobile-open");
+  el("sideB").classList.remove("mobile-open");
+  el("mobileSheetBackdrop").classList.remove("open");
+}
+
 // --- Menu (conversation picker) ---
 function renderMenu() {
   const list = el("menuList");
@@ -430,7 +456,7 @@ async function loadRandomConversation() {
 // Anchored to this specific conversation so every step has real, curated
 // data behind it (see anchorPos below) -- opening the tour always loads it,
 // regardless of what the visitor was previously browsing.
-const TUTORIAL_CONV_ID = "262_163_290_15";
+const TUTORIAL_CONV_ID = "7_385_309_126";
 
 const TUTORIAL_STEPS = [
   {
@@ -447,46 +473,53 @@ const TUTORIAL_STEPS = [
   },
   {
     title: "Each side's sketch",
-    text: "This panel shows what A pictured as of the selected turn: A's own state if it's A's turn, or A's most recent state otherwise.",
+    text: "This panel shows what A pictured as of the selected turn: A's own state if it's A's turn, or A's most recent state otherwise. On a narrow screen, tapping any message slides its speaker's panel in from the side.",
     selector: "#sideA",
     placement: "right",
+    mobilePrep: () => openMobileSheet("A"),
   },
   {
     title: "Skipped turns",
     text: "Not every turn produces a change to the picture. B's last turn here was skipped, so B's panel shows “No image available.”",
     selector: "#sideB",
-    anchorPos: 8,
+    anchorPos: 12,
     placement: "left",
+    mobilePrep: () => openMobileSheet("B"),
   },
   {
     title: "Global frame history",
     text: "Every distinct scene sketched from A's POV in this conversation, each at its latest version. Click any thumbnail to preview it and jump to the corresponding message in the conversation.",
     selector: "#globalTrackerA",
     anchorPos: 13,
+    mobilePrep: () => openMobileSheet("A"),
   },
   {
     title: "Edit history",
     text: "Every edit made to the current scene.",
     selector: "#thumbsA",
+    mobilePrep: () => openMobileSheet("A"),
   },
   {
     title: "Prompt & metadata",
     text: "The exact prompt that generated the current image, plus the structured data extracted from that turn (frame metadata, relations, imagery).",
     selector: "#metaA",
+    mobilePrep: () => openMobileSheet("A"),
   },
   {
     title: "Color legend",
     text: "Green marks a brand-new sketch, purple an edit to the existing one, orange a skipped turn.",
     selector: ".footer-legend",
+    mobilePrep: () => el("footerLegend").classList.add("expanded"),
   },
   {
     title: "More tools",
     text: "Switch conversations, search within one, jump to a random example, or inspect the underlying Q&A annotations from here.",
     selector: ".footer-left",
+    mobilePrep: () => el("mobileMoreMenu").classList.add("open"),
   },
   {
     title: "That's it",
-    text: "Click any message to start exploring. You can reopen this tour anytime from the “Show tutorial” button.",
+    text: "Click any message to start exploring. You can reopen this tour anytime from the “Tutorial” button.",
     selector: null,
   },
 ];
@@ -515,6 +548,9 @@ function closeTutorial() {
   el("tutorialBackdrop").classList.remove("open");
   el("tutorialSpotlight").classList.remove("open");
   el("tutorialBox").classList.remove("open");
+  closeMobileSheet();
+  el("mobileMoreMenu").classList.remove("open");
+  el("footerLegend").classList.remove("expanded");
   window.removeEventListener("resize", positionCurrentTutorialStep);
   window.removeEventListener("scroll", positionCurrentTutorialStep, true);
 }
@@ -522,6 +558,17 @@ function closeTutorial() {
 function renderTutorialStep() {
   const step = TUTORIAL_STEPS[state.tutorialStep];
   if (step.anchorPos !== undefined) selectPos(step.anchorPos);
+
+  // Every step starts from a clean mobile-UI slate (no leftover sheet/menu
+  // from whichever step ran before), then opens whatever this one needs --
+  // otherwise a step without a sheet could render behind one left open by
+  // the previous step (Next) or the next one (Prev).
+  if (isMobileLayout()) {
+    closeMobileSheet();
+    el("mobileMoreMenu").classList.remove("open");
+    el("footerLegend").classList.remove("expanded");
+    if (step.mobilePrep) step.mobilePrep();
+  }
 
   el("tutorialStepCount").textContent = `${state.tutorialStep + 1} / ${TUTORIAL_STEPS.length}`;
   el("tutorialTitle").textContent = step.title;
@@ -598,6 +645,23 @@ function positionSpotlight(rect) {
 // content instead of next to it.
 function positionTutorialBox(rect, placement) {
   const box = el("tutorialBox");
+  box.style.top = "";
+  box.style.left = "";
+  box.style.right = "";
+  box.style.bottom = "";
+  box.style.width = "";
+
+  // On a narrow screen the target is often a near-fullscreen sheet (or the
+  // whole chat column), leaving no real "beside"/"above"/"below" -- pin the
+  // box to a fixed, always-readable spot near the bottom instead of trying
+  // to compute one relative to the target's geometry.
+  if (isMobileLayout()) {
+    box.style.left = "16px";
+    box.style.width = "calc(100vw - 32px)";
+    box.style.bottom = `calc(var(--footer-h) + 16px)`;
+    return;
+  }
+
   const margin = 12;
   const boxWidth = box.offsetWidth || 320;
   const boxHeight = box.offsetHeight || 140;
@@ -662,7 +726,19 @@ function maybeAutoOpenTutorial() {
   openTutorial();
 }
 
+// The --topbar-h constant assumes a single-line tagline; on narrow screens
+// it wraps to 2+ lines, so .side/.chat-col's height calc() (which subtracts
+// this var) would leave the sticky topbar overlapping their top edge. Sync
+// it to the topbar's real rendered height instead of a fixed guess.
+function syncTopbarHeight() {
+  const topbar = document.querySelector(".topbar");
+  document.documentElement.style.setProperty("--topbar-h", `${topbar.offsetHeight}px`);
+}
+
 function wireUp() {
+  syncTopbarHeight();
+  window.addEventListener("resize", syncTopbarHeight);
+
   el("btnMenu").addEventListener("click", openMenu);
   el("menuClose").addEventListener("click", closeMenu);
   el("menuOverlay").addEventListener("click", (e) => {
@@ -678,6 +754,16 @@ function wireUp() {
     if (e.key === "Enter") searchNext();
     if (e.key === "Escape") closeSearch();
   });
+  document.addEventListener("click", (e) => {
+    if (
+      el("searchBar").classList.contains("open") &&
+      !e.target.closest("#searchBar") &&
+      !e.target.closest("#btnSearch") &&
+      !e.target.closest("#mobileMoreMenu")
+    ) {
+      closeSearch();
+    }
+  });
 
   el("btnRandom").addEventListener("click", loadRandomConversation);
 
@@ -688,8 +774,51 @@ function wireUp() {
   el("tutorialNext").addEventListener("click", tutorialNext);
   el("tutorialPrev").addEventListener("click", tutorialPrev);
   el("tutorialSkip").addEventListener("click", closeTutorial);
+
+  // Mobile side sheets: opened per-bubble (see renderChat), closed via the
+  // backdrop or either sheet's own close button, switched via the A/B tabs.
+  document.querySelectorAll(".mobile-side-btn").forEach((btn) => {
+    btn.addEventListener("click", () => openMobileSheet(btn.dataset.side));
+  });
+  document.querySelectorAll(".mobile-sheet-close").forEach((btn) => {
+    btn.addEventListener("click", closeMobileSheet);
+  });
+  el("mobileSheetBackdrop").addEventListener("click", closeMobileSheet);
+
+  // Mobile footer: the 4 left-hand actions collapse behind one "more" menu.
+  el("btnMobileMore").addEventListener("click", () => {
+    el("mobileMoreMenu").classList.toggle("open");
+  });
+  document.querySelectorAll("#mobileMoreMenu .menu-item").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      el("mobileMoreMenu").classList.remove("open");
+      const action = btn.dataset.action;
+      if (action === "menu") openMenu();
+      else if (action === "search") {
+        if (el("searchBar").classList.contains("open")) closeSearch();
+        else openSearch();
+      } else if (action === "random") loadRandomConversation();
+      else if (action === "qa") toggleQA();
+    });
+  });
+
+  // Mobile footer: the legend collapses into a single toggleable chip.
+  // Tapping anywhere outside it (including its own popover) closes it.
+  el("legendToggleBtn").addEventListener("click", () => {
+    el("footerLegend").classList.toggle("expanded");
+  });
+  document.addEventListener("click", (e) => {
+    if (el("footerLegend").classList.contains("expanded") && !e.target.closest("#footerLegend")) {
+      el("footerLegend").classList.remove("expanded");
+    }
+  });
+
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && state.tutorialOpen) closeTutorial();
+    if (e.key !== "Escape") return;
+    if (state.tutorialOpen) closeTutorial();
+    closeMobileSheet();
+    el("mobileMoreMenu").classList.remove("open");
+    el("footerLegend").classList.remove("expanded");
   });
 }
 
