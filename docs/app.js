@@ -823,11 +823,31 @@ function wireUp() {
   });
 
   document.addEventListener("keydown", (e) => {
-    if (e.key !== "Escape") return;
-    if (state.tutorialOpen) closeTutorial();
-    closeMobileSheet();
-    el("mobileMoreMenu").classList.remove("open");
-    el("footerLegend").classList.remove("expanded");
+    if (e.key === "Escape") {
+      if (state.tutorialOpen) closeTutorial();
+      closeMobileSheet();
+      el("mobileMoreMenu").classList.remove("open");
+      el("footerLegend").classList.remove("expanded");
+      return;
+    }
+
+    // Step through the conversation one turn at a time -- handy for
+    // recording a clean, steady screen capture of one side's image
+    // updating, without hunting for the right bubble to click each time.
+    if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+      const tag = document.activeElement.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA") return;
+      if (!state.conv || state.tutorialOpen) return;
+      const positions = getChatPositions();
+      const idx = positions.indexOf(state.selectedPos);
+      if (idx === -1) return;
+      const nextIdx = e.key === "ArrowRight"
+        ? Math.min(idx + 1, positions.length - 1)
+        : Math.max(idx - 1, 0);
+      if (nextIdx === idx) return;
+      e.preventDefault();
+      selectPos(positions[nextIdx]);
+    }
   });
 }
 
