@@ -52,11 +52,8 @@
          published. Interactive Visualization link stays relative so it
          works both locally and on GitHub Pages. -->
     <div class="link-buttons">
-      <a class="link-btn" href="https://arxiv.org/pdf/2604.21144" target="_blank" rel="noopener">
-        <span class="link-icon">📄</span> Paper
-      </a>
       <a class="link-btn" href="https://arxiv.org/abs/2604.21144" target="_blank" rel="noopener">
-        <span class="link-icon">📚</span> arXiv
+        <span class="link-icon">📄</span> Paper
       </a>
       <a class="link-btn" href="https://github.com/r3lativo/ground_sketching" target="_blank" rel="noopener">
         <span class="link-icon">💻</span> Code
@@ -95,12 +92,12 @@
         People offload memory constantly: we write things down, sketch a floor plan, draw a diagram
         on a napkin. It is a way of turning something we might misremember into something we can check.
         Conversational AI agents don't do this. Everything they know about a conversation lives in text,
-        and text compresses. Two different rooms, described across a long dialogue, can start to blur
-        into one.
+        and text naturally compresses, losing specific details for a more general overview.
+        In our example, two different rooms, described across a long dialogue, can start to blur into one.
       </p>
       <p>
         We asked a simple question: what happens if an AI agent could sketch what it understands, the
-        same way a person might, and check its own sketch later instead of relying on memory alone?
+        same way a person might, and check its own sketch later instead of relying on textual memory alone?
       </p>
     </div>
   </section>
@@ -112,7 +109,10 @@
     <h2 class="section-title">Abstract</h2>
     <div class="card abstract">
       <p>
-        Situated dialogue requires speakers to maintain a reliable representation of shared context rather than reasoning only over isolated utterances. Current conversational agents often struggle with this requirement, especially when the common ground must be preserved beyond the immediate context window. In such settings, fine-grained distinctions are frequently compressed into purely textual representations, leading to a critical failure mode we call <i>representational blur</i>, in which similar but distinct entities collapse into interchangeable descriptions. This semantic flattening creates an illusion of grounding, where agents appear locally coherent but fail to track shared context persistently over time. Inspired by the role of mental imagery in human reasoning, and based on the increased availability of multimodal models, we explore whether conversational agents can be given an analogous ability to construct some depictive intermediate representations during dialogue to address these limitations. Thus, we introduce an active visual scaffolding framework that incrementally converts dialogue state into a persistent visual history that can later be retrieved for grounded response generation. Evaluation on the IndiRef benchmark shows that incremental externalization itself improves over full-dialog reasoning, while visual scaffolding provides additional gains by reducing representational blur and enforcing concrete scene commitments. At the same time, textual representations remain advantageous for non-depictable information, and a hybrid multimodal setting yields the best overall performance. Together, these findings suggest that conversational agents benefit from an explicitly multimodal representation of common ground that integrates depictive and propositional information.
+        Situated dialogue requires speakers to maintain a reliable representation of shared context rather than reasoning only over isolated utterances. Current conversational agents often struggle with this requirement, especially when the common ground must be preserved beyond the immediate context window. In such settings, fine-grained distinctions are frequently compressed into purely textual representations, leading to a critical failure mode we call <i>representational blur</i>, in which similar but distinct entities collapse into interchangeable descriptions. This semantic flattening creates an illusion of grounding, where agents appear locally coherent but fail to track shared context persistently over time. Inspired by the role of mental imagery in human reasoning, and based on the increased availability of multimodal models, we explore whether conversational agents can be given an analogous ability to construct some depictive intermediate representations during dialogue to address these limitations.
+        </p>
+        <p>
+        Thus, we introduce an <b>active visual scaffolding framework</b> that incrementally converts dialogue state into a persistent visual history that can later be retrieved for grounded response generation. Evaluation on the IndiRef benchmark shows that incremental externalization itself improves over full-dialog reasoning, while visual scaffolding provides additional gains by reducing representational blur and enforcing concrete scene commitments. At the same time, textual representations remain advantageous for non-depictable information, and a hybrid multimodal setting yields the best overall performance. Together, these findings suggest that conversational agents benefit from an explicitly multimodal representation of common ground that integrates depictive and propositional information.
       </p>
     </div>
   </section>
@@ -160,9 +160,11 @@
         so there was nothing left to merge.
       </p>
       <!-- EDIT: links straight to the real conversation behind the example above -->
-      <a class="link-btn" href="interactive_visualization.html?conv=7_385_309_126">
-        <span class="link-icon">🖼️</span> View this conversation
-      </a>
+      <div style="text-align: center;">
+        <a class="link-btn" href="interactive_visualization.html?conv=7_385_309_126">
+          <span class="link-icon">🖼️</span> View this conversation
+        </a>
+      </div>
     </div>
   </section>
 
@@ -217,6 +219,7 @@
           <span class="zoom-lens">🔍</span>
         </div>
       </figure>
+      <p></p>
       <p>
         This is an example from a dialogue. Each time the Observer flags
         an update, a new or revised sketch appears. The full, browsable version of this trace is in the Interactive Visualization below.
@@ -324,7 +327,7 @@
        ============================================================ -->
   <section class="section">
     <h2 class="section-title">Explore the Data</h2>
-    <div class="card callout">
+    <div class="card callout" style="display: flex; flex-direction: column; align-items: center; text-align: center;">
       <p>
         Browse full example conversations turn-by-turn, including the generated imagery for
         both participants at every step, in our Interactive Visualization.
