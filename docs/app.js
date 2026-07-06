@@ -1,4 +1,5 @@
 const DATA_DIR = "data";
+const AUTOPLAY_INTERVAL_MS = 1000; // base interval at 1x -- 1 move per second
 
 const state = {
   index: [],       // [{id, category, label, num_messages}, ...]
@@ -9,6 +10,8 @@ const state = {
   searchCursor: -1,
   tutorialOpen: false,
   tutorialStep: 0,
+  autoplayTimer: null,
+  autoplayIntervalMs: AUTOPLAY_INTERVAL_MS,
 };
 
 const el = (id) => document.getElementById(id);
@@ -24,6 +27,7 @@ async function loadIndex() {
 }
 
 async function loadConversation(id) {
+  stopAutoplay();
   state.conv = await fetchJSON(`${DATA_DIR}/${id}.json`);
   state.sideOverride = { A: null, B: null };
   closeSearch();
@@ -157,6 +161,7 @@ function renderChat() {
     }
 
     bubble.addEventListener("click", () => {
+      stopAutoplay();
       selectPos(pos);
       if (isMobileLayout()) openMobileSheet(row.character);
     });
@@ -365,6 +370,53 @@ function selectPos(pos) {
   if (selected) selected.scrollIntoView({ block: "nearest", behavior: "smooth" });
 }
 
+// Moves the selection one chat turn forward/back. Shared by the arrow-key
+// handler and the autoplay timer tick. Returns false at either end of the
+// conversation so autoplay knows to stop instead of idling on the last turn.
+function stepChat(direction) {
+  if (!state.conv) return false;
+  const positions = getChatPositions();
+  const idx = positions.indexOf(state.selectedPos);
+  if (idx === -1) return false;
+  const nextIdx = direction > 0
+    ? Math.min(idx + 1, positions.length - 1)
+    : Math.max(idx - 1, 0);
+  if (nextIdx === idx) return false;
+  selectPos(positions[nextIdx]);
+  return true;
+}
+
+// Spacebar-triggered playback -- steps forward one turn every
+// state.autoplayIntervalMs, for recording a clean, hands-free capture
+// instead of pressing arrow keys turn by turn. Stops itself at the last turn.
+function startAutoplay() {
+  if (state.autoplayTimer || !state.conv) return;
+  state.autoplayTimer = setInterval(() => {
+    if (!stepChat(1)) stopAutoplay();
+  }, state.autoplayIntervalMs);
+  updateAutoplayIndicator();
+}
+
+function stopAutoplay() {
+  if (!state.autoplayTimer) return;
+  clearInterval(state.autoplayTimer);
+  state.autoplayTimer = null;
+  updateAutoplayIndicator();
+}
+
+function toggleAutoplay() {
+  if (state.autoplayTimer) stopAutoplay();
+  else startAutoplay();
+}
+
+function updateAutoplayIndicator() {
+  const playing = !!state.autoplayTimer;
+  const btn = el("autoplayToggle");
+  btn.classList.toggle("active", playing);
+  btn.textContent = playing ? "⏸" : "▶";
+  btn.title = playing ? "Pause autoplay (Space)" : "Play autoplay (Space)";
+}
+
 // --- Mobile: slide-in side sheets ---
 // Below the layout breakpoint, #sideA/#sideB leave the grid and become
 // fixed, off-screen sheets (see the @media block in style.css) shown one
@@ -529,6 +581,7 @@ const TUTORIAL_STEPS = [
 let tutorialShineTimeout = null;
 
 async function openTutorial() {
+  stopAutoplay();
   closeSearch();
   closeMenu();
   closeQA();
@@ -822,12 +875,38 @@ function wireUp() {
     }
   });
 
+  // Autoplay control: one button toggles play/pause, the other opens the
+  // speed popover -- same two actions, same tap/click on both desktop and
+  // mobile, no hover or long-press to discover.
+  el("autoplayToggle").addEventListener("click", toggleAutoplay);
+  el("autoplaySettingsBtn").addEventListener("click", () => {
+    el("autoplayPopover").classList.toggle("open");
+  });
+  el("autoplaySpeedSlider").addEventListener("input", () => {
+    // Slider reads as a playback speed multiplier (0.5x-2x, 1x = normal)
+    // rather than a raw seconds value -- easier to reason about, and its
+    // natural min-to-max direction already puts slow on the left, fast on
+    // the right.
+    const multiplier = parseFloat(el("autoplaySpeedSlider").value);
+    state.autoplayIntervalMs = Math.round(AUTOPLAY_INTERVAL_MS / multiplier);
+    if (state.autoplayTimer) {
+      stopAutoplay();
+      startAutoplay();
+    }
+  });
+  document.addEventListener("click", (e) => {
+    if (el("autoplayPopover").classList.contains("open") && !e.target.closest("#autoplayControl")) {
+      el("autoplayPopover").classList.remove("open");
+    }
+  });
+
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
       if (state.tutorialOpen) closeTutorial();
       closeMobileSheet();
       el("mobileMoreMenu").classList.remove("open");
       el("footerLegend").classList.remove("expanded");
+      el("autoplayPopover").classList.remove("open");
       return;
     }
 
@@ -838,15 +917,20 @@ function wireUp() {
       const tag = document.activeElement.tagName;
       if (tag === "INPUT" || tag === "TEXTAREA") return;
       if (!state.conv || state.tutorialOpen) return;
-      const positions = getChatPositions();
-      const idx = positions.indexOf(state.selectedPos);
-      if (idx === -1) return;
-      const nextIdx = e.key === "ArrowRight"
-        ? Math.min(idx + 1, positions.length - 1)
-        : Math.max(idx - 1, 0);
-      if (nextIdx === idx) return;
       e.preventDefault();
-      selectPos(positions[nextIdx]);
+      stopAutoplay();
+      stepChat(e.key === "ArrowRight" ? 1 : -1);
+      return;
+    }
+
+    // Spacebar toggles hands-free autoplay -- pressing arrows manually
+    // during a screen recording makes for a jittery capture.
+    if (e.code === "Space") {
+      const tag = document.activeElement.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA") return;
+      if (!state.conv || state.tutorialOpen) return;
+      e.preventDefault();
+      toggleAutoplay();
     }
   });
 }

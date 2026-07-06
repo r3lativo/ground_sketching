@@ -39,8 +39,35 @@
   </section>
 
   <section class="chat-col">
-    <h2 class="side-heading">Conversation</h2>
-    <div class="conv-label" id="convLabel">Loading…</div>
+    <div class="chat-header">
+      <div class="chat-header-left">
+        <h2 class="side-heading">Conversation</h2>
+        <div class="conv-label" id="convLabel">Loading…</div>
+      </div>
+      <div class="autoplay-control" id="autoplayControl">
+        <div class="autoplay-title">Autoplay</div>
+        <div class="autoplay-buttons">
+          <button class="autoplay-btn" id="autoplayToggle" aria-label="Toggle autoplay" title="Play autoplay (Space)">▶</button>
+          <button class="autoplay-btn" id="autoplaySettingsBtn" aria-label="Autoplay speed" title="Autoplay speed">⚙️</button>
+        </div>
+        <div class="autoplay-popover" id="autoplayPopover">
+          <span class="autoplay-speed-label">Speed</span>
+          <input type="range" id="autoplaySpeedSlider" min="0.5" max="3" step="0.1" value="1" list="autoplaySpeedMarks">
+          <datalist id="autoplaySpeedMarks">
+            <option value="0.5"></option>
+            <option value="1"></option>
+            <option value="2"></option>
+            <option value="3"></option>
+          </datalist>
+          <div class="autoplay-speed-ticks">
+            <span style="left: 0%">0.5x</span>
+            <span style="left: 30%">1x</span>
+            <span style="left: 60%">2x</span>
+            <span style="left: 100%">3x</span>
+          </div>
+        </div>
+      </div>
+    </div>
     <div class="chat-scroll" id="chatScroll">
       <div class="chat-list" id="chatList"></div>
     </div>

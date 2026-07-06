@@ -88,6 +88,22 @@ body {
   max-height: calc(100dvh - var(--topbar-h) - var(--footer-h));
 }
 
+/* Scrollable panels stay scrollable (wheel/trackpad/touch) -- just without
+   a visible scrollbar track/thumb cluttering the layout. */
+.side,
+.chat-scroll,
+.qa-panel.open,
+.overlay .panel {
+  scrollbar-width: none; /* Firefox */
+}
+
+.side::-webkit-scrollbar,
+.chat-scroll::-webkit-scrollbar,
+.qa-panel.open::-webkit-scrollbar,
+.overlay .panel::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Edge */
+}
+
 .main-image-wrap {
   max-width: 420px;
   margin: 0 auto;
@@ -121,12 +137,129 @@ body {
 
 /* Conversation heading isn't inside a scrolling ancestor, so it doesn't
    need (or want) the sticky/full-bleed treatment above. */
-.chat-col > .side-heading {
+.chat-header .side-heading {
   position: static;
   background: none;
   margin: 0;
-  padding: 10px 0;
+  padding: 0;
+  text-align: left;
 }
+
+.chat-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px 6px;
+}
+
+.chat-header-left { min-width: 0; }
+
+.chat-header .conv-label {
+  text-align: left;
+  margin: 2px 0 0;
+}
+
+/* ---------- Autoplay control ---------- */
+.autoplay-control {
+  position: relative;
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Same font treatment as .conv-label, so the two read as a matched pair
+   of small captions on either side of the header. */
+.autoplay-title {
+  text-align: center;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.autoplay-buttons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.autoplay-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--ink);
+  touch-action: manipulation;
+}
+
+.autoplay-btn:hover { background: #f1efe9; }
+
+.autoplay-btn.active {
+  background: var(--accent-a);
+  color: #fff;
+  border-color: var(--accent-a);
+  animation: autoplay-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes autoplay-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(45, 108, 223, 0.4); }
+  50% { box-shadow: 0 0 0 5px rgba(45, 108, 223, 0); }
+}
+
+.autoplay-popover {
+  display: none;
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 130px;
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  z-index: 15;
+  font-size: 12px;
+  color: var(--ink);
+  text-align: left;
+}
+
+.autoplay-popover.open { display: block; }
+
+.autoplay-speed-label {
+  display: block;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+#autoplaySpeedSlider { width: 100%; }
+
+/* Marks sit at their actual value position along the 0.5-3 track (not
+   evenly spaced by index -- 1x/2x aren't equidistant from 0.5x/3x), via
+   the inline `left` percentages set in the HTML. */
+.autoplay-speed-ticks {
+  position: relative;
+  height: 12px;
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.autoplay-speed-ticks span {
+  position: absolute;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.autoplay-speed-ticks span:first-child { transform: translateX(0); }
+.autoplay-speed-ticks span:last-child { transform: translateX(-100%); }
 
 .subsection-label {
   font-size: 10px;
@@ -757,4 +890,6 @@ body {
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
     z-index: 25;
   }
+
+  .autoplay-popover { max-width: calc(100vw - 32px); }
 }
